@@ -14,3 +14,9 @@ workspace = true
 syn.workspace = true
 quote.workspace = true
 proc-macro2.workspace = true
+ 
+[dev-dependencies]
+trybuild.workspace = true
+brom-core = { path = "../brom-core" }
+serde.workspace = true
+serde_json.workspace = true
