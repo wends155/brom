@@ -7,17 +7,11 @@ pub enum Error {
     SchemaError(String),
 
     #[error("validation error for field '{field}': {message}")]
-    ValidationError {
-        field: String,
-        message: String,
-    },
+    ValidationError { field: String, message: String },
 
     #[error("relation error: {0}")]
     RelationError(String),
 
     #[error("not found: entity {entity} with id {id}")]
-    NotFound {
-        entity: &'static str,
-        id: i64,
-    },
+    NotFound { entity: &'static str, id: i64 },
 }

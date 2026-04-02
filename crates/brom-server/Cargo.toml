@@ -14,3 +14,5 @@ brom-db.workspace = true
 brom-auth.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+serde_json.workspace = true
+

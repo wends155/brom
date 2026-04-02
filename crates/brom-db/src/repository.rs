@@ -1,13 +1,20 @@
 use brom_core::{EntitySchema, Pagination, Repository};
 use std::marker::PhantomData;
 
-/// SQLite implementation of the Repository trait.
+/// `SQLite` implementation of the Repository trait.
 pub struct SqliteRepository<T> {
     _marker: PhantomData<T>,
 }
 
+impl<T> Default for SqliteRepository<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> SqliteRepository<T> {
     /// Creates a new generic repository.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             _marker: PhantomData,

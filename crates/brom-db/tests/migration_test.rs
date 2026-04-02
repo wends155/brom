@@ -1,3 +1,4 @@
+#![allow(clippy::expect_used)]
 use brom_db::{DbPool, MigrationRunner};
 
 #[test]
@@ -12,7 +13,7 @@ fn ensure_internal_tables_creates_all_four() {
         .expect("prepare")
         .query_map([], |row| row.get(0))
         .expect("query")
-        .filter_map(|r| r.ok())
+        .filter_map(Result::ok)
         .collect();
 
     assert!(tables.contains(&"_brom_user".to_string()));

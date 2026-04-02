@@ -221,6 +221,7 @@ dependencies = [
  "brom-auth",
  "brom-core",
  "brom-db",
+ "serde_json",
  "thiserror",
  "tracing",
 ]

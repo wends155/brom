@@ -8,12 +8,16 @@ pub struct MigrationRunner<'a> {
 }
 
 impl<'a> MigrationRunner<'a> {
-    /// Creates a new MigrationRunner.
+    /// Creates a new `MigrationRunner`.
+    #[must_use]
     pub const fn new(pool: &'a DbPool) -> Self {
         Self { pool }
     }
 
     /// Ensures all internal `_brom_*` tables exist.
+    ///
+    /// # Errors
+    /// Returns `DbError` if table creation fails.
     pub fn ensure_internal_tables(&self) -> Result<(), DbError> {
         let conn = self.pool.get()?;
 
@@ -57,6 +61,9 @@ impl<'a> MigrationRunner<'a> {
     }
 
     /// Applies all pending migrations from the given directory.
+    ///
+    /// # Errors
+    /// Returns `DbError` if reading migrations or executing them fails.
     pub fn run_pending(&self, _migrations_dir: &Path) -> Result<Vec<String>, DbError> {
         // STUB(Phase 2): Implement directory reading and file application
         Ok(Vec::new())

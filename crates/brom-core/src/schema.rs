@@ -6,8 +6,15 @@ pub struct SchemaRegistry {
     schemas: RwLock<Vec<SchemaInfo>>,
 }
 
+impl Default for SchemaRegistry {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SchemaRegistry {
     /// Creates a new, empty registry.
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             schemas: RwLock::new(Vec::new()),

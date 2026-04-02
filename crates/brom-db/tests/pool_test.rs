@@ -1,3 +1,4 @@
+#![allow(clippy::expect_used)]
 use brom_db::DbPool;
 
 #[test]
@@ -10,4 +11,3 @@ fn in_memory_pool_connects() {
         .expect("pragma");
     assert_eq!(mode, "memory");
 }
-
