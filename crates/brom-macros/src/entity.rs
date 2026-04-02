@@ -6,10 +6,19 @@ use crate::schema::{BromFieldAttrs, BromStructAttrs, map_type_to_field_type};
 
 pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
     let struct_name = &input.ident;
-    let struct_attrs = BromStructAttrs::parse(input);
+    let mut errors: Option<syn::Error> = None;
+
+    let struct_attrs = match BromStructAttrs::parse(input) {
+        Ok(attrs) => Some(attrs),
+        Err(e) => {
+            errors = Some(e);
+            None
+        }
+    };
 
     let table_name = struct_attrs
-        .table_name
+        .as_ref()
+        .and_then(|a| a.table_name.clone())
         .unwrap_or_else(|| struct_name.to_string().to_lowercase());
 
     let fields = match &input.data {
@@ -30,47 +39,16 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
         }
     };
 
-    let field_infos = fields
-        .named
-        .iter()
-        .map(|f| {
-            let name = f
-                .ident
-                .as_ref()
-                .ok_or_else(|| syn::Error::new_spanned(f, "Field must have an identifier"))?
-                .to_string();
-            let attrs = BromFieldAttrs::parse(f);
-            let field_type = map_type_to_field_type(&f.ty, &attrs);
+    let mut field_infos = Vec::new();
+    for f in &fields.named {
+        if let Some(info) = expand_field(f, &mut errors) {
+            field_infos.push(info);
+        }
+    }
 
-            let mut constraints = Vec::new();
-            if attrs.unique {
-                constraints.push(quote!(Constraint::Unique));
-            }
-            if attrs.not_null {
-                constraints.push(quote!(Constraint::NotNull));
-            }
-            if let Some(default) = &attrs.default {
-                constraints.push(quote!(Constraint::Default(#default.to_string())));
-            }
-
-            let hidden = attrs.hidden;
-            let ui_widget = if let Some(w) = &attrs.ui_widget {
-                quote!(Some(#w.to_string()))
-            } else {
-                quote!(None)
-            };
-
-            Ok(quote! {
-                FieldInfo {
-                    name: #name.to_string(),
-                    field_type: #field_type,
-                    constraints: vec![#(#constraints),*],
-                    ui_widget: #ui_widget,
-                    hidden: #hidden,
-                }
-            })
-        })
-        .collect::<syn::Result<Vec<_>>>()?;
+    if let Some(errs) = errors {
+        return Err(errs);
+    }
 
     let expanded = quote! {
         #[automatically_derived]
@@ -97,4 +75,63 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
     };
 
     Ok(expanded)
+}
+
+fn expand_field(f: &syn::Field, errors: &mut Option<syn::Error>) -> Option<TokenStream> {
+    #[allow(clippy::single_match_else)]
+    let name = match f.ident.as_ref() {
+        Some(id) => id.to_string(),
+        None => {
+            let e = syn::Error::new_spanned(f, "Field must have an identifier");
+            if let Some(errs) = errors {
+                errs.combine(e);
+            } else {
+                *errors = Some(e);
+            }
+            return None;
+        }
+    };
+
+    #[allow(clippy::single_match_else)]
+    let attrs = match BromFieldAttrs::parse(f) {
+        Ok(a) => a,
+        Err(e) => {
+            if let Some(errs) = errors {
+                errs.combine(e);
+            } else {
+                *errors = Some(e);
+            }
+            return None;
+        }
+    };
+
+    let field_type = map_type_to_field_type(&f.ty, &attrs);
+
+    let mut constraints = Vec::new();
+    if attrs.unique {
+        constraints.push(quote!(Constraint::Unique));
+    }
+    if attrs.not_null {
+        constraints.push(quote!(Constraint::NotNull));
+    }
+    if let Some(default) = &attrs.default {
+        constraints.push(quote!(Constraint::Default(#default.to_string())));
+    }
+
+    let hidden = attrs.hidden;
+    let ui_widget = if let Some(w) = &attrs.ui_widget {
+        quote!(Some(#w.to_string()))
+    } else {
+        quote!(None)
+    };
+
+    Some(quote! {
+        FieldInfo {
+            name: #name.to_string(),
+            field_type: #field_type,
+            constraints: vec![#(#constraints),*],
+            ui_widget: #ui_widget,
+            hidden: #hidden,
+        }
+    })
 }
