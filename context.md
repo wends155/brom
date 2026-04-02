@@ -10,3 +10,6 @@
 > * **New Constraints:** Unit tests requiring mocks must enable the `testing` feature.
 > * **Feature:** Verification Pipeline Remediation
 > * **Changes:** Removed stable-incompatible nightly settings from `rustfmt.toml`. Updated `wildcard-import.yml` with AST-aware exclusion to permit wildcard imports in inline `mod tests` blocks, matching the logic established for `.unwrap()` checks.
+> * **Feature:** Phase 2A (BromEntity Derive Macro)
+> * **Changes:** Fully implemented `#[derive(BromEntity)]`. Added `syn` 2.0 based attribute parsing for `#[brom(table=...)]` and field constraints. Implemented `EntitySchema` trait generation including `table_name()`, `fields()`, and `schema_info()`. Added type mapping for common Rust types to `FieldType`.
+> * **Verification:** Added `trybuild` integration tests covering basic success, attribute overrides, and enum-rejection failure modes.

@@ -1,0 +1,5 @@
+error: BromEntity can only be derived on structs with named fields
+ --> tests/fixtures/fail_not_struct.rs:4:10
+  |
+4 | pub enum NotAStruct {
+  |          ^^^^^^^^^^
