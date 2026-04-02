@@ -2,7 +2,15 @@ id: wildcard-import
 language: rust
 severity: warning
 rule:
-  pattern: "use $MOD::*;"
+  all:
+    - pattern: "use $MOD::*;"
+    - not:
+        inside:
+          kind: mod_item
+          has:
+            kind: identifier
+            regex: "^tests$"
+          stopBy: end
 ignores:
   - "tests/**"
   - "**/*test*"

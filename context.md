@@ -8,3 +8,5 @@
 > * **Feature:** Infrastructure Wiring (Testing & Observability)
 > * **Changes:** Added `mockall` for trait mocking in `brom-core` and `brom-auth` (feature-gated). Instrumented all public methods in `brom-db` and `brom-auth` with `tracing::instrument`. Wired `tower-http` TraceLayer into `brom-server` router. Initialized `tracing-subscriber` in `brom-cli`.
 > * **New Constraints:** Unit tests requiring mocks must enable the `testing` feature.
+> * **Feature:** Verification Pipeline Remediation
+> * **Changes:** Removed stable-incompatible nightly settings from `rustfmt.toml`. Updated `wildcard-import.yml` with AST-aware exclusion to permit wildcard imports in inline `mod tests` blocks, matching the logic established for `.unwrap()` checks.
