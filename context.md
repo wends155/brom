@@ -17,3 +17,7 @@
 > * **Changes:** Refactored `BromEntity` attribute parsing to return `syn::Result` with `syn::Error::combine`, ensuring exhaustive multi-error accumulation and strict unrecognized attribute validation. Abstracted expansion implementation to observe strict line-count cleanliness.
 > * **New Constraints:** Any future procedural macro logic must accumulate errors rather than emitting early bail-outs, ensuring compile-time developer feedback is maximized.
 > * **Pruned:** The unstable macro parsing state and false `unwraps` are history. The macro foundation is formally locked and verified.
+> * **Feature:** Workflow Execution Safety
+> * **Changes:** Migrated AI agent IDE execution constraints (`|`, `&&`, `;`) from hardcoded regex queries across `.agent/workflows/.md` templates to a decentralized `.justfile` task runner. Added `git-diff-last` recipe to bypass `~` character constraints in `run_command` auto-run.
+> * **New Constraints:** Any future automation commands relying on regex, complex chaining, or IDE-restricted characters (like `~`) MUST be properly encapsulated within a `.justfile` recipe.
+> * **Pruned:** Manual `git diff HEAD~1..HEAD` calls in `audit.md` are removed. Rely on `just git-diff-last` for Reflect phase safety.

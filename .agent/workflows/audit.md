@@ -59,10 +59,10 @@ It enforces the **Reflect** phase of the TARS protocol and generates a structure
 Before auditing, collect all relevant materials:
 
 - **Scope**: Determine if this is a post-implementation audit (changed files) or a full compliance check.
-- **Changed Files**: `git diff --name-only` to identify what was created, modified, or deleted.
+- **Changed Files**: `git show --name-only --format="" HEAD` to identify what was created, modified, or deleted.
 - **Implementation Plan**: Locate and re-read the original approved plan (post-implementation only).
 - **Verification Logs**: Review any test output, lint results, or build logs from the Act phase.
-- **Git Diff**: Run `git diff` or `git log` to see the exact changes made.
+- **Git Diff**: Run `just git-diff-last` to see the exact changes made without triggering IDE regex interception.
 
 ### 2. Compliance Audit
 

@@ -51,3 +51,7 @@ stats-public-items src_dir="src/":
 # Docs coverage: doc comments count (Rust)
 stats-doc-comments src_dir="src/":
     rg -c "\s*///" {{src_dir}} --glob "*.rs"
+
+# Display the git diff of the most recent commit
+git-diff-last:
+    git diff HEAD~1..HEAD
