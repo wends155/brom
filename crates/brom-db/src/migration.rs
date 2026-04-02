@@ -18,6 +18,7 @@ impl<'a> MigrationRunner<'a> {
     ///
     /// # Errors
     /// Returns `DbError` if table creation fails.
+    #[tracing::instrument(skip_all)]
     pub fn ensure_internal_tables(&self) -> Result<(), DbError> {
         let conn = self.pool.get()?;
 
@@ -64,6 +65,7 @@ impl<'a> MigrationRunner<'a> {
     ///
     /// # Errors
     /// Returns `DbError` if reading migrations or executing them fails.
+    #[tracing::instrument(skip_all)]
     pub fn run_pending(&self, _migrations_dir: &Path) -> Result<Vec<String>, DbError> {
         // STUB(Phase 2): Implement directory reading and file application
         Ok(Vec::new())

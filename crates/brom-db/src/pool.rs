@@ -13,6 +13,7 @@ impl DbPool {
     ///
     /// # Errors
     /// Returns `DbError::PoolError` if connection manager fails to initialize.
+    #[tracing::instrument(skip_all)]
     pub fn new(path: &str) -> Result<Self, DbError> {
         let manager = SqliteConnectionManager::file(path).with_init(|c| {
             c.execute_batch(
@@ -30,6 +31,7 @@ impl DbPool {
     ///
     /// # Errors
     /// Returns `DbError::PoolError` if connection manager fails to initialize.
+    #[tracing::instrument(skip_all)]
     pub fn in_memory() -> Result<Self, DbError> {
         let manager = SqliteConnectionManager::memory().with_init(|c| {
             c.execute_batch(
@@ -47,6 +49,7 @@ impl DbPool {
     ///
     /// # Errors
     /// Returns `DbError::PoolError` if a connection cannot be acquired before timeout.
+    #[tracing::instrument(skip_all)]
     pub fn get(&self) -> Result<PooledConnection<SqliteConnectionManager>, DbError> {
         self.pool.get().map_err(Into::into)
     }
