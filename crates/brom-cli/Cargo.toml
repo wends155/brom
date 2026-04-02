@@ -11,3 +11,5 @@ workspace = true
 clap.workspace = true
 brom-core.workspace = true
 brom-db.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
