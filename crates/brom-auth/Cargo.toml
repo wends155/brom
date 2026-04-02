@@ -10,3 +10,8 @@ workspace = true
 [dependencies]
 brom-core.workspace = true
 thiserror.workspace = true
+tracing.workspace = true
+mockall = { workspace = true, optional = true }
+
+[features]
+testing = ["mockall"]
