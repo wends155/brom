@@ -40,9 +40,9 @@ Gather the current documentation state:
 2. **Toolchain Config:** Check for `rustfmt.toml`, `clippy.toml`, `.cargo/config.toml` with `view_file`.
 3. **Doc Coverage (Rust):**
 // turbo
-   - `rg -c -e "pub\s+fn\s+" -e "pub\s+struct\s+" -e "pub\s+enum\s+" -e "pub\s+trait\s+" -e "pub\s+type\s+" src/ --glob "*.rs"` (public items)
+   - `just stats-public-items` (public items)
 // turbo
-   - `rg -c "\s*///" src/ --glob "*.rs"` (doc comment lines)
+   - `just stats-doc-comments` (doc comment lines)
 4. **Section Audit:** Read `spec.md` with `view_file`. Check for required section headings from `doc-rules.md §4`.
 5. **Drift Detection:** If `spec.md` has `> Last verified against: <hash>`:
 // turbo
@@ -65,7 +65,7 @@ If **Narsil MCP** is available, use it to extract code-level data:
 | `get_symbol_definition` | Read signatures of undocumented public items |
 
 If Narsil is **not available**, fall back to manual investigation:
-- `rg "pub (fn|struct|enum|trait|type)"` for public API surface *(⚠️ contains `|` — use `grep_search` instead)*
+- use MCP `grep_search` tool for `pub (fn|struct|enum|trait|type)` to find public API surface
 - Read key files directly
 
 #### Sequential Thinking MCP

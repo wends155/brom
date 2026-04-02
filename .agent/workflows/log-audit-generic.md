@@ -37,10 +37,10 @@ The output is a diagnostic report that feeds directly into `/issue` for formal t
 Run these log inspection commands (auto-runnable):
 
 ```
-rg -c "TRACE|DEBUG|INFO|WARN|ERROR" logs/
+just logs-level-counts
 ```
 ```
-rg -n "WARN|ERROR" logs/ --max-count 50
+just logs-warnings
 ```
 
 This produces a severity count per log file and the most recent warning/error entries.
@@ -53,13 +53,13 @@ This produces a severity count per log file and the most recent warning/error en
 Run the lifecycle extraction commands:
 
 ```
-rg -n "thread spawned|thread started|thread exiting|initialized|shutting down|dropping" logs/
+just logs-lifecycle
 ```
 ```
-rg -n "connection established|connection closed|reconnect|evict|cache hit|cache miss" logs/
+just logs-connections
 ```
 ```
-rg -n "elapsed_ms=|duration_ms=|took [0-9]+ms|latency_ms=" logs/
+just logs-latency
 ```
 
 This produces:
@@ -75,10 +75,10 @@ Use this output to pre-populate §3b (Event Ordering) and §3d (Resource Lifecyc
 Run these deep analysis commands:
 
 ```
-rg -c "elapsed_ms=[0-9]+|duration_ms=[0-9]+|took [0-9]+ms" logs/
+just logs-latency-counts
 ```
 ```
-rg -o "elapsed_ms=[0-9]+" logs/ --no-filename
+just logs-extract-latency
 ```
 
 Agent performs statistical analysis on the output:

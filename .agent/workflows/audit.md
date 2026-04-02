@@ -37,9 +37,9 @@ It enforces the **Reflect** phase of the TARS protocol and generates a structure
 // turbo
 > - Unwrap scan: covered by `sg scan` rule `unwrap-in-production` *(see L41 — only if `sgconfig.yml` exists)*
 // turbo
-> - Secret scan: `rg -n -i -e "API_KEY\s*=" -e "SECRET\s*=" -e "PASSWORD\s*=" -e "TOKEN\s*=" . --glob "!.git" --glob "!target" --glob "!*.lock"`
+> - Secret scan: `just scan-secrets`
 // turbo
-> - TODO markers: `rg -n -e "TODO" -e "FIXME" -e "HACK" --glob "*.rs" --glob "*.go" --glob "*.ts" --glob "*.js" --glob "*.svelte" .`
+> - TODO markers: `just scan-todos`
 // turbo
 > - AST lint scan: `sg scan` *(only if `sgconfig.yml` exists in project root)*
 >
@@ -73,7 +73,7 @@ Systematically verify the code against project standards.
 - [ ] No unapproved changes were introduced (check for Additions per Fidelity Matrix)
 - [ ] If deviations occurred, they are documented with justification
 - [ ] Builder Notes section of `task.md` reviewed and processed (see §2a-bis)
-- [ ] No stale stubs remain: `STUB(Phase N)` where N ≤ current phase are all addressed *(multi-phase only — verify with `rg "STUB\(Phase"`)*
+- [ ] No stale stubs remain: `STUB(Phase N)` where N ≤ current phase are all addressed *(multi-phase only — verify with `just scan-stubs`)*
 
 #### 2a-bis. Builder Notes Processing *(if Builder Notes exist in task.md)*
 
