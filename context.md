@@ -58,3 +58,13 @@
 > * **New Constraints:** Passwords MUST be hashed using `Argon2id` (v0.5). API keys MUST be stored as SHA-256 hashes with an 8-character prefix for identification.
 > * **Pruned:** All `AuthCore` and persistence stubs in `brom-auth` and `brom-db` are now fully implemented.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test), `scan-secrets`, `scan-stubs`, and `sg scan` all passed cleanly after isolating `allow(clippy::unwrap_used)` strictly to `#[cfg(test)]` modules. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
+> * **Feature:** Toolcheck Workflow Cleanup
+> * **Changes:** Removed redundant shell and Rust version checks from `.agent/workflows/toolcheck.md`. All version reporting is now consolidated into the encapsulation-safe `just verify-toolchain` recipe.
+> * **New Constraints:** (None)
+> * **Pruned:** Duplicate version printouts and legacy inline shell commands for `git`, `rg`, `sg`, and Rust tools are removed.
+> * **Feature:** Phase 3A (Auth Core Remediation)
+> * **Changes:** Fixed `clippy::doc_markdown` violations in `rbac.rs`. Applied `clippy::expect_used` suppressions to `password.rs` tests. Cleaned up redundant wildcard exports in `brom_db`.
+> * **New Constraints:** (None - adhered to existing standards)
+> * **Pruned:** Zero-exit verification gate is formally restored.

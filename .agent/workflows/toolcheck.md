@@ -28,16 +28,6 @@ Run the following checks. All are auto-runnable:
 // turbo
 - `just verify-toolchain` (fast multi-tool version check)
 // turbo
-- `just pwsh-version`
-// turbo
-- `git --version`
-// turbo
-- `rg --version`
-// turbo
-- `sg --version`
-
-**Git Non-Interactive Safety:**
-// turbo
 - `git config credential.helper`
 
 If the output matches `manager`, `wincred`, or `osxkeychain`, set these env vars for the session. Execute each command separately to avoid IDE interception rules:
@@ -45,14 +35,6 @@ If the output matches `manager`, `wincred`, or `osxkeychain`, set these env vars
 - `$env:GIT_TERMINAL_PROMPT = '0'`
 
 **Rust Toolchain:**
-// turbo
-- `rustc --version`
-// turbo
-- `cargo --version`
-// turbo
-- `cargo clippy --version`
-// turbo
-- `rustfmt --version`
 // turbo
 - `rustup show`
 
