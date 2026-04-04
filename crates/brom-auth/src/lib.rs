@@ -21,9 +21,9 @@ pub trait ApiKeyStore: Send + Sync {
 ///
 /// # Errors
 /// Returns `AuthError` if the policy requirement is not met by the token/session.
-#[tracing::instrument(skip(_token_or_session), fields(policy = ?_policy))]
+#[tracing::instrument(skip(_token_or_session), fields(policy = ?policy))]
 pub fn evaluate_policy(
-    _policy: &AuthPolicy,
+    policy: &AuthPolicy,
     _token_or_session: Option<&str>,
 ) -> Result<(), AuthError> {
     // STUB(Phase 3): Implement evaluation logic

@@ -25,3 +25,6 @@
 > * **Changes:** Fixed `brom_auth::evaluate_policy` instrumentation to capture `AuthPolicy` context while masking sensitive tokens. Added 15 baseline unit/integration tests across `brom-core`, `brom-auth`, `brom-db`, and `brom-server`. Implemented `IntoResponse` status code mapping tests for `ServerError`.
 > * **New Constraints:** Any new feature implementation MUST include matching `#[cfg(test)]` modules following the established Red-Green-Blue cycle.
 > * **Pruned:** The deferred file-based log sink and `TraceLayer` customization items are now tracked in `todos.md` for Phase 2/4 execution.
+> * **Feature:** Verification Pipeline Remediation (FMT & Linter)
+> * **Changes:** Fixed formatting drift in `brom-core` and `brom-db` test files. Resolved `clippy::used-underscore-binding` in `brom-auth` by renaming the instrumented `_policy` parameter to `policy`.
+> * **New Constraints:** The `tracing::instrument` macro consumes function parameters for fields; such parameters MUST NOT use the `_` prefix if they are to be instrumented.

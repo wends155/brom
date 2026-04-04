@@ -27,7 +27,9 @@ fn ensure_internal_tables_is_idempotent() {
     let pool = DbPool::in_memory().expect("pool");
     let runner = MigrationRunner::new(&pool);
     runner.ensure_internal_tables().expect("first call");
-    runner.ensure_internal_tables().expect("second call should not fail");
+    runner
+        .ensure_internal_tables()
+        .expect("second call should not fail");
 
     let conn = pool.get().expect("conn");
     let count: i64 = conn

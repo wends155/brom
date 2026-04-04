@@ -131,7 +131,9 @@ mod tests {
     #[test]
     #[allow(clippy::unwrap_used)]
     fn field_type_link_serde_roundtrip() {
-        let ft = FieldType::Link { target: "category".into() };
+        let ft = FieldType::Link {
+            target: "category".into(),
+        };
         let json = serde_json::to_string(&ft).unwrap();
         let parsed: FieldType = serde_json::from_str(&json).unwrap();
         assert_eq!(ft, parsed);
