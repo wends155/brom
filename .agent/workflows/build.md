@@ -95,6 +95,7 @@ that exercised the stub.
 > [!CAUTION]
 > Do NOT skip checkpoints. They create atomic commits for the audit trail.
 > All verification (fmt + clippy + test) must pass before committing.
+> **BANNED OPERATORS:** Never chain git commands with `&&`. You MUST run `git add` and `git commit` as separate `run_command` tool calls to prevent IDE auto-run blocking.
 
 ### 4. Final Verification
 
@@ -105,6 +106,9 @@ FMT + LINT + TEST
 ```
 
 Use the exact commands from `architecture.md § Toolchain`. Confirm zero-exit on all gates.
+
+> [!CAUTION]
+> **BANNED OPERATORS:** Do NOT chain these checks together with `&&` or `;`. You MUST run `fmt`, `clippy`, and `test` sequentially as *separate* `run_command` tool calls.
 
 > [!NOTE]
 > If `sgconfig.yml` exists in the project root, also run `sg scan` as Gate 4 (AST Linting) and confirm zero findings.
