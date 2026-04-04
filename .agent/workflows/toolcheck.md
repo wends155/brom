@@ -26,6 +26,10 @@ Run the following checks. All are auto-runnable:
 
 **Shell Tools:**
 // turbo
+- `just verify-toolchain` (fast multi-tool version check)
+// turbo
+- `just pwsh-version`
+// turbo
 - `git --version`
 // turbo
 - `rg --version`

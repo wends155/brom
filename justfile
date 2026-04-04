@@ -55,3 +55,17 @@ stats-doc-comments src_dir="src/":
 # Display the git diff of the most recent commit
 git-diff-last:
     git diff HEAD~1..HEAD
+
+# Check PowerShell version safely
+pwsh-version:
+    @pwsh -NoProfile -Command 'Write-Output $PSVersionTable.PSVersion.ToString()'
+
+# Verify entire toolchain versioning (avoids chaining operators in shell)
+verify-toolchain: pwsh-version
+    git --version
+    rg --version
+    sg --version
+    rustc --version
+    cargo --version
+    cargo clippy --version
+    rustfmt --version

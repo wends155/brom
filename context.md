@@ -38,3 +38,7 @@
 > * **Changes:** Fixed `clippy::uninlined_format_args` in `brom-cli/src/main.rs`. Centralized environment variable loading into a new `config` module in `brom-cli` to resolve `scattered-env-var` AST-grep warnings.
 > * **New Constraints:** Any new environment variable lookups in CLI commands MUST be added to `AppConfig` in `config.rs`.
 > * **Pruned:** The direct `std::env::var()` calls in `main.rs` are removed.
+> * **Feature:** Toolcheck Workflow Hardening
+> * **Changes:** Encapsulated PowerShell version checking and multi-tool environment scans into safe `.justfile` recipes (`pwsh-version`, `verify-toolchain`). Updated `.agent/workflows/toolcheck.md` to trigger these recipes, eliminating direct use of restricted characters (`$`) and shell chaining operators (`;`) in `run_command` calls.
+> * **New Constraints:** Any automated environment checks requiring PowerShell internal variables or command pipelines MUST be mediated through `just` to avoid IDE auto-run interception.
+> * **Pruned:** Direct `$PSVersionTable` lookups and shell-level command chaining in toolcheck execution are deprecated in favor of `just` recipes.
