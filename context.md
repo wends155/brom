@@ -34,3 +34,7 @@
 * **Feature:** Phase 2 (Persistence & Migrations)
 * **Changes:** Transitioned from database stubs to fully-functional generic JSON-to-SQLite mappings using `serde_json`. Implemented `MigrationRunner::run_pending` to provision schemas synchronously. Removed all Phase 2 STUBs across `brom-db`.
 * **New Constraints:** Generics utilizing the `Repository` trait must satisfy `Serialize + DeserializeOwned` bounds constraints.
+> * **Feature:** Phase 2 Verification Remediation
+> * **Changes:** Fixed `clippy::uninlined_format_args` in `brom-cli/src/main.rs`. Centralized environment variable loading into a new `config` module in `brom-cli` to resolve `scattered-env-var` AST-grep warnings.
+> * **New Constraints:** Any new environment variable lookups in CLI commands MUST be added to `AppConfig` in `config.rs`.
+> * **Pruned:** The direct `std::env::var()` calls in `main.rs` are removed.

@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+mod config;
 
 #[derive(Parser)]
 #[command(
@@ -34,11 +35,13 @@ fn main() {
 
     match cli.command {
         Commands::Migrate => {
-            let db_path = std::env::var("DATABASE_URL").unwrap_or_else(|_| "brom.db".to_string());
-            let pool = match brom_db::DbPool::new(&db_path) {
+            let config = config::AppConfig::load();
+            let db_path = &config.db_path;
+
+            let pool = match brom_db::DbPool::new(db_path) {
                 Ok(p) => p,
                 Err(e) => {
-                    eprintln!("Failed to connect to database '{}': {}", db_path, e);
+                    eprintln!("Failed to connect to database '{db_path}': {e}");
                     std::process::exit(1);
                 }
             };
@@ -46,7 +49,7 @@ fn main() {
             let runner = brom_db::MigrationRunner::new(&pool);
 
             if let Err(e) = runner.ensure_internal_tables() {
-                eprintln!("Failed to initialize internal tables: {}", e);
+                eprintln!("Failed to initialize internal tables: {e}");
                 std::process::exit(1);
             }
 
@@ -57,12 +60,12 @@ fn main() {
                         println!("No pending migrations.");
                     } else {
                         for version in applied {
-                            println!("Applied migration: {}", version);
+                            println!("Applied migration: {version}");
                         }
                     }
                 }
                 Err(e) => {
-                    eprintln!("Migration failed: {}", e);
+                    eprintln!("Migration failed: {e}");
                     std::process::exit(1);
                 }
             }
