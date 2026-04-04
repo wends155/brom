@@ -55,6 +55,8 @@ tokio = { version = "1.43", features = ["full"] }
 mockall = "0.13"
 tower-http = { version = "0.6", features = ["trace"] }
 trybuild = { version = "1.0", features = ["diff"] }
+hex = "0.4"
+
 
 brom-core = { path = "crates/brom-core" }
 brom-macros = { path = "crates/brom-macros" }

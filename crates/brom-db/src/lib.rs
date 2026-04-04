@@ -9,3 +9,6 @@ pub use error::DbError;
 pub use migration::MigrationRunner;
 pub use pool::DbPool;
 pub use repository::SqliteRepository;
+
+#[cfg(test)]
+mod tests;

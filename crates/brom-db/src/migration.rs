@@ -66,8 +66,57 @@ impl<'a> MigrationRunner<'a> {
     /// # Errors
     /// Returns `DbError` if reading migrations or executing them fails.
     #[tracing::instrument(skip_all)]
-    pub fn run_pending(&self, _migrations_dir: &Path) -> Result<Vec<String>, DbError> {
-        // STUB(Phase 2): Implement directory reading and file application
-        Ok(Vec::new())
+    pub fn run_pending(&self, migrations_dir: &Path) -> Result<Vec<String>, DbError> {
+        if !migrations_dir.exists() {
+            return Ok(Vec::new());
+        }
+
+        let mut entries: Vec<_> = std::fs::read_dir(migrations_dir)?
+            .filter_map(Result::ok)
+            .filter(|e| e.path().extension().is_some_and(|ext| ext == "sql"))
+            .collect();
+
+        entries.sort_by_key(std::fs::DirEntry::file_name);
+
+        let mut conn = self.pool.get()?;
+        let tx = conn
+            .transaction()
+            .map_err(|e| DbError::PoolError(e.to_string()))?;
+
+        let mut applied = Vec::new();
+        for entry in entries {
+            let path = entry.path();
+            let version = path
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .ok_or_else(|| DbError::PoolError("invalid migration filename".into()))?
+                .to_string();
+
+            let exists: bool = tx
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM _brom_migration WHERE version = ?)",
+                    [&version],
+                    |row| row.get(0),
+                )
+                .map_err(|e| DbError::PoolError(e.to_string()))?;
+
+            if !exists {
+                let sql = std::fs::read_to_string(&path).map_err(|e| {
+                    DbError::PoolError(format!("failed to read migration {version}: {e}"))
+                })?;
+                tx.execute_batch(&sql).map_err(|e| {
+                    DbError::PoolError(format!("failed to execute migration {version}: {e}"))
+                })?;
+                tx.execute(
+                    "INSERT INTO _brom_migration (version, applied_at) VALUES (?, datetime('now'))",
+                    [&version],
+                )
+                .map_err(|e| DbError::PoolError(e.to_string()))?;
+                applied.push(version);
+            }
+        }
+
+        tx.commit().map_err(|e| DbError::PoolError(e.to_string()))?;
+        Ok(applied)
     }
 }

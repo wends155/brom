@@ -77,7 +77,9 @@ impl Default for Pagination {
 
 /// Generic CRUD interface for entity persistence.
 #[cfg_attr(feature = "testing", mockall::automock)]
-pub trait Repository<T: EntitySchema>: Send + Sync {
+pub trait Repository<T: EntitySchema + Serialize + serde::de::DeserializeOwned>:
+    Send + Sync
+{
     /// Creates a new entity in the repository.
     ///
     /// # Errors

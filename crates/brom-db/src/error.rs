@@ -14,6 +14,9 @@ pub enum DbError {
 
     #[error("pool error: {0}")]
     PoolError(String),
+
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
 }
 
 impl From<rusqlite::Error> for DbError {

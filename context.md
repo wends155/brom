@@ -31,3 +31,6 @@
 > * **Feature:** Environment Normalization (Line-Endings)
 > * **Changes:** Established repository-wide LF normalization by adding `.gitattributes` and configuring `.editorconfig`. This ensures byte-level consistency for AI agent file operations on Windows hosts.
 > * **New Constraints:** Any new text-based file types MUST be added to `.gitattributes` if Git's `auto` detection is insufficient.
+* **Feature:** Phase 2 (Persistence & Migrations)
+* **Changes:** Transitioned from database stubs to fully-functional generic JSON-to-SQLite mappings using `serde_json`. Implemented `MigrationRunner::run_pending` to provision schemas synchronously. Removed all Phase 2 STUBs across `brom-db`.
+* **New Constraints:** Generics utilizing the `Repository` trait must satisfy `Serialize + DeserializeOwned` bounds constraints.
