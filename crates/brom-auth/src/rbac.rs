@@ -3,13 +3,13 @@ use crate::error::AuthError;
 use crate::session::SessionStore;
 use brom_core::AuthPolicy;
 
-/// Evaluates if a given token or session meets the requirements of an AuthPolicy.
+/// Evaluates if a given token or session meets the requirements of an `AuthPolicy`.
 ///
 /// # Errors
 /// - `AuthError::InvalidCredentials` if no token is provided for protected routes.
 /// - `AuthError::InvalidSession` if session validation fails.
 /// - `AuthError::InvalidApiKey` if api key validation fails.
-/// - `AuthError::InsufficientPermissions` if the policy requirements (e.g. read_write) are not met.
+/// - `AuthError::InsufficientPermissions` if the policy requirements (e.g. `read_write`) are not met.
 pub fn evaluate_policy(
     policy: &AuthPolicy,
     token: Option<&str>,
@@ -36,7 +36,6 @@ pub fn evaluate_policy(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api_key::ApiKeyRecord;
     use crate::api_key::MockApiKeyStore;
     use crate::session::MockSessionStore;
     use crate::session::Session;

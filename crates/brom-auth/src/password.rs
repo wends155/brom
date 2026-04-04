@@ -34,6 +34,7 @@ pub fn verify_password(password: &str, hash: &str) -> Result<(), AuthError> {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
