@@ -53,3 +53,8 @@
 > * **Feature:** Phase 3 Infrastructure (Configuration & Observability)
 > * **Changes:** Hardened the workspace by centralizing environment variable loading via `dotenvy`, establishing `.env.example`, mapping root logs to `logs/brom.log` via `tracing-appender`, and adding detailed `TraceLayer` HTTP instrumentation across the Axum router.
 > * **New Constraints:** All configuration must be loaded through `dotenvy` via `AppConfig`. CLI and server environments must maintain dual-sink logs (stdout + file). Do not use `std::env::var` for configuration independent of `AppConfig`.
+> * **Feature:** Phase 3A (Auth Core)
+> * **Changes:** Replaced authentication stubs with production-ready logic. Implemented Argon2id password hashing, defined `SessionStore` and `ApiKeyStore` traits, and provided concrete SQLite implementations in `brom-db`. Built a robust RBAC `evaluate_policy` engine with full unit test coverage (~45 new tests).
+> * **New Constraints:** Passwords MUST be hashed using `Argon2id` (v0.5). API keys MUST be stored as SHA-256 hashes with an 8-character prefix for identification.
+> * **Pruned:** All `AuthCore` and persistence stubs in `brom-auth` and `brom-db` are now fully implemented.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test) passed cleanly after isolating `allow(clippy::unwrap_used)` strictly to `#[cfg(test)]` modules.

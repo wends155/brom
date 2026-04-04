@@ -15,6 +15,9 @@ pub enum AuthError {
     #[error("insufficient permissions: {0}")]
     InsufficientPermissions(String),
 
+    #[error("password hash error: {0}")]
+    HashError(String),
+
     #[error("internal auth error: {0}")]
     InternalError(String),
 }

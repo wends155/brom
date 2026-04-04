@@ -11,7 +11,11 @@ workspace = true
 brom-core.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
+serde = { workspace = true, features = ["derive"] }
+argon2 = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
 mockall = { workspace = true, optional = true }
 
 [features]
-testing = ["mockall"]
+testing = ["mockall", "argon2", "rand", "sha2"]

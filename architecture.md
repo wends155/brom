@@ -251,15 +251,16 @@ brom/
 | `brom`       | All crates (re-export only)             | —                                  |
 | `brom-core`  | std, serde                              | Any `brom-*` crate                 |
 | `brom-macros`| `brom-core` (types only), syn, quote    | `brom-db`, `brom-auth`, `brom-server` |
-| `brom-db`    | `brom-core`, rusqlite, r2d2             | `brom-auth`, `brom-server`, `brom-macros` |
+| `brom-db`    | `brom-core`, `brom-auth` (traits), rusqlite, r2d2 | `brom-server`, `brom-macros` |
 | `brom-auth`  | `brom-core` (traits), argon2, rand      | `brom-db` (concrete), `brom-server` |
 | `brom-server`| `brom-core`, `brom-db`, `brom-auth`, axum, utoipa | `brom-macros`, `brom-cli` |
 | `brom-cli`   | `brom-core`, `brom-db`, clap            | `brom-auth`, `brom-server`         |
 | `admin`      | leptos, reqwest/fetch                   | Any `brom-*` Rust crate            |
 
-> **Rule**: `brom-auth` depends on `brom-core` trait definitions (`SessionStore`,
-> `ApiKeyStore`) but never on `brom-db` concrete types. The concrete
-> implementations are injected at the `brom-server` composition root.
+> **Rule**: `brom-db` implements persistence traits defined in `brom-auth`
+> (`SessionStore`, `ApiKeyStore`) and `brom-core` (`Repository<T>`). `brom-auth`
+> itself never depends on `brom-db` — concrete implementations are injected at
+> the `brom-server` composition root.
 
 ## 7. Toolchain
 
@@ -477,8 +478,9 @@ erDiagram
     }
 
     _brom_session {
-        text id PK
+        integer id PK
         integer user_id FK
+        text token UK
         text expires_at
         text created_at
     }
@@ -535,8 +537,9 @@ user-defined entities.
 
 | Column       | Type    | Constraints                            | Notes          |
 | ------------ | ------- | -------------------------------------- | -------------- |
-| `id`         | TEXT    | PK                                     | Session token  |
+| `id`         | INTEGER | PK AUTOINCREMENT                       | —              |
 | `user_id`    | INTEGER | NOT NULL, FK → `_brom_user(id)` ON DELETE CASCADE | — |
+| `token`      | TEXT    | NOT NULL, UNIQUE                       | Session token  |
 | `expires_at` | TEXT    | NOT NULL                               | ISO 8601       |
 | `created_at` | TEXT    | NOT NULL                               | ISO 8601       |
 

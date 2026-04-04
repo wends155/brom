@@ -44,7 +44,7 @@ impl<'a> MigrationRunner<'a> {
                 name TEXT NOT NULL,
                 user_id INTEGER NOT NULL REFERENCES _brom_user(id) ON DELETE CASCADE,
                 key_hash TEXT NOT NULL UNIQUE,
-                preview_hint TEXT NOT NULL,
+                key_prefix TEXT NOT NULL,
                 permissions TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 last_used_at TEXT
