@@ -42,3 +42,7 @@
 > * **Changes:** Encapsulated PowerShell version checking and multi-tool environment scans into safe `.justfile` recipes (`pwsh-version`, `verify-toolchain`). Updated `.agent/workflows/toolcheck.md` to trigger these recipes, eliminating direct use of restricted characters (`$`) and shell chaining operators (`;`) in `run_command` calls.
 > * **New Constraints:** Any automated environment checks requiring PowerShell internal variables or command pipelines MUST be mediated through `just` to avoid IDE auto-run interception.
 > * **Pruned:** Direct `$PSVersionTable` lookups and shell-level command chaining in toolcheck execution are deprecated in favor of `just` recipes.
+> * **Feature:** Workflow Discovery Remediation
+> * **Changes:** Replaced references to the non-existent `find_by_name` tool with the native `list_dir` tool in `.agent/workflows/toolcheck.md` and `.agent/workflows/architecture.md`.
+> * **New Constraints:** All environment discovery and file listing tasks MUST use native agent tools (`list_dir`, `grep_search`) rather than shell traversal commands or invalid internal tool names.
+> * **Pruned:** The stale `find_by_name` instructions are removed, eliminating the primary cause of shell-level command fallbacks in session readiness workflows.
