@@ -57,4 +57,4 @@
 > * **Changes:** Replaced authentication stubs with production-ready logic. Implemented Argon2id password hashing, defined `SessionStore` and `ApiKeyStore` traits, and provided concrete SQLite implementations in `brom-db`. Built a robust RBAC `evaluate_policy` engine with full unit test coverage (~45 new tests).
 > * **New Constraints:** Passwords MUST be hashed using `Argon2id` (v0.5). API keys MUST be stored as SHA-256 hashes with an 8-character prefix for identification.
 > * **Pruned:** All `AuthCore` and persistence stubs in `brom-auth` and `brom-db` are now fully implemented.
-> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test) passed cleanly after isolating `allow(clippy::unwrap_used)` strictly to `#[cfg(test)]` modules.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test), `scan-secrets`, `scan-stubs`, and `sg scan` all passed cleanly after isolating `allow(clippy::unwrap_used)` strictly to `#[cfg(test)]` modules. Fidelity to Plan: 100%.
