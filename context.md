@@ -31,9 +31,9 @@
 > * **Feature:** Environment Normalization (Line-Endings)
 > * **Changes:** Established repository-wide LF normalization by adding `.gitattributes` and configuring `.editorconfig`. This ensures byte-level consistency for AI agent file operations on Windows hosts.
 > * **New Constraints:** Any new text-based file types MUST be added to `.gitattributes` if Git's `auto` detection is insufficient.
-* **Feature:** Phase 2 (Persistence & Migrations)
-* **Changes:** Transitioned from database stubs to fully-functional generic JSON-to-SQLite mappings using `serde_json`. Implemented `MigrationRunner::run_pending` to provision schemas synchronously. Removed all Phase 2 STUBs across `brom-db`.
-* **New Constraints:** Generics utilizing the `Repository` trait must satisfy `Serialize + DeserializeOwned` bounds constraints.
+> * **Feature:** Phase 2 (Persistence & Migrations)
+> * **Changes:** Transitioned from database stubs to fully-functional generic JSON-to-SQLite mappings using `serde_json`. Implemented `MigrationRunner::run_pending` to provision schemas synchronously. Removed all Phase 2 STUBs across `brom-db`.
+> * **New Constraints:** Generics utilizing the `Repository` trait must satisfy `Serialize + DeserializeOwned` bounds constraints.
 > * **Feature:** Phase 2 Verification Remediation
 > * **Changes:** Fixed `clippy::uninlined_format_args` in `brom-cli/src/main.rs`. Centralized environment variable loading into a new `config` module in `brom-cli` to resolve `scattered-env-var` AST-grep warnings.
 > * **New Constraints:** Any new environment variable lookups in CLI commands MUST be added to `AppConfig` in `config.rs`.
@@ -46,3 +46,7 @@
 > * **Changes:** Replaced references to the non-existent `find_by_name` tool with the native `list_dir` tool in `.agent/workflows/toolcheck.md` and `.agent/workflows/architecture.md`.
 > * **New Constraints:** All environment discovery and file listing tasks MUST use native agent tools (`list_dir`, `grep_search`) rather than shell traversal commands or invalid internal tool names.
 > * **Pruned:** The stale `find_by_name` instructions are removed, eliminating the primary cause of shell-level command fallbacks in session readiness workflows.
+> * **Feature:** Audit Template Clarification
+> * **Changes:** Updated `.agent/rules/audit-rules.md` to rename the "Findings" section to "Violations & Deviations". Added explicit fallback instruction: "No violations found". Moved positive confirmations and passing items to the "Compliant Items" block.
+> * **New Constraints:** Audit reports MUST NOT populate the "Violations & Deviations" table with positive observations. Positive confirmations belong strictly in the bulleted "Compliant Items" list.
+> * **Pruned:** The ambiguous "Findings" header and its associated confusion regarding positive confirmations in audit reports.

@@ -23,13 +23,15 @@
 | Linter | ✅ / ❌ |
 | Tests | ✅ / ❌ |
 
-### Findings
+### Violations & Deviations
+*(If there are no violations, output a single row stating "No violations found".)*
 
 | # | Finding | Category | Severity | File | Rule |
 |---|---------|----------|----------|------|------|
 | 1 | [description] | [category] | critical/high/med/low | [file:line] | [doc § section] |
 
 ### Compliant Items
+- *(Positive confirmations and items that successfully passed the audit belong here, NOT in the table above.)*
 - [List items that passed audit — document what's working well]
 ```
 <!-- TEMPLATE_END -->
