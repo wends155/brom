@@ -60,6 +60,12 @@
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test), `scan-secrets`, `scan-stubs`, and `sg scan` all passed cleanly after isolating `allow(clippy::unwrap_used)` strictly to `#[cfg(test)]` modules. Fidelity to Plan: 100%.
 
 > 📝 **Context Update:**
+> * **Feature:** Narsil Workspace Attachment
+> * **Changes:** Added the `brom` repository path to the Narsil MCP configuration in `mcp_config.json`. 
+> * **New Constraints:** The Narsil MCP server must be restarted to finalize indexing of the project.
+> * **Pruned:** (None)
+
+> 📝 **Context Update:**
 > * **Feature:** Toolcheck Workflow Cleanup
 > * **Changes:** Removed redundant shell and Rust version checks from `.agent/workflows/toolcheck.md`. All version reporting is now consolidated into the encapsulation-safe `just verify-toolchain` recipe.
 > * **New Constraints:** (None)
