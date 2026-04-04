@@ -129,6 +129,41 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::unwrap_used)]
+    fn field_type_link_serde_roundtrip() {
+        let ft = FieldType::Link { target: "category".into() };
+        let json = serde_json::to_string(&ft).unwrap();
+        let parsed: FieldType = serde_json::from_str(&json).unwrap();
+        assert_eq!(ft, parsed);
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    fn field_type_many_to_many_serde_roundtrip() {
+        let ft = FieldType::ManyToMany {
+            target: "tag".into(),
+            junction_table: "post_tag".into(),
+        };
+        let json = serde_json::to_string(&ft).unwrap();
+        let parsed: FieldType = serde_json::from_str(&json).unwrap();
+        assert_eq!(ft, parsed);
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    fn constraint_serde_roundtrip() {
+        let c = Constraint::NotNull;
+        let json = serde_json::to_string(&c).unwrap();
+        let parsed: Constraint = serde_json::from_str(&json).unwrap();
+        assert_eq!(c, parsed);
+    }
+
+    #[test]
+    fn auth_policy_defaults_to_public() {
+        assert_eq!(AuthPolicy::default(), AuthPolicy::Public);
+    }
+
+    #[test]
     fn pagination_defaults() {
         let p = Pagination::default();
         assert_eq!(p.page, 1);

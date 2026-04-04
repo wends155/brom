@@ -21,11 +21,37 @@ pub trait ApiKeyStore: Send + Sync {
 ///
 /// # Errors
 /// Returns `AuthError` if the policy requirement is not met by the token/session.
-#[tracing::instrument(skip_all)]
+#[tracing::instrument(skip(_token_or_session), fields(policy = ?_policy))]
 pub fn evaluate_policy(
     _policy: &AuthPolicy,
     _token_or_session: Option<&str>,
 ) -> Result<(), AuthError> {
     // STUB(Phase 3): Implement evaluation logic
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use brom_core::AuthPolicy;
+
+    #[test]
+    fn evaluate_policy_public_succeeds() {
+        let result = evaluate_policy(&AuthPolicy::Public, None);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn evaluate_policy_api_key_succeeds_stub() {
+        // Stub currently returns Ok for all policies
+        let result = evaluate_policy(&AuthPolicy::ApiKey, Some("test-token"));
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn evaluate_policy_admin_only_succeeds_stub() {
+        // Stub currently returns Ok for all policies
+        let result = evaluate_policy(&AuthPolicy::AdminOnly, None);
+        assert!(result.is_ok());
+    }
 }

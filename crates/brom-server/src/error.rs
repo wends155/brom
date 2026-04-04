@@ -48,3 +48,80 @@ impl IntoResponse for ServerError {
         (status, body).into_response()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::http::StatusCode;
+    use axum::response::IntoResponse;
+
+    fn status_of(err: ServerError) -> StatusCode {
+        err.into_response().status()
+    }
+
+    #[test]
+    fn invalid_credentials_returns_401() {
+        assert_eq!(
+            status_of(ServerError::Auth(brom_auth::AuthError::InvalidCredentials)),
+            StatusCode::UNAUTHORIZED,
+        );
+    }
+
+    #[test]
+    fn invalid_session_returns_401() {
+        assert_eq!(
+            status_of(ServerError::Auth(brom_auth::AuthError::InvalidSession)),
+            StatusCode::UNAUTHORIZED,
+        );
+    }
+
+    #[test]
+    fn invalid_api_key_returns_401() {
+        assert_eq!(
+            status_of(ServerError::Auth(brom_auth::AuthError::InvalidApiKey)),
+            StatusCode::UNAUTHORIZED,
+        );
+    }
+
+    #[test]
+    fn insufficient_permissions_returns_403() {
+        assert_eq!(
+            status_of(ServerError::Auth(
+                brom_auth::AuthError::InsufficientPermissions("write".into()),
+            )),
+            StatusCode::FORBIDDEN,
+        );
+    }
+
+    #[test]
+    fn not_found_returns_404() {
+        assert_eq!(
+            status_of(ServerError::Core(brom_core::Error::NotFound {
+                entity: "post",
+                id: 42,
+            })),
+            StatusCode::NOT_FOUND,
+        );
+    }
+
+    #[test]
+    fn validation_error_returns_400() {
+        assert_eq!(
+            status_of(ServerError::Core(brom_core::Error::ValidationError {
+                field: "title".into(),
+                message: "required".into(),
+            })),
+            StatusCode::BAD_REQUEST,
+        );
+    }
+
+    #[test]
+    fn generic_core_error_returns_500() {
+        assert_eq!(
+            status_of(ServerError::Core(brom_core::Error::SchemaError(
+                "unknown".into(),
+            ))),
+            StatusCode::INTERNAL_SERVER_ERROR,
+        );
+    }
+}

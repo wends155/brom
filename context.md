@@ -21,3 +21,7 @@
 > * **Changes:** Migrated AI agent IDE execution constraints (`|`, `&&`, `;`) from hardcoded regex queries across `.agent/workflows/.md` templates to a decentralized `.justfile` task runner. Added `git-diff-last` recipe to bypass `~` character constraints in `run_command` auto-run.
 > * **New Constraints:** Any future automation commands relying on regex, complex chaining, or IDE-restricted characters (like `~`) MUST be properly encapsulated within a `.justfile` recipe.
 > * **Pruned:** Manual `git diff HEAD~1..HEAD` calls in `audit.md` are removed. Rely on `just git-diff-last` for Reflect phase safety.
+> * **Feature:** Infrastructure Remediation (Observability & Testing)
+> * **Changes:** Fixed `brom_auth::evaluate_policy` instrumentation to capture `AuthPolicy` context while masking sensitive tokens. Added 15 baseline unit/integration tests across `brom-core`, `brom-auth`, `brom-db`, and `brom-server`. Implemented `IntoResponse` status code mapping tests for `ServerError`.
+> * **New Constraints:** Any new feature implementation MUST include matching `#[cfg(test)]` modules following the established Red-Green-Blue cycle.
+> * **Pruned:** The deferred file-based log sink and `TraceLayer` customization items are now tracked in `todos.md` for Phase 2/4 execution.
