@@ -11,6 +11,7 @@ impl AppConfig {
     ///
     /// Defaults `DATABASE_URL` to "brom.db" if not specified.
     pub fn load() -> Self {
+        dotenvy::dotenv().ok();
         let db_path = std::env::var("DATABASE_URL").unwrap_or_else(|_| "brom.db".to_string());
         Self { db_path }
     }

@@ -20,23 +20,40 @@ enum Commands {
     New { name: String },
 }
 
-fn init_tracing() {
+fn init_tracing() -> tracing_appender::non_blocking::WorkerGuard {
     use tracing_subscriber::EnvFilter;
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            EnvFilter::try_from_env("BROM_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
-        )
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::util::SubscriberInitExt;
+
+    let file_appender = tracing_appender::rolling::daily("logs", "brom.log");
+    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
+
+    let env_filter = EnvFilter::try_from_env("BROM_LOG").unwrap_or_else(|_| EnvFilter::new("info"));
+
+    let file_layer = tracing_subscriber::fmt::layer()
+        .with_writer(non_blocking)
+        .with_ansi(false);
+
+    let stdout_layer = tracing_subscriber::fmt::layer().with_ansi(true);
+
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(stdout_layer)
+        .with(file_layer)
         .init();
+
+    guard
 }
 
 fn main() {
-    init_tracing();
+    let _guard = init_tracing();
     let cli = Cli::parse();
 
     match cli.command {
         Commands::Migrate => {
             let config = config::AppConfig::load();
             let db_path = &config.db_path;
+            tracing::info!(%db_path, "Executing database migrations");
 
             let pool = match brom_db::DbPool::new(db_path) {
                 Ok(p) => p,

@@ -4,3 +4,4 @@
 .env.*.local
 *.db
 admin/dist/
+/logs

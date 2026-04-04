@@ -50,3 +50,6 @@
 > * **Changes:** Updated `.agent/rules/audit-rules.md` to rename the "Findings" section to "Violations & Deviations". Added explicit fallback instruction: "No violations found". Moved positive confirmations and passing items to the "Compliant Items" block.
 > * **New Constraints:** Audit reports MUST NOT populate the "Violations & Deviations" table with positive observations. Positive confirmations belong strictly in the bulleted "Compliant Items" list.
 > * **Pruned:** The ambiguous "Findings" header and its associated confusion regarding positive confirmations in audit reports.
+> * **Feature:** Phase 3 Infrastructure (Configuration & Observability)
+> * **Changes:** Hardened the workspace by centralizing environment variable loading via `dotenvy`, establishing `.env.example`, mapping root logs to `logs/brom.log` via `tracing-appender`, and adding detailed `TraceLayer` HTTP instrumentation across the Axum router.
+> * **New Constraints:** All configuration must be loaded through `dotenvy` via `AppConfig`. CLI and server environments must maintain dual-sink logs (stdout + file). Do not use `std::env::var` for configuration independent of `AppConfig`.

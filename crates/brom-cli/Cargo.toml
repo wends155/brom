@@ -13,3 +13,5 @@ brom-core.workspace = true
 brom-db.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+dotenvy.workspace = true
+tracing-appender.workspace = true
