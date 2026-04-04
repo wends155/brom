@@ -68,3 +68,9 @@
 > * **Changes:** Fixed `clippy::doc_markdown` violations in `rbac.rs`. Applied `clippy::expect_used` suppressions to `password.rs` tests. Cleaned up redundant wildcard exports in `brom_db`.
 > * **New Constraints:** (None - adhered to existing standards)
 > * **Pruned:** Zero-exit verification gate is formally restored.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Roadmap Alignment (Phase 3 Split)
+> * **Changes:** Formally split Phase 3 into Phase 3A (Auth Core - Done) and Phase 3B (REST API & Codegen - Next) in `roadmap.md` tables and dependency graph.
+> * **New Constraints:** (None)
+> * **Pruned:** Monolithic Phase 3 ambiguity removed from phasing plans.

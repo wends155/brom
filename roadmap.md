@@ -45,7 +45,8 @@ gantt
     Phase 2B - CRUD & Migrations   :p2b, after p2a, 3d
 
     section Web Layer
-    Phase 3 - Auth & REST API      :p3, after p2b, 5d
+    Phase 3A - Auth Core           :done, p3a, after p2b, 2d
+    Phase 3B - REST API & Codegen  :p3b, after p3a, 3d
 
     section Tooling
     Phase 4 - Schema Diffing       :p4, after p3, 3d
@@ -59,7 +60,8 @@ gantt
 | 1 | Foundation | Workspace, traits, pooling | M | ✅ Done | all (scaffold) |
 | 2A | Derive Macro | Compile-time codegen | M | 🔜 Next | `brom-core`, `brom-macros` |
 | 2B | CRUD & Migrations | Runtime persistence | M | ⏳ Blocked by 2A | `brom-db`, `brom-cli` |
-| 3 | Auth & REST API | Secure HTTP layer | L | ⏳ Blocked by 2B | `brom-auth`, `brom-server`, `brom-macros` |
+| 3A | Auth Core | Password, Sessions, RBAC | M | ✅ Done | `brom-auth`, `brom-db` |
+| 3B | REST API & Codegen | Secure HTTP layer | M | 🔜 Next | `brom-auth`, `brom-server`, `brom-macros` |
 | 4 | Schema Diffing | `brom diff` engine | M | ⏳ Blocked by 3 | `brom-cli`, `brom-db` |
 | 5 | Admin SPA | Leptos embedded UI | L | ⏳ Blocked by 3 | `admin`, `brom-server` |
 
@@ -72,20 +74,23 @@ graph LR
     P1["Phase 1<br/>Foundation<br/>✅ Done"]
     P2A["Phase 2A<br/>Derive Macro"]
     P2B["Phase 2B<br/>CRUD & Migrations"]
-    P3["Phase 3<br/>Auth & REST API"]
+    P3A["Phase 3A<br/>Auth Core<br/>✅ Done"]
+    P3B["Phase 3B<br/>REST API & Codegen"]
     P4["Phase 4<br/>Schema Diffing"]
     P5["Phase 5<br/>Admin SPA"]
 
     P1 --> P2A
     P2A --> P2B
-    P2B --> P3
-    P3 --> P4
-    P3 --> P5
+    P2B --> P3A
+    P3A --> P3B
+    P3B --> P4
+    P3B --> P5
 
     style P1 fill:#2d6a4f,color:#fff
     style P2A fill:#e9c46a,color:#000
     style P2B fill:#264653,color:#fff
-    style P3 fill:#264653,color:#fff
+    style P3A fill:#2d6a4f,color:#fff
+    style P3B fill:#264653,color:#fff
     style P4 fill:#264653,color:#fff
     style P5 fill:#264653,color:#fff
 ```
@@ -159,8 +164,8 @@ metadata, constraints, UI hints, and auth policy — all at compile time.
 
 | Stub | Location | Scheduled |
 |------|----------|-----------|
-| `routes.rs` (Axum handler generation) | `brom-macros/src/routes.rs` | Phase 3 |
-| `openapi.rs` (utoipa annotation generation) | `brom-macros/src/openapi.rs` | Phase 3 |
+| `routes.rs` (Axum handler generation) | `brom-macros/src/routes.rs` | Phase 3B |
+| `openapi.rs` (utoipa annotation generation) | `brom-macros/src/openapi.rs` | Phase 3B |
 
 ### New Files
 
@@ -311,35 +316,23 @@ adds them automatically during SQL generation.
 
 ---
 
-## Phase 3: Auth & REST API
+## Phase 3A: Auth Core ✅
 
-> **Status:** Blocked by 2B · **Depends on:** Phase 2B
-> **Crates:** `brom-auth` (primary), `brom-server` (primary), `brom-macros` (extension)
+> **Status:** Complete · **Depends on:** Phase 2B
+> **Crates:** `brom-auth` (primary), `brom-db` (extension)
 
 ### Objective
 
-Implement the authentication and authorization layer, then extend the derive
-macro to generate secure Axum CRUD route handlers. After this phase, a
-developer can run a fully functional, authenticated REST API from a single
-binary.
+Implement the core authentication and authorization logic, including password hashing, session lifecycle, API key management, and RBAC evaluations.
 
 ### Scope
 
 | In Scope | Out of Scope |
 |----------|-------------|
-| `brom-auth`: Argon2 password hashing + verification | OAuth / OIDC integration |
-| `brom-auth`: Session lifecycle (create, validate, expire) | Multi-tenancy |
+| `brom-auth`: Argon2 password hashing + verification | REST API endpoints |
+| `brom-auth`: Session lifecycle (create, validate, expire) | OAuth / OIDC integration |
 | `brom-auth`: API key generation, validation, revocation | GraphQL API |
-| `brom-auth`: Axum extractors (`RequireAdmin`, `RequireApiKey`) | Admin SPA UI |
-| `brom-auth`: RBAC permission evaluation | — |
-| `brom-server`: Router assembly (admin auth + API routes) | — |
-| `brom-server`: `GET /admin/api/schema` endpoint | — |
-| `brom-server`: Middleware (CORS, security headers, logging) | — |
-| `brom-server`: OpenAPI / Swagger UI mount | — |
-| `brom-macros`: Route generation (`routes.rs`) | — |
-| `brom-macros`: OpenAPI annotation generation (`openapi.rs`) | — |
-| `Link<T>` / `ManyToMany<T>` macro support | — |
-| `Option<T>` nullable field support | — |
+| `brom-auth`: RBAC permission evaluation | Admin SPA UI |
 | `brom-db`: `SqliteSessionStore` + `SqliteApiKeyStore` | — |
 
 ### Stubs Consumed
@@ -350,17 +343,41 @@ binary.
 | `ApiKeyStore` trait (empty) | `brom-auth/src/lib.rs` | Define full interface + SQLite impl |
 | `evaluate_policy()` (no-op) | `brom-auth/src/lib.rs` | Implement real RBAC logic |
 
+### Exit Criteria
+
+- Unit test and integration test coverage for Auth Core workflows pass.
+- Full verification pipeline exit 0.
+
+---
+
+## Phase 3B: REST API & Codegen
+
+> **Status:** Next · **Depends on:** Phase 3A
+> **Crates:** `brom-server` (primary), `brom-macros` (extension), `brom-auth` (supporting)
+
+### Objective
+
+Extend the derive macro to generate secure Axum CRUD route handlers and wire up the HTTP layer framework. After this phase, a developer can run a fully functional, authenticated REST API from a single binary.
+
+### Scope
+
+| In Scope | Out of Scope |
+|----------|-------------|
+| `brom-auth`: Axum extractors (`RequireAdmin`, `RequireApiKey`) | Admin SPA UI |
+| `brom-server`: Router assembly (admin auth + API routes) | Multi-tenancy |
+| `brom-server`: `GET /admin/api/schema` endpoint | GraphQL API |
+| `brom-server`: Middleware (CORS, security headers, logging) | — |
+| `brom-server`: OpenAPI / Swagger UI mount | — |
+| `brom-macros`: Route generation (`routes.rs`) | — |
+| `brom-macros`: OpenAPI annotation generation (`openapi.rs`) | — |
+| `Link<T>` / `ManyToMany<T>` macro support | — |
+| `Option<T>` nullable field support | — |
+
 ### New Files (Expected)
 
 | File | Purpose |
 |------|---------|
-| `brom-auth/src/password.rs` | Argon2 hashing and verification |
-| `brom-auth/src/session.rs` | Session lifecycle management |
-| `brom-auth/src/api_key.rs` | API key generation and validation |
 | `brom-auth/src/extractor.rs` | `RequireAdmin`, `RequireApiKey` Axum extractors |
-| `brom-auth/src/rbac.rs` | Role-based access control logic |
-| `brom-db/src/session.rs` | `SqliteSessionStore` implementation |
-| `brom-db/src/api_key.rs` | `SqliteApiKeyStore` implementation |
 | `brom-server/src/router.rs` | Route assembly |
 | `brom-server/src/middleware.rs` | CORS, security headers, request logging |
 | `brom-server/src/schema_api.rs` | `GET /admin/api/schema` |
@@ -372,8 +389,6 @@ binary.
 
 | Crate | Purpose | Added To |
 |-------|---------|----------|
-| `argon2` | Password hashing | `brom-auth` |
-| `rand` | API key generation | `brom-auth` |
 | `utoipa` | OpenAPI spec generation | `brom-server`, `brom-macros` |
 | `utoipa-swagger-ui` | Embedded Swagger UI | `brom-server` |
 | `rust-embed` | Static asset embedding | `brom-server` |
@@ -531,19 +546,19 @@ Quick reference: "Where does feature X live?"
 | `SqliteRepository<T>` CRUD | 2B | `brom-db` |
 | `MigrationRunner::run_pending()` | 2B | `brom-db` |
 | CLI `migrate` command | 2B | `brom-cli` |
-| Argon2 password hashing | 3 | `brom-auth` |
-| Session management | 3 | `brom-auth`, `brom-db` |
-| API key management | 3 | `brom-auth`, `brom-db` |
-| Axum extractors (`RequireAdmin`, `RequireApiKey`) | 3 | `brom-auth` |
-| `#[derive(BromEntity)]` → Axum route generation | 3 | `brom-macros` |
-| `#[derive(BromEntity)]` → OpenAPI annotations | 3 | `brom-macros` |
-| `Link<T>` macro awareness + FK queries | 3 | `brom-macros`, `brom-db` |
-| `ManyToMany<T>` macro awareness + junction tables | 3 | `brom-macros`, `brom-db` |
-| `Option<T>` nullable field support | 3 | `brom-macros`, `brom-db` |
-| REST API router assembly | 3 | `brom-server` |
-| Middleware (CORS, security headers) | 3 | `brom-server` |
-| `GET /admin/api/schema` | 3 | `brom-server` |
-| Swagger UI | 3 | `brom-server` |
+| Argon2 password hashing | 3A | `brom-auth` |
+| Session management | 3A | `brom-auth`, `brom-db` |
+| API key management | 3A | `brom-auth`, `brom-db` |
+| Axum extractors (`RequireAdmin`, `RequireApiKey`) | 3B | `brom-auth` |
+| `#[derive(BromEntity)]` → Axum route generation | 3B | `brom-macros` |
+| `#[derive(BromEntity)]` → OpenAPI annotations | 3B | `brom-macros` |
+| `Link<T>` macro awareness + FK queries | 3B | `brom-macros`, `brom-db` |
+| `ManyToMany<T>` macro awareness + junction tables | 3B | `brom-macros`, `brom-db` |
+| `Option<T>` nullable field support | 3B | `brom-macros`, `brom-db` |
+| REST API router assembly | 3B | `brom-server` |
+| Middleware (CORS, security headers) | 3B | `brom-server` |
+| `GET /admin/api/schema` | 3B | `brom-server` |
+| Swagger UI | 3B | `brom-server` |
 | `brom diff` (schema comparison) | 4 | `brom-cli`, `brom-db` |
 | SQLite introspection (`PRAGMA`) | 4 | `brom-db` |
 | Migration rollback (`-- DOWN`) | 4 | `brom-db` |
@@ -566,11 +581,11 @@ Tracks every `STUB(Phase N)` marker from creation to resolution.
 | `MigrationRunner::run_pending()` | Phase 1 | `brom-db/src/migration.rs` | Phase 2B | File-based migration |
 | CLI `migrate` | Phase 1 | `brom-cli/src/main.rs` | Phase 2B | Wire to `MigrationRunner` |
 | CLI `new` | Phase 1 | `brom-cli/src/main.rs` | Phase 3+ | Project scaffolding |
-| `SessionStore` trait | Phase 1 | `brom-auth/src/lib.rs` | Phase 3 | Full interface + SQLite impl |
-| `ApiKeyStore` trait | Phase 1 | `brom-auth/src/lib.rs` | Phase 3 | Full interface + SQLite impl |
-| `evaluate_policy()` | Phase 1 | `brom-auth/src/lib.rs` | Phase 3 | Real RBAC evaluation |
-| `routes.rs` (handler gen) | Phase 2A | `brom-macros/src/routes.rs` | Phase 3 | Axum handler generation |
-| `openapi.rs` (annotation gen) | Phase 2A | `brom-macros/src/openapi.rs` | Phase 3 | utoipa annotation generation |
+| `SessionStore` trait | Phase 1 | `brom-auth/src/lib.rs` | Phase 3A | Full interface + SQLite impl |
+| `ApiKeyStore` trait | Phase 1 | `brom-auth/src/lib.rs` | Phase 3A | Full interface + SQLite impl |
+| `evaluate_policy()` | Phase 1 | `brom-auth/src/lib.rs` | Phase 3A | Real RBAC evaluation |
+| `routes.rs` (handler gen) | Phase 2A | `brom-macros/src/routes.rs` | Phase 3B | Axum handler generation |
+| `openapi.rs` (annotation gen) | Phase 2A | `brom-macros/src/openapi.rs` | Phase 3B | utoipa annotation generation |
 | CLI `diff` | Phase 2B | `brom-cli/src/main.rs` | Phase 4 | Schema comparison engine |
 | Migration rollback | Phase 2B | `brom-db/src/migration.rs` | Phase 4 | `-- DOWN` section parsing |
 
@@ -582,8 +597,8 @@ Accumulated technical debt tracked across all phases.
 
 | Item | Class | Introduced | Target Phase | Notes |
 |------|-------|-----------|-------------|-------|
-| No `.env` loading | Scheduled | Phase 1 | Phase 3 | Add `dotenvy` when brom-server needs config |
-| CLI hardcodes `"brom.db"` path | Opportunistic | Phase 2B | Phase 3 | Should come from config/env |
+| No `.env` loading | Scheduled | Phase 1 | Phase 3B | Add `dotenvy` when brom-server needs config |
+| CLI hardcodes `"brom.db"` path | Opportunistic | Phase 2B | Phase 3B | Should come from config/env |
 | No benchmarks | Scheduled | Phase 1 | Phase 5 | Add Criterion benchmarks for DB operations |
 | No migration rollback | Scheduled | Phase 2B | Phase 4 | `-- DOWN` section parsing |
 | Admin SPA size optimization | Scheduled | Phase 5 | Post-v1 | `wasm-opt`, code-splitting |
