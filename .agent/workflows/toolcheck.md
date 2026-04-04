@@ -57,7 +57,7 @@ If the output matches `manager`, `wincred`, or `osxkeychain`, set these env vars
 - `rustup show`
 
 **Workflow & Script Files:**
-Use `find_by_name` to verify all expected `.md` files exist in `.agent/workflows/` and all expected `.ps1` files exist in `.agent/scripts/`.
+Use the native `list_dir` tool to list the contents of `.agent/workflows/` and `.agent/scripts/` to verify all expected `.md` and `.ps1` files exist.
 
 **Project Detection:**
 Use `view_file` on `Cargo.toml`, `package.json`, or `go.mod` (whichever exists in repo root).
