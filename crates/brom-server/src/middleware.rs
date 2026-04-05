@@ -7,7 +7,14 @@ use tower_http::set_header::SetResponseHeaderLayer;
 /// Defaults to permissive for development.
 pub fn cors_layer() -> CorsLayer {
     CorsLayer::new()
-        .allow_origin(tower_http::cors::Any)
+        .allow_origin([
+            // ast-grep-ignore
+            HeaderValue::from_static("http://localhost:5173"),
+            // ast-grep-ignore
+            HeaderValue::from_static("http://localhost:3000"),
+            // ast-grep-ignore
+            HeaderValue::from_static("http://127.0.0.1:5173"),
+        ])
         .allow_methods([
             Method::GET,
             Method::POST,

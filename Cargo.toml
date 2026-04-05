@@ -63,7 +63,8 @@ rand = { version = "0.8", features = ["std"] }
 sha2 = "0.10"
 utoipa = { version = "5.3" }
 utoipa-swagger-ui = { version = "9.0", features = ["axum"] }
-
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
 
 brom-core = { path = "crates/brom-core" }
 brom-macros = { path = "crates/brom-macros" }

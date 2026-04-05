@@ -276,6 +276,7 @@ brom/
 | Admin SPA  | `trunk build --release` (in `admin/`) | WASM compilation        |
 | Migrations | `cargo run -p brom-cli -- diff` | Schema diff                    |
 | Migrations | `cargo run -p brom-cli -- migrate` | Apply migrations            |
+| Coverage   | `cargo llvm-cov`              | Code coverage (baseline)       |
 
 ### Verification Pipeline
 

@@ -27,3 +27,6 @@ mockall = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt"] }
 brom-auth = { workspace = true, features = ["testing"] }
 brom-db = { workspace = true }
+tower = { workspace = true }
+http-body-util = { workspace = true }
+serde_json = { workspace = true }

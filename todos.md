@@ -16,3 +16,7 @@ This document captures forward-looking architectural choices and technical tasks
 ## 3. Toolchain & Quality Gates
 *   **[ ] Retain AST-Grep (`sg scan`):** Maintain AST-Grep in the verification pipeline.
 *   **[ ] Tune AST-Grep Rules:** Refine `.ast-grep` rules to correctly ignore `mod tests` and specific test module macros to prevent pipeline friction when mocking or unwrap testing. 
+
+## 4. Advanced Testing & Coverage
+*   **[x] E2E Integration (oneshot):** Utilize `tower::ServiceExt::oneshot` to perform end-to-end API integration tests without needing live TCP ports.
+*   **[ ] Snapshot Testing:** Leverage `cargo-insta` for testing macro expansions and CLI outputs, which are otherwise brittle to string-comparison tests.

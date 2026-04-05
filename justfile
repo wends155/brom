@@ -4,6 +4,14 @@
 scan-todos:
     rg -n -e "TODO" -e "FIXME" -e "HACK" --type-add "code:*.{rs,go,ts,js,svelte,py}" --type code .
 
+# Run coverage analysis (requires cargo-llvm-cov)
+coverage:
+    cargo llvm-cov --all-features --workspace
+
+# Run coverage analysis and generate HTML report
+coverage-html:
+    cargo llvm-cov --all-features --workspace --html
+
 # Audit architecture sections
 audit-sections:
     rg -n "## " architecture.md

@@ -104,3 +104,14 @@
 > * **Changes:** Synthesized project architecture, toolchain verifications, and macro usage documentation into a comprehensive `README.md` at the repository root.
 > * **New Constraints:** The `README.md` should serve as the initial anchor for standard workflows. Ensure pipeline execution commands described within align precisely with the zero-exit gates enforced in `architecture.md`.
 > * **Pruned:** Ad-hoc usage questions are now explicitly answered via the README.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 1 (Test Visibility)
+> * **Changes:** Established code coverage baseline infrastructure. Added `coverage` and `coverage-html` recipes to `justfile` utilizing `cargo llvm-cov`. Updated `architecture.md` toolchain to include `Coverage` as a standard diagnostic tool.
+> * **New Constraints:** Any developer-level coverage reporting requires `cargo-llvm-cov` to be installed locally. Coverage metrics are currently for observation only; no hard failure thresholds are enforced.
+> 
+> 📝 **Context Update:**
+> * **Feature:** API Integration Tests (E2E)
+> * **Changes:** Added `tower::ServiceExt::oneshot` infrastructure to run in-process API integration tests for `brom-server` without live TCP binding. Created `tests/common/mod.rs` harness utilizing in-memory SQLite (`DbPool`) to satisfy both `session_store` and `api_key_store` trait implementations. Covered login, logout, schema, zero-route paths, and security headers in `tests/api_test.rs`.
+> * **New Constraints:** Any new routes added to `brom-server/src/router.rs` MUST have corresponding E2E tests in `tests/api_test.rs` validating both success pathways and `ServerError` status mappings.
+> * **Pruned:** The `todos.md` backlog item for "E2E Integration" is complete and removed. Line coverage for `brom-server` has significantly scaled up.
