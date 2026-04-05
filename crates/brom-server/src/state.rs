@@ -1,7 +1,7 @@
-use std::sync::Arc;
 use brom_auth::{ApiKeyStore, SessionStore};
 use brom_core::schema::SchemaRegistry;
 use brom_db::DbPool;
+use std::sync::Arc;
 
 /// Shared application state injected into all Axum handlers.
 #[derive(Clone)]

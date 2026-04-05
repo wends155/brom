@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use syn::Ident;
 
 pub fn expand_openapi(struct_name: &Ident) -> TokenStream {

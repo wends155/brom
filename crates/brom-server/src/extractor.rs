@@ -1,9 +1,9 @@
+use crate::{error::ServerError, state::AppState};
 use axum::{
     extract::{FromRef, FromRequestParts},
     http::{header, request::Parts},
 };
 use brom_auth::{ApiKeyRecord, Session};
-use crate::{state::AppState, error::ServerError};
 
 /// Extractor that requires a valid admin session cookie.
 pub struct RequireAdmin(pub Session);
@@ -17,7 +17,7 @@ where
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let state = AppState::from_ref(state);
-        
+
         let cookie_header = parts
             .headers
             .get(header::COOKIE)
@@ -27,7 +27,7 @@ where
         // Basic cookie parsing for "brom_session=<token>"
         let token = cookie_header
             .split(';')
-            .map(|s| s.trim())
+            .map(str::trim)
             .find(|s| s.starts_with("brom_session="))
             .and_then(|s| s.strip_prefix("brom_session="))
             .ok_or(brom_auth::AuthError::InvalidSession)?;
@@ -69,11 +69,12 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Arc;
     use axum::http::Request;
-    use brom_auth::{MockSessionStore, MockApiKeyStore};
+    use brom_auth::{MockApiKeyStore, MockSessionStore};
     use brom_db::DbPool;
+    use std::sync::Arc;
 
+    #[allow(clippy::unwrap_used)]
     fn test_state(
         session_store: Arc<dyn brom_auth::SessionStore>,
         api_key_store: Arc<dyn brom_auth::ApiKeyStore>,
@@ -87,6 +88,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::unwrap_used)]
     async fn test_require_admin_valid_session() {
         let mut mock_sessions = MockSessionStore::new();
         let expected_session = Session {
@@ -101,12 +103,12 @@ mod tests {
             .returning(move |_| Ok(session_clone.clone()));
 
         let state = test_state(Arc::new(mock_sessions), Arc::new(MockApiKeyStore::new()));
-        
-        let mut request = Request::builder()
+
+        let request = Request::builder()
             .header("Cookie", "brom_session=valid_token")
             .body(())
             .unwrap();
-        let (mut parts, _) = request.into_parts();
+        let (mut parts, ()) = request.into_parts();
 
         let result = RequireAdmin::from_request_parts(&mut parts, &state).await;
         assert!(result.is_ok());
@@ -114,6 +116,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[allow(clippy::unwrap_used)]
     async fn test_require_api_key_valid() {
         let mut mock_keys = MockApiKeyStore::new();
         let expected_record = ApiKeyRecord {
@@ -133,11 +136,11 @@ mod tests {
 
         let state = test_state(Arc::new(MockSessionStore::new()), Arc::new(mock_keys));
 
-        let mut request = Request::builder()
+        let request = Request::builder()
             .header("Authorization", "Bearer secret_key")
             .body(())
             .unwrap();
-        let (mut parts, _) = request.into_parts();
+        let (mut parts, ()) = request.into_parts();
 
         let result = RequireApiKey::from_request_parts(&mut parts, &state).await;
         assert!(result.is_ok());

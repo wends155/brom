@@ -1,19 +1,16 @@
-use axum::{
-    extract::State,
-    http::{header, StatusCode},
-    routing::{get, post},
-    Json, Router,
-};
-use tower_http::trace::TraceLayer;
-use serde::Serialize;
 use axum::response::IntoResponse;
+use axum::{
+    Json, Router,
+    extract::State,
+    http::{StatusCode, header},
+    routing::{get, post},
+};
 use serde::Deserialize;
+use serde::Serialize;
+use tower_http::trace::TraceLayer;
 
 use crate::{
-    error::ServerError,
-    extractor::RequireAdmin,
-    middleware, openapi, schema_api,
-    state::AppState,
+    error::ServerError, extractor::RequireAdmin, middleware, openapi, schema_api, state::AppState,
 };
 use brom_auth::password::verify_password;
 
@@ -31,6 +28,9 @@ pub struct LoginResponse {
 
 /// Handler for `POST /admin/api/login`.
 /// Verifies credentials and sets a session cookie.
+///
+/// # Errors
+/// Returns `ServerError` if database query fails or credentials are invalid.
 #[utoipa::path(
     post,
     path = "/admin/api/login",
@@ -46,7 +46,7 @@ pub async fn login(
     Json(payload): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
     let conn = state.db.get()?;
-    
+
     let (user_id, password_hash): (i64, String) = conn
         .query_row(
             "SELECT id, password_hash FROM _brom_user WHERE email = ?1",
@@ -69,15 +69,14 @@ pub async fn login(
         user_id,
     });
 
-    Ok((
-        StatusCode::OK,
-        [(header::SET_COOKIE, cookie)],
-        body,
-    ))
+    Ok((StatusCode::OK, [(header::SET_COOKIE, cookie)], body))
 }
 
 /// Handler for `POST /admin/api/logout`.
 /// Destroys the current session and clears the cookie.
+///
+/// # Errors
+/// Returns `ServerError` if the session could not be destroyed in the store.
 #[utoipa::path(
     post,
     path = "/admin/api/logout",

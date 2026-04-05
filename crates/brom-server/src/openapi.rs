@@ -1,8 +1,9 @@
+#![allow(clippy::needless_for_each)]
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
-/// Base OpenAPI specification for the brom framework.
-/// 
+/// Base `OpenAPI` specification for the `brom` framework.
+///
 /// This includes the core administrative APIs. Entity-specific routes
 /// are dynamically discovered in the generated Swagger UI configuration.
 #[derive(OpenApi)]
@@ -20,6 +21,5 @@ pub struct ApiDoc;
 
 /// Returns a Swagger UI instance configured for the /docs endpoint.
 pub fn swagger_ui() -> SwaggerUi {
-    SwaggerUi::new("/docs")
-        .url("/api-docs/openapi.json", ApiDoc::openapi())
+    SwaggerUi::new("/docs").url("/api-docs/openapi.json", ApiDoc::openapi())
 }

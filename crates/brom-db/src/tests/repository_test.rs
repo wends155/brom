@@ -1,16 +1,54 @@
 #![allow(clippy::expect_used)]
 use crate::DbPool;
 use crate::SqliteRepository;
-use brom_core::{Pagination, Repository};
-use brom_macros::BromEntity;
+use brom_core::{
+    AuthPolicy, EntitySchema, FieldInfo, FieldType, Pagination, Repository, SchemaInfo,
+};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone, BromEntity, PartialEq)]
-#[brom(table = "test_posts")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Post {
     pub id: i64,
     pub title: String,
     pub body: String,
+}
+
+impl EntitySchema for Post {
+    fn table_name() -> &'static str {
+        "test_posts"
+    }
+    fn fields() -> Vec<FieldInfo> {
+        vec![
+            FieldInfo {
+                name: "id".into(),
+                field_type: FieldType::Integer,
+                constraints: vec![],
+                ui_widget: None,
+                hidden: false,
+            },
+            FieldInfo {
+                name: "title".into(),
+                field_type: FieldType::String,
+                constraints: vec![],
+                ui_widget: None,
+                hidden: false,
+            },
+            FieldInfo {
+                name: "body".into(),
+                field_type: FieldType::String,
+                constraints: vec![],
+                ui_widget: None,
+                hidden: false,
+            },
+        ]
+    }
+    fn schema_info() -> SchemaInfo {
+        SchemaInfo {
+            table_name: "test_posts".into(),
+            fields: Self::fields(),
+            auth_policy: AuthPolicy::Public,
+        }
+    }
 }
 
 #[test]

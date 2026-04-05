@@ -1,16 +1,17 @@
 use proc_macro2::TokenStream;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use syn::{Ident, LitStr};
 
+#[allow(clippy::too_many_lines)]
 pub fn expand_routes(struct_name: &Ident) -> TokenStream {
     let lower_name = struct_name.to_string().to_lowercase();
     let api_mod_name = format_ident!("{}_api", lower_name);
-    let base_path = format!("/admin/api/entities/{}", lower_name);
-    
+    let base_path = format!("/admin/api/entities/{lower_name}");
+
     // Axum 0.7+ and Utoipa 5.x BOTH require `{id}` for capturing path segments.
     // The previous `:id` syntax caused Axum runtime router panics.
-    let id_path = format!("{}/{{id}}", base_path);
-    let tag_name = format!("Entity {}", struct_name);
+    let id_path = format!("{base_path}/{{id}}");
+    let tag_name = format!("Entity {struct_name}");
 
     let base_path_lit = LitStr::new(&base_path, proc_macro2::Span::call_site());
     let id_path_lit = LitStr::new(&id_path, proc_macro2::Span::call_site());

@@ -1,9 +1,9 @@
-use axum::http::{header, HeaderValue, Method};
+use axum::http::{HeaderValue, Method, header};
 use tower_http::cors::CorsLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
 
 /// Returns a CORS layer configured for the admin UI.
-/// 
+///
 /// Defaults to permissive for development.
 pub fn cors_layer() -> CorsLayer {
     CorsLayer::new()
@@ -15,11 +15,7 @@ pub fn cors_layer() -> CorsLayer {
             Method::DELETE,
             Method::OPTIONS,
         ])
-        .allow_headers([
-            header::CONTENT_TYPE,
-            header::AUTHORIZATION,
-            header::COOKIE,
-        ])
+        .allow_headers([header::CONTENT_TYPE, header::AUTHORIZATION, header::COOKIE])
         .allow_credentials(true)
 }
 

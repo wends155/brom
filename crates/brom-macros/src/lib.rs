@@ -2,8 +2,8 @@ use proc_macro::TokenStream;
 use syn::{DeriveInput, parse_macro_input};
 
 mod entity;
-mod routes;
 mod openapi;
+mod routes;
 mod schema;
 
 #[proc_macro_derive(BromEntity, attributes(brom))]
