@@ -98,3 +98,9 @@
 > * **New Constraints:** Any manual implementation of `EntitySchema` MUST adhere to the `# Safety` section to prevent SQL injection in the repository's dynamic query builder.
 > * **Deferred:** The JSON allocation bottleneck in `SqliteRepository` is formally deferred to the `roadmap.md` Tech Debt Register for Post-v1 optimization.
 > * **Security:** Production code verified secure. `OsRng` is correctly used for all production token generation; SQL vectors are structurally bounded by the `&'static str` trait contract.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Project Documentation Foundation
+> * **Changes:** Synthesized project architecture, toolchain verifications, and macro usage documentation into a comprehensive `README.md` at the repository root.
+> * **New Constraints:** The `README.md` should serve as the initial anchor for standard workflows. Ensure pipeline execution commands described within align precisely with the zero-exit gates enforced in `architecture.md`.
+> * **Pruned:** Ad-hoc usage questions are now explicitly answered via the README.
