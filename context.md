@@ -92,3 +92,9 @@
 > * **Changes:** Created `lint_suppression_inventory.md` in the project root. This artifact tabulates all `#[allow]` attributes across the workspace, providing technical justifications for each to ensure long-term auditability and prevent linting decay.
 > * **New Constraints:** Any new lint suppressions MUST be added to the `lint_suppression_inventory.md` with a valid technical justification.
 > * **Pruned:** The temporary `issue_report.md` investigation data is now formally persisted in the root inventory.
+> 📝 **Context Update:**
+> * **Feature:** Phase 3B Security Audit Remediation
+> * **Changes:** Performed deep-dive validation of 5 security findings from `/review all all`. Confirmed 3/5 were false positives (insecure randomness in tests, hardcoded test credentials, rusqlite parameter indexing noise). Hardened `EntitySchema` trait in `brom-core` with `# Safety` documentation enforcing compile-time constants for schema metadata.
+> * **New Constraints:** Any manual implementation of `EntitySchema` MUST adhere to the `# Safety` section to prevent SQL injection in the repository's dynamic query builder.
+> * **Deferred:** The JSON allocation bottleneck in `SqliteRepository` is formally deferred to the `roadmap.md` Tech Debt Register for Post-v1 optimization.
+> * **Security:** Production code verified secure. `OsRng` is correctly used for all production token generation; SQL vectors are structurally bounded by the `&'static str` trait contract.

@@ -603,6 +603,7 @@ Accumulated technical debt tracked across all phases.
 | No migration rollback | Scheduled | Phase 2B | Phase 4 | `-- DOWN` section parsing |
 | Admin SPA size optimization | Scheduled | Phase 5 | Post-v1 | `wasm-opt`, code-splitting |
 | No hot-reload for admin | Known constraint | Phase 5 | Post-v1 | `trunk serve --watch` for dev |
+| JSON allocation bottleneck | Performance | Phase 3B | Post-v1 | Optimization: migrate `SqliteRepository` to specialized row-to-struct mapper to avoid `serde_json::Value` intermediary. |
 
 ---
 
