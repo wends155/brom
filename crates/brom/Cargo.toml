@@ -13,3 +13,6 @@ brom-macros.workspace = true
 brom-db.workspace = true
 brom-auth.workspace = true
 brom-server.workspace = true
+axum.workspace = true
+utoipa.workspace = true
+tower-http.workspace = true

@@ -50,6 +50,9 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
         return Err(errs);
     }
 
+    let routes = crate::routes::expand_routes(struct_name);
+    let openapi = crate::openapi::expand_openapi(struct_name);
+
     let expanded = quote! {
         #[automatically_derived]
         impl ::brom_core::EntitySchema for #struct_name {
@@ -72,6 +75,9 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
                 }
             }
         }
+
+        #routes
+        #openapi
     };
 
     Ok(expanded)

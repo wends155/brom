@@ -11,12 +11,19 @@ workspace = true
 axum.workspace = true
 brom-core.workspace = true
 brom-db.workspace = true
-brom-auth.workspace = true
+brom-auth = { workspace = true, features = ["testing"] }
 thiserror.workspace = true
 tracing.workspace = true
 serde_json.workspace = true
 tower-http.workspace = true
 dotenvy.workspace = true
+utoipa.workspace = true
+utoipa-swagger-ui.workspace = true
+serde.workspace = true
+tokio.workspace = true
 
 [dev-dependencies]
-axum = { workspace = true }
+mockall = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt"] }
+brom-auth = { workspace = true, features = ["testing"] }
+brom-db = { workspace = true }

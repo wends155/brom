@@ -9,3 +9,8 @@ pub use api_key::{ApiKeyRecord, ApiKeyStore};
 pub use error::AuthError;
 pub use rbac::evaluate_policy;
 pub use session::{Session, SessionStore};
+
+#[cfg(feature = "testing")]
+pub use api_key::MockApiKeyStore;
+#[cfg(feature = "testing")]
+pub use session::MockSessionStore;

@@ -18,5 +18,8 @@ proc-macro2.workspace = true
 [dev-dependencies]
 trybuild.workspace = true
 brom-core = { path = "../brom-core" }
-serde.workspace = true
+brom-server = { path = "../brom-server" }
+brom-db = { path = "../brom-db" }
+serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+utoipa = { workspace = true }

@@ -1,7 +1,9 @@
 use brom_macros::BromEntity;
 use brom_core::EntitySchema;
+use serde::{Deserialize, Serialize};
+pub use brom_server::utoipa::ToSchema;
 
-#[derive(BromEntity)]
+#[derive(BromEntity, Serialize, Deserialize, ToSchema)]
 pub struct Post {
     pub id: i64,
     pub title: String,

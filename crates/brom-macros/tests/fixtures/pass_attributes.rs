@@ -1,7 +1,9 @@
 use brom_macros::BromEntity;
 use brom_core::{EntitySchema, Constraint};
+use serde::{Deserialize, Serialize};
+pub use brom_server::utoipa::ToSchema;
 
-#[derive(BromEntity)]
+#[derive(BromEntity, Serialize, Deserialize, ToSchema)]
 #[brom(table = "users")]
 pub struct User {
     #[brom(unique)]
