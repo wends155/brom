@@ -80,3 +80,15 @@
 > * **Changes:** Formally split Phase 3 into Phase 3A (Auth Core - Done) and Phase 3B (REST API & Codegen - Next) in `roadmap.md` tables and dependency graph.
 > * **New Constraints:** (None)
 > * **Pruned:** Monolithic Phase 3 ambiguity removed from phasing plans.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Phase 3B Audit Remediation (REST API & Codegen)
+> * **Changes:** Fixed `clippy::uninlined_format_args` in `routes.rs` and `missing_errors_doc` in `router.rs`. Resolved `BromEntity` dependency violation in `brom-db` test fixtures by manually implementing `EntitySchema`. Suppressed macro-generated `clippy` failures (`too_many_lines`, `needless_for_each`) in `brom-macros` and `brom-server`.
+> * **New Constraints:** The `#[derive(BromEntity)]` macro is architecturally bound to `brom-server`. It MUST NOT be used in lower-level crates (e.g., `brom-db`). Use manual `EntitySchema` implementations for test fixtures in lower layers to preserve dependency isolation.
+> * **Pruned:** The Phase 3B audit blockers (dependency breaches, linting drift, formatting) are cleared. Zero-exit verification gate is fully restored for the workspace.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Formal Lint Suppression Inventory
+> * **Changes:** Created `lint_suppression_inventory.md` in the project root. This artifact tabulates all `#[allow]` attributes across the workspace, providing technical justifications for each to ensure long-term auditability and prevent linting decay.
+> * **New Constraints:** Any new lint suppressions MUST be added to the `lint_suppression_inventory.md` with a valid technical justification.
+> * **Pruned:** The temporary `issue_report.md` investigation data is now formally persisted in the root inventory.
