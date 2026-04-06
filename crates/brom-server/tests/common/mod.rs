@@ -1,6 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-
 use brom_core::schema::SchemaRegistry;
 use brom_db::{DbPool, MigrationRunner};
 use brom_server::AppState;

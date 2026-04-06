@@ -7,7 +7,7 @@ use axum::{
     http::{Request, StatusCode, header},
 };
 use http_body_util::BodyExt;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use tower::ServiceExt; // for oneshot
 
 use brom_server::router::build_router;
@@ -22,7 +22,7 @@ async fn send_json(
     let app = build_router(state);
 
     let mut builder = Request::builder().uri(uri).method(method);
-    
+
     let body = if let Some(json_body) = body {
         builder = builder.header(header::CONTENT_TYPE, "application/json");
         Body::from(serde_json::to_vec(&json_body).unwrap())
@@ -93,7 +93,10 @@ async fn login_invalid_password_returns_401() {
 
     assert_eq!(status, StatusCode::UNAUTHORIZED);
     let err_str = body["error"].as_str().expect("body missing error");
-    assert!(err_str.to_lowercase().contains("invalid"), "Expected 'invalid' but got: {err_str}");
+    assert!(
+        err_str.to_lowercase().contains("invalid"),
+        "Expected 'invalid' but got: {err_str}"
+    );
 }
 
 #[tokio::test]
@@ -198,10 +201,7 @@ async fn swagger_ui_endpoint_exists() {
     let state = common::test_app_state();
 
     let app = build_router(state);
-    let request = Request::builder()
-        .uri("/docs")
-        .body(Body::empty())
-        .unwrap();
+    let request = Request::builder().uri("/docs").body(Body::empty()).unwrap();
 
     let response = app.oneshot(request).await.unwrap();
     // Swagger UI redirects or serves — either 200 or 3xx is acceptable
