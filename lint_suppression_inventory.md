@@ -6,9 +6,9 @@ This document provides a formal inventory of all compiler and lint suppressions 
 
 | Metric | Value |
 |--------|-------|
-| **Total Suppressions** | 13 Locations |
+| **Total Suppressions** | 14 Locations |
 | **Strictness Policy** | `-D warnings` (Clippy Warnings = Errors) |
-| **Last Audit** | 2026-04-05 |
+| **Last Audit** | 2026-04-06 |
 
 ---
 
@@ -28,6 +28,7 @@ Multiple suppressions are used within `#[cfg(test)]` modules or dedicated test c
 
 | File | Lint | Context | Justification |
 |------|------|---------|---------------|
+| `crates/brom-macros/src/entity.rs` | `clippy::unwrap_used` | Snapshot Tests | Permit deterministic unwrap of synthetic `DeriveInput` parsing. |
 | `crates/brom-server/src/extractor.rs` | `clippy::unwrap_used` | Unit Tests | Permit clean setup in mock request assertions. |
 | `crates/brom-db/src/api_key_store.rs` | `clippy::unwrap_used`, `clippy::expect_used` | Unit Tests | Permit fail-fast database setup in in-memory tests. |
 | `crates/brom-db/src/session_store.rs` | `clippy::unwrap_used`, `clippy::expect_used` | Unit Tests | Permit fail-fast session lifecycle assertions. |

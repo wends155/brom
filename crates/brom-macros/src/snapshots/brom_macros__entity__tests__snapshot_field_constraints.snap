@@ -1,0 +1,186 @@
+---
+source: crates/brom-macros/src/entity.rs
+expression: expand_and_format(&input)
+---
+#[automatically_derived]
+impl ::brom_core::EntitySchema for User {
+    fn table_name() -> &'static str {
+        "user"
+    }
+    fn fields() -> Vec<::brom_core::FieldInfo> {
+        use ::brom_core::{FieldInfo, FieldType, Constraint};
+        vec![
+            FieldInfo { name : "email".to_string(), field_type : FieldType::String,
+            constraints : vec![Constraint::Unique], ui_widget : None, hidden : false, },
+            FieldInfo { name : "display_name".to_string(), field_type :
+            FieldType::String, constraints : vec![Constraint::NotNull,
+            Constraint::Default("Anonymous".to_string())], ui_widget : None, hidden :
+            false, }, FieldInfo { name : "password_hash".to_string(), field_type :
+            FieldType::String, constraints : vec![], ui_widget : None, hidden : true, }
+        ]
+    }
+    fn schema_info() -> ::brom_core::SchemaInfo {
+        ::brom_core::SchemaInfo {
+            table_name: Self::table_name().to_string(),
+            fields: Self::fields(),
+            auth_policy: ::brom_core::AuthPolicy::Public,
+        }
+    }
+}
+#[automatically_derived]
+pub mod user_api {
+    use super::*;
+    use ::brom_server::axum::{
+        extract::{State, Path},
+        Json, http::StatusCode,
+    };
+    use ::brom_server::AppState;
+    use ::brom_core::{Repository, Pagination};
+    use ::brom_db::SqliteRepository;
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/admin/api/entities/user",
+        responses((status = 200, description = "List all items", body = [User])),
+        tag = "Entity User"
+    )]
+    pub async fn list_handler(
+        state: State<AppState>,
+    ) -> Result<Json<Vec<User>>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<User>::new(state.db.clone());
+        let items = repo.find_all(&Pagination::default())?;
+        Ok(Json(items))
+    }
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/admin/api/entities/user/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to retrieve")),
+        responses(
+            (status = 200, description = "Get item by ID", body = User),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity User"
+    )]
+    pub async fn get_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+    ) -> Result<Json<User>, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<User>::new(state.db.clone());
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "user",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        post,
+        path = "/admin/api/entities/user",
+        request_body = User,
+        responses((status = 201, description = "Item created", body = User)),
+        tag = "Entity User"
+    )]
+    pub async fn create_handler(
+        state: State<AppState>,
+        payload: Json<User>,
+    ) -> Result<Json<User>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<User>::new(state.db.clone());
+        let id = repo.create(&payload.0)?;
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "user",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        put,
+        path = "/admin/api/entities/user/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to update")),
+        request_body = User,
+        responses(
+            (status = 200, description = "Item updated", body = User),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity User"
+    )]
+    pub async fn update_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+        payload: Json<User>,
+    ) -> Result<Json<User>, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<User>::new(state.db.clone());
+        repo.update(id, &payload.0)?;
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "user",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        delete,
+        path = "/admin/api/entities/user/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to delete")),
+        responses(
+            (status = 204, description = "Item deleted"),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity User"
+    )]
+    pub async fn delete_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+    ) -> Result<StatusCode, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<User>::new(state.db.clone());
+        repo.delete(id)?;
+        Ok(StatusCode::NO_CONTENT)
+    }
+}
+#[automatically_derived]
+impl User {
+    /// Generated Axum router for this entity.
+    pub fn router() -> ::brom_server::axum::Router<::brom_server::AppState> {
+        use ::brom_server::axum::routing::get;
+        ::brom_server::axum::Router::<::brom_server::AppState>::new()
+            .route(
+                "/admin/api/entities/user",
+                get(user_api::list_handler).post(user_api::create_handler),
+            )
+            .route(
+                "/admin/api/entities/user/{id}",
+                get(user_api::get_handler)
+                    .put(user_api::update_handler)
+                    .delete(user_api::delete_handler),
+            )
+    }
+}
+#[automatically_derived]
+mod user_openapi_inner {
+    use super::*;
+    use ::brom_server::utoipa;
+    #[derive(utoipa::OpenApi)]
+    #[openapi(
+        paths(
+            user_api::list_handler,
+            user_api::get_handler,
+            user_api::create_handler,
+            user_api::update_handler,
+            user_api::delete_handler,
+        ),
+        components(schemas(User))
+    )]
+    pub struct UserApi;
+}
+pub use user_openapi_inner::UserApi;

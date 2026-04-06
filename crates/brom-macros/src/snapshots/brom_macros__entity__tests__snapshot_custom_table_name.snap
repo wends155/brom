@@ -1,0 +1,181 @@
+---
+source: crates/brom-macros/src/entity.rs
+expression: expand_and_format(&input)
+---
+#[automatically_derived]
+impl ::brom_core::EntitySchema for Post {
+    fn table_name() -> &'static str {
+        "blog_posts"
+    }
+    fn fields() -> Vec<::brom_core::FieldInfo> {
+        use ::brom_core::{FieldInfo, FieldType, Constraint};
+        vec![
+            FieldInfo { name : "title".to_string(), field_type : FieldType::String,
+            constraints : vec![], ui_widget : None, hidden : false, }
+        ]
+    }
+    fn schema_info() -> ::brom_core::SchemaInfo {
+        ::brom_core::SchemaInfo {
+            table_name: Self::table_name().to_string(),
+            fields: Self::fields(),
+            auth_policy: ::brom_core::AuthPolicy::Public,
+        }
+    }
+}
+#[automatically_derived]
+pub mod post_api {
+    use super::*;
+    use ::brom_server::axum::{
+        extract::{State, Path},
+        Json, http::StatusCode,
+    };
+    use ::brom_server::AppState;
+    use ::brom_core::{Repository, Pagination};
+    use ::brom_db::SqliteRepository;
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/admin/api/entities/post",
+        responses((status = 200, description = "List all items", body = [Post])),
+        tag = "Entity Post"
+    )]
+    pub async fn list_handler(
+        state: State<AppState>,
+    ) -> Result<Json<Vec<Post>>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let items = repo.find_all(&Pagination::default())?;
+        Ok(Json(items))
+    }
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/admin/api/entities/post/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to retrieve")),
+        responses(
+            (status = 200, description = "Get item by ID", body = Post),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity Post"
+    )]
+    pub async fn get_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+    ) -> Result<Json<Post>, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "post",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        post,
+        path = "/admin/api/entities/post",
+        request_body = Post,
+        responses((status = 201, description = "Item created", body = Post)),
+        tag = "Entity Post"
+    )]
+    pub async fn create_handler(
+        state: State<AppState>,
+        payload: Json<Post>,
+    ) -> Result<Json<Post>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let id = repo.create(&payload.0)?;
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "post",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        put,
+        path = "/admin/api/entities/post/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to update")),
+        request_body = Post,
+        responses(
+            (status = 200, description = "Item updated", body = Post),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity Post"
+    )]
+    pub async fn update_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+        payload: Json<Post>,
+    ) -> Result<Json<Post>, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        repo.update(id, &payload.0)?;
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "post",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        delete,
+        path = "/admin/api/entities/post/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to delete")),
+        responses(
+            (status = 204, description = "Item deleted"),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity Post"
+    )]
+    pub async fn delete_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+    ) -> Result<StatusCode, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        repo.delete(id)?;
+        Ok(StatusCode::NO_CONTENT)
+    }
+}
+#[automatically_derived]
+impl Post {
+    /// Generated Axum router for this entity.
+    pub fn router() -> ::brom_server::axum::Router<::brom_server::AppState> {
+        use ::brom_server::axum::routing::get;
+        ::brom_server::axum::Router::<::brom_server::AppState>::new()
+            .route(
+                "/admin/api/entities/post",
+                get(post_api::list_handler).post(post_api::create_handler),
+            )
+            .route(
+                "/admin/api/entities/post/{id}",
+                get(post_api::get_handler)
+                    .put(post_api::update_handler)
+                    .delete(post_api::delete_handler),
+            )
+    }
+}
+#[automatically_derived]
+mod post_openapi_inner {
+    use super::*;
+    use ::brom_server::utoipa;
+    #[derive(utoipa::OpenApi)]
+    #[openapi(
+        paths(
+            post_api::list_handler,
+            post_api::get_handler,
+            post_api::create_handler,
+            post_api::update_handler,
+            post_api::delete_handler,
+        ),
+        components(schemas(Post))
+    )]
+    pub struct PostApi;
+}
+pub use post_openapi_inner::PostApi;

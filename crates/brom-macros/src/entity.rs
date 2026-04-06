@@ -141,3 +141,80 @@ fn expand_field(f: &syn::Field, errors: &mut Option<syn::Error>) -> Option<Token
         }
     })
 }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+    use insta::assert_snapshot;
+    use syn::parse_quote;
+
+    /// Helper: expand a `DeriveInput` and format the result.
+    fn expand_and_format(input: &syn::DeriveInput) -> String {
+        let tokens = expand_brom_entity(input).unwrap();
+        let file: syn::File = syn::parse2(tokens).unwrap();
+        prettyplease::unparse(&file)
+    }
+
+    #[test]
+    fn snapshot_basic_struct() {
+        let input: syn::DeriveInput = parse_quote! {
+            pub struct Post {
+                pub title: String,
+                pub body: String,
+                pub published: bool,
+            }
+        };
+        assert_snapshot!(expand_and_format(&input));
+    }
+
+    #[test]
+    fn snapshot_custom_table_name() {
+        let input: syn::DeriveInput = parse_quote! {
+            #[brom(table = "blog_posts")]
+            pub struct Post {
+                pub title: String,
+            }
+        };
+        assert_snapshot!(expand_and_format(&input));
+    }
+
+    #[test]
+    fn snapshot_field_constraints() {
+        let input: syn::DeriveInput = parse_quote! {
+            pub struct User {
+                #[brom(unique)]
+                pub email: String,
+                #[brom(not_null, default = "Anonymous")]
+                pub display_name: String,
+                #[brom(hidden)]
+                pub password_hash: String,
+            }
+        };
+        assert_snapshot!(expand_and_format(&input));
+    }
+
+    #[test]
+    fn snapshot_link_relationship() {
+        let input: syn::DeriveInput = parse_quote! {
+            pub struct Comment {
+                pub body: String,
+                #[brom(link = "post")]
+                pub post_id: i64,
+            }
+        };
+        assert_snapshot!(expand_and_format(&input));
+    }
+
+    #[test]
+    fn snapshot_many_to_many_relationship() {
+        let input: syn::DeriveInput = parse_quote! {
+            pub struct Article {
+                pub title: String,
+                #[brom(many_many = "tag", junction = "article_tag")]
+                pub tags: String,
+            }
+        };
+        assert_snapshot!(expand_and_format(&input));
+    }
+}

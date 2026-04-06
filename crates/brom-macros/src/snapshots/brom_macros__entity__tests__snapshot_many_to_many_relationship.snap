@@ -1,0 +1,184 @@
+---
+source: crates/brom-macros/src/entity.rs
+expression: expand_and_format(&input)
+---
+#[automatically_derived]
+impl ::brom_core::EntitySchema for Article {
+    fn table_name() -> &'static str {
+        "article"
+    }
+    fn fields() -> Vec<::brom_core::FieldInfo> {
+        use ::brom_core::{FieldInfo, FieldType, Constraint};
+        vec![
+            FieldInfo { name : "title".to_string(), field_type : FieldType::String,
+            constraints : vec![], ui_widget : None, hidden : false, }, FieldInfo { name :
+            "tags".to_string(), field_type : FieldType::ManyToMany { target : "tag"
+            .to_string(), junction_table : "article_tag".to_string() }, constraints :
+            vec![], ui_widget : None, hidden : false, }
+        ]
+    }
+    fn schema_info() -> ::brom_core::SchemaInfo {
+        ::brom_core::SchemaInfo {
+            table_name: Self::table_name().to_string(),
+            fields: Self::fields(),
+            auth_policy: ::brom_core::AuthPolicy::Public,
+        }
+    }
+}
+#[automatically_derived]
+pub mod article_api {
+    use super::*;
+    use ::brom_server::axum::{
+        extract::{State, Path},
+        Json, http::StatusCode,
+    };
+    use ::brom_server::AppState;
+    use ::brom_core::{Repository, Pagination};
+    use ::brom_db::SqliteRepository;
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/admin/api/entities/article",
+        responses((status = 200, description = "List all items", body = [Article])),
+        tag = "Entity Article"
+    )]
+    pub async fn list_handler(
+        state: State<AppState>,
+    ) -> Result<Json<Vec<Article>>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<Article>::new(state.db.clone());
+        let items = repo.find_all(&Pagination::default())?;
+        Ok(Json(items))
+    }
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/admin/api/entities/article/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to retrieve")),
+        responses(
+            (status = 200, description = "Get item by ID", body = Article),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity Article"
+    )]
+    pub async fn get_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+    ) -> Result<Json<Article>, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<Article>::new(state.db.clone());
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "article",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        post,
+        path = "/admin/api/entities/article",
+        request_body = Article,
+        responses((status = 201, description = "Item created", body = Article)),
+        tag = "Entity Article"
+    )]
+    pub async fn create_handler(
+        state: State<AppState>,
+        payload: Json<Article>,
+    ) -> Result<Json<Article>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<Article>::new(state.db.clone());
+        let id = repo.create(&payload.0)?;
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "article",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        put,
+        path = "/admin/api/entities/article/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to update")),
+        request_body = Article,
+        responses(
+            (status = 200, description = "Item updated", body = Article),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity Article"
+    )]
+    pub async fn update_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+        payload: Json<Article>,
+    ) -> Result<Json<Article>, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<Article>::new(state.db.clone());
+        repo.update(id, &payload.0)?;
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "article",
+                    id,
+                }),
+            )?;
+        Ok(Json(item))
+    }
+    #[::brom_server::utoipa::path(
+        delete,
+        path = "/admin/api/entities/article/{id}",
+        params(("id" = i64, Path, description = "The ID of the entity to delete")),
+        responses(
+            (status = 204, description = "Item deleted"),
+            (status = 404, description = "Item not found")
+        ),
+        tag = "Entity Article"
+    )]
+    pub async fn delete_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+    ) -> Result<StatusCode, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<Article>::new(state.db.clone());
+        repo.delete(id)?;
+        Ok(StatusCode::NO_CONTENT)
+    }
+}
+#[automatically_derived]
+impl Article {
+    /// Generated Axum router for this entity.
+    pub fn router() -> ::brom_server::axum::Router<::brom_server::AppState> {
+        use ::brom_server::axum::routing::get;
+        ::brom_server::axum::Router::<::brom_server::AppState>::new()
+            .route(
+                "/admin/api/entities/article",
+                get(article_api::list_handler).post(article_api::create_handler),
+            )
+            .route(
+                "/admin/api/entities/article/{id}",
+                get(article_api::get_handler)
+                    .put(article_api::update_handler)
+                    .delete(article_api::delete_handler),
+            )
+    }
+}
+#[automatically_derived]
+mod article_openapi_inner {
+    use super::*;
+    use ::brom_server::utoipa;
+    #[derive(utoipa::OpenApi)]
+    #[openapi(
+        paths(
+            article_api::list_handler,
+            article_api::get_handler,
+            article_api::create_handler,
+            article_api::update_handler,
+            article_api::delete_handler,
+        ),
+        components(schemas(Article))
+    )]
+    pub struct ArticleApi;
+}
+pub use article_openapi_inner::ArticleApi;

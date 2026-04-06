@@ -127,3 +127,10 @@
 > * **Changes:** Fixed `clippy::doc_markdown` violations within `brom-server/tests/common/mod.rs` and `brom-server/tests/api_test.rs` by securing identifiers within code block backticks in documentation comments.
 > * **New Constraints:** (None)
 > * **Pruned:** Clippy linting errors for markdown documentation. Zero-exit pipeline formally restored.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Macro Snapshot Testing (Structural Regression)
+> * **Changes:** Implemented structural snapshot testing for `#[derive(BromEntity)]` using `insta` and `prettyplease`. Added 5 expansion variants in `crates/brom-macros/src/entity.rs`: Basic Struct, Custom Table, Field Constraints, Link relationship, and ManyToMany relationship. Integrated `insta` and `prettyplease` into the workspace dev-dependencies.
+> * **New Constraints:** Any modification to the `BromEntity` expansion logic MUST be verified against these snapshots. Use `INSTA_UPDATE=always cargo test -p brom-macros` to update baselines after intentional structural changes.
+> * **Pruned:** Deferred CLI snapshot testing to `todos.md` until `brom diff` is stable.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test) passed. All 5 new snapshots verified and accepted. Fidelity to Plan: 100%.

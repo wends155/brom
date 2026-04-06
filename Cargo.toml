@@ -65,6 +65,8 @@ utoipa = { version = "5.3" }
 utoipa-swagger-ui = { version = "9.0", features = ["axum"] }
 tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
+insta = "1"
+prettyplease = "0.2"
 
 brom-core = { path = "crates/brom-core" }
 brom-macros = { path = "crates/brom-macros" }

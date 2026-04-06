@@ -19,4 +19,6 @@ This document captures forward-looking architectural choices and technical tasks
 
 ## 4. Advanced Testing & Coverage
 *   **[x] E2E Integration (oneshot):** Utilize `tower::ServiceExt::oneshot` to perform end-to-end API integration tests without needing live TCP ports.
-*   **[ ] Snapshot Testing:** Leverage `cargo-insta` for testing macro expansions and CLI outputs, which are otherwise brittle to string-comparison tests.
+*   **[/] Snapshot Testing:**
+    *   **[x] Macro Expansion Snapshots:** Wire `insta` and `prettyplease` for `BromEntity` expansion verification (Structural Regression Safety).
+    *   **[ ] CLI Output Snapshots (Deferred):** Implement `insta` for `brom diff` and complex CLI outputs once subcommands are fully stabilized.
