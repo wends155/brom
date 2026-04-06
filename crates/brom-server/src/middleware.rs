@@ -2,19 +2,10 @@ use axum::http::{HeaderValue, Method, header};
 use tower_http::cors::CorsLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
 
-/// Returns a CORS layer configured for the admin UI.
-///
-/// Defaults to permissive for development.
-pub fn cors_layer() -> CorsLayer {
+/// Returns a CORS layer configured with the provided origins.
+pub fn cors_layer(origins: Vec<HeaderValue>) -> CorsLayer {
     CorsLayer::new()
-        .allow_origin([
-            // ast-grep-ignore
-            HeaderValue::from_static("http://localhost:5173"),
-            // ast-grep-ignore
-            HeaderValue::from_static("http://localhost:3000"),
-            // ast-grep-ignore
-            HeaderValue::from_static("http://127.0.0.1:5173"),
-        ])
+        .allow_origin(origins)
         .allow_methods([
             Method::GET,
             Method::POST,

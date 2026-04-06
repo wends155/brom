@@ -115,3 +115,9 @@
 > * **Changes:** Added `tower::ServiceExt::oneshot` infrastructure to run in-process API integration tests for `brom-server` without live TCP binding. Created `tests/common/mod.rs` harness utilizing in-memory SQLite (`DbPool`) to satisfy both `session_store` and `api_key_store` trait implementations. Covered login, logout, schema, zero-route paths, and security headers in `tests/api_test.rs`.
 > * **New Constraints:** Any new routes added to `brom-server/src/router.rs` MUST have corresponding E2E tests in `tests/api_test.rs` validating both success pathways and `ServerError` status mappings.
 > * **Pruned:** The `todos.md` backlog item for "E2E Integration" is complete and removed. Line coverage for `brom-server` has significantly scaled up.
+> 📝 **Context Update:**
+> * **Feature:** Dynamic CORS Configuration (Environment-Driven)
+> * **Changes:** Extracted hardcoded CORS origins from `middleware.rs` into a centralized `ServerConfig` struct in `config.rs`. Implemented `ServerConfig::load_from_env()` using `dotenvy` and the `BROM_CORS_ORIGINS` environment variable. Updated `create_router` and `build_router` signatures to accept dynamic origins. Added CORS origin template to `.env.example`.
+> * **New Constraints:** Any additional CORS origins MUST be configured via `BROM_CORS_ORIGINS` (comma-separated list). Hardcoded URLs in middleware are strictly prohibited.
+> * **Pruned:** Removed all `// ast-grep-ignore: hardcoded-url` suppressions in `middleware.rs`.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test) passed. All 18 integration tests in `brom-server` verified with mock origin injection.

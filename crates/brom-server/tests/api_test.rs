@@ -19,7 +19,7 @@ async fn send_json(
     uri: &str,
     body: Option<Value>,
 ) -> (StatusCode, Value) {
-    let app = build_router(state);
+    let app = build_router(state, vec![]);
 
     let mut builder = Request::builder().uri(uri).method(method);
 
@@ -42,8 +42,9 @@ async fn send_json(
 async fn login_valid_credentials_returns_200_and_cookie() {
     let state = common::test_app_state();
     let (_user_id, password) = common::seed_admin_user(&state);
+    let origins = vec![header::HeaderValue::from_static("http://localhost:3000")];
 
-    let app = build_router(state);
+    let app = build_router(state, origins);
     let request = Request::builder()
         .method("POST")
         .uri("/admin/api/login")
@@ -123,7 +124,7 @@ async fn logout_with_valid_session_returns_200() {
     let (user_id, _password) = common::seed_admin_user(&state);
     let token = common::create_test_session(&state, user_id);
 
-    let app = build_router(state);
+    let app = build_router(state, vec![]);
     let request = Request::builder()
         .method("POST")
         .uri("/admin/api/logout")
@@ -147,7 +148,7 @@ async fn logout_with_valid_session_returns_200() {
 async fn logout_without_session_returns_401() {
     let state = common::test_app_state();
 
-    let app = build_router(state);
+    let app = build_router(state, vec![]);
     let request = Request::builder()
         .method("POST")
         .uri("/admin/api/logout")
@@ -162,7 +163,7 @@ async fn logout_without_session_returns_401() {
 async fn get_schema_returns_empty_array() {
     let state = common::test_app_state();
 
-    let app = build_router(state);
+    let app = build_router(state, vec![]);
     let request = Request::builder()
         .uri("/admin/api/schema")
         .body(Body::empty())
@@ -181,7 +182,7 @@ async fn get_schema_returns_empty_array() {
 async fn security_headers_are_present() {
     let state = common::test_app_state();
 
-    let app = build_router(state);
+    let app = build_router(state, vec![]);
     let request = Request::builder()
         .uri("/admin/api/schema")
         .body(Body::empty())
@@ -200,7 +201,7 @@ async fn security_headers_are_present() {
 async fn swagger_ui_endpoint_exists() {
     let state = common::test_app_state();
 
-    let app = build_router(state);
+    let app = build_router(state, vec![]);
     let request = Request::builder().uri("/docs").body(Body::empty()).unwrap();
 
     let response = app.oneshot(request).await.unwrap();
@@ -216,7 +217,7 @@ async fn swagger_ui_endpoint_exists() {
 async fn unknown_route_returns_404() {
     let state = common::test_app_state();
 
-    let app = build_router(state);
+    let app = build_router(state, vec![]);
     let request = Request::builder()
         .uri("/nonexistent")
         .body(Body::empty())

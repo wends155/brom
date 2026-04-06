@@ -105,13 +105,13 @@ pub async fn logout(
 }
 
 /// Builds the complete Axum router for the brom-server.
-pub fn build_router(state: AppState) -> Router {
+pub fn build_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>) -> Router {
     Router::new()
         .route("/admin/api/login", post(login))
         .route("/admin/api/logout", post(logout))
         .route("/admin/api/schema", get(schema_api::get_schema))
         .merge(openapi::swagger_ui())
-        .layer(middleware::cors_layer())
+        .layer(middleware::cors_layer(cors_origins))
         .layer(middleware::security_headers_layer())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
