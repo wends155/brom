@@ -12,7 +12,7 @@ use tower::ServiceExt; // for oneshot
 
 use brom_server::router::build_router;
 
-/// Helper: send a request through the full router and return (status, body_json).
+/// Helper: send a request through the full router and return (status, `body_json`).
 async fn send_json(
     state: brom_server::AppState,
     method: &str,

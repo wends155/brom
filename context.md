@@ -121,3 +121,9 @@
 > * **New Constraints:** Any additional CORS origins MUST be configured via `BROM_CORS_ORIGINS` (comma-separated list). Hardcoded URLs in middleware are strictly prohibited.
 > * **Pruned:** Removed all `// ast-grep-ignore: hardcoded-url` suppressions in `middleware.rs`.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test) passed. All 18 integration tests in `brom-server` verified with mock origin injection.
+
+> 📝 **Context Update:**
+> * **Feature:** Verification Pipeline Remediation (Clippy Doc Markdown)
+> * **Changes:** Fixed `clippy::doc_markdown` violations within `brom-server/tests/common/mod.rs` and `brom-server/tests/api_test.rs` by securing identifiers within code block backticks in documentation comments.
+> * **New Constraints:** (None)
+> * **Pruned:** Clippy linting errors for markdown documentation. Zero-exit pipeline formally restored.
