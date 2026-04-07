@@ -20,32 +20,37 @@ pub enum ServerError {
 
 impl IntoResponse for ServerError {
     fn into_response(self) -> Response {
-        let (status, error_message) = match &self {
+        let (status, ident, message) = match &self {
             ServerError::Auth(
                 brom_auth::AuthError::InvalidSession
                 | brom_auth::AuthError::InvalidCredentials
                 | brom_auth::AuthError::InvalidApiKey,
-            ) => (StatusCode::UNAUTHORIZED, self.to_string()),
+            ) => (StatusCode::UNAUTHORIZED, "Unauthorized", self.to_string()),
             ServerError::Auth(brom_auth::AuthError::InsufficientPermissions(_)) => {
-                (StatusCode::FORBIDDEN, self.to_string())
+                (StatusCode::FORBIDDEN, "Forbidden", self.to_string())
             }
             ServerError::Core(brom_core::Error::NotFound { .. }) => {
-                (StatusCode::NOT_FOUND, self.to_string())
+                (StatusCode::NOT_FOUND, "NotFound", self.to_string())
             }
             ServerError::Core(brom_core::Error::ValidationError { .. }) => {
-                (StatusCode::BAD_REQUEST, self.to_string())
+                (StatusCode::BAD_REQUEST, "ValidationFailed", self.to_string())
             }
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
+                "InternalError",
                 "Internal server error".to_string(),
             ),
         };
 
-        let body = Json(json!({
-            "error": error_message
-        }));
+        let mut body = serde_json::Map::new();
+        body.insert("error".to_string(), json!(ident));
+        body.insert("message".to_string(), json!(message));
 
-        (status, body).into_response()
+        if let ServerError::Core(brom_core::Error::ValidationError { field, .. }) = &self {
+            body.insert("fields".to_string(), json!({ field: [message] }));
+        }
+
+        (status, Json(body)).into_response()
     }
 }
 
@@ -123,5 +128,24 @@ mod tests {
             ))),
             StatusCode::INTERNAL_SERVER_ERROR,
         );
+    }
+
+    #[tokio::test]
+    async fn validation_error_body_format() {
+        let err = ServerError::Core(brom_core::Error::ValidationError {
+            field: "title".into(),
+            message: "validation msg".into(),
+        });
+        
+        let mut response = err.into_response();
+        let body_bytes = http_body_util::BodyExt::collect(response.body_mut())
+            .await
+            .unwrap()
+            .to_bytes();
+        let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
+
+        assert_eq!(body["error"], "ValidationFailed");
+        assert_eq!(body["message"], "validation error for field 'title': validation msg");
+        assert_eq!(body["fields"]["title"][0], "validation error for field 'title': validation msg");
     }
 }

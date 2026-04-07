@@ -93,7 +93,7 @@ async fn login_invalid_password_returns_401() {
     .await;
 
     assert_eq!(status, StatusCode::UNAUTHORIZED);
-    let err_str = body["error"].as_str().expect("body missing error");
+    let err_str = body["message"].as_str().expect("body missing message");
     assert!(
         err_str.to_lowercase().contains("invalid"),
         "Expected 'invalid' but got: {err_str}"
