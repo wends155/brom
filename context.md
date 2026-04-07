@@ -150,3 +150,9 @@
 > * **Pruned:** The Phase 2B structural integration anomalies and verification gate failures are fully resolved.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test) restored workspace-wide.
 
+> 📝 **Context Update:**
+> * **Feature:** Documentation Sync (Phase 2B Cleanup)
+> * **Changes:** Synchronized `spec.md` with current Phase 2B behavioral contracts and updated the verification hash (`83c78be`). Hardened `brom-db` doc comments in `migration.rs` and `repository.rs` with `# Arguments`, `# Returns`, `# Errors`, and validated `# Examples`.
+> * **New Constraints:** (None)
+> * **Pruned:** The stale documentation state and missing usage examples for the core storage engine are resolved.
+
