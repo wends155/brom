@@ -156,3 +156,9 @@
 > * **New Constraints:** (None)
 > * **Pruned:** The stale documentation state and missing usage examples for the core storage engine are resolved.
 
+> 📝 **Context Update:**
+> * **Feature:** API Architectural Design (Phase 3B Preparation)
+> * **Changes:** Formally captured the API architecture decisions in a new S-Tier design document (`api.md`). This solidifies the "Split API Surfaces" (admin vs. public), the `AuthPolicy` matrix, URL-based versioning (`/api/v1/`), hidden field stripping behavior, pagination/filtering strategies, and macro dual-route expansion design.
+> * **New Constraints:** Any implementation regarding the REST API routes and endpoints MUST align with the design formalized in `api.md`.
+> * **Pruned:** (None)
+
