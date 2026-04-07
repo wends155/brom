@@ -34,7 +34,7 @@ pub struct BlogPost {
 
 This single definition expands to generate:
 *   A `CREATE TABLE` SQLite schema.
-*   Full CRUD endpoints mounted on `/api/v1/entities`.
+*   Full CRUD endpoints mounted on `/admin/api/entities`.
 *   A Swagger OpenAPI interface reflecting the route payload logic.
 *   Dynamic JSON schemas instructing the embedded Admin SPA on how to render inputs.
 
@@ -60,7 +60,7 @@ cargo run --bin brom-server
 ```
 
 When you launch the server, it seamlessly mounts:
-*   **API Layer**: The auto-generated REST API (`/api/v1/*`).
+*   **API Layer**: The auto-generated REST API (`/admin/api/entities/*`).
 *   **API Docs**: The Swagger OpenAPI documentation endpoints.
 *   **Admin Panel**: The embedded Admin UI accessible at `/admin`. Log in to handle content using built-in session mechanics.
 
