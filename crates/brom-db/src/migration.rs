@@ -130,7 +130,7 @@ impl<'a> MigrationRunner<'a> {
     /// let pool = DbPool::in_memory().unwrap();
     /// let runner = MigrationRunner::new(&pool);
     /// runner.ensure_internal_tables().unwrap();
-    /// 
+    ///
     /// // Assuming a "migrations" directory exists:
     /// // let applied = runner.run_pending(Path::new("migrations")).unwrap();
     /// ```
