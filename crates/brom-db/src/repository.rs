@@ -40,7 +40,8 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
             placeholders.join(", ")
         );
 
-        let json = serde_json::to_value(entity).map_err(|e| brom_core::Error::Serde(e.to_string()))?;
+        let json =
+            serde_json::to_value(entity).map_err(|e| brom_core::Error::Serde(e.to_string()))?;
         let obj = json
             .as_object()
             .ok_or_else(|| brom_core::Error::Serde("entity must be a JSON object".to_string()))?;
@@ -160,8 +161,8 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         let mut entities = Vec::new();
         for row in rows {
             let json = row.map_err(|e| brom_core::Error::Database(e.to_string()))?;
-            let entity = serde_json::from_value(json)
-                .map_err(|e| brom_core::Error::Serde(e.to_string()))?;
+            let entity =
+                serde_json::from_value(json).map_err(|e| brom_core::Error::Serde(e.to_string()))?;
             entities.push(entity);
         }
 
@@ -179,7 +180,8 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
             .join(", ");
         let sql = format!("UPDATE {table} SET {set_clause} WHERE id = ?");
 
-        let json = serde_json::to_value(entity).map_err(|e| brom_core::Error::Serde(e.to_string()))?;
+        let json =
+            serde_json::to_value(entity).map_err(|e| brom_core::Error::Serde(e.to_string()))?;
         let obj = json
             .as_object()
             .ok_or_else(|| brom_core::Error::Serde("entity must be a JSON object".to_string()))?;

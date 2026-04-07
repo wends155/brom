@@ -1,19 +1,72 @@
-extern crate brom_core;
-extern crate brom_macros;
+#![allow(clippy::expect_used)]
+#![allow(clippy::unwrap_used)]
 
-use brom_db::{DbPool, SqliteRepository};
+use brom_core::entity::{AuthPolicy, Constraint, FieldInfo, FieldType, SchemaInfo};
 use brom_core::{EntitySchema, Pagination, Repository};
+use brom_db::{DbPool, SqliteRepository};
 use serde::{Deserialize, Serialize};
-use brom_macros::BromEntity;
 
-#[derive(Debug, BromEntity, Serialize, Deserialize, Clone, PartialEq, utoipa::ToSchema)]
-#[brom(table = "test_posts")]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 struct Post {
     id: i64,
     title: String,
     content: String,
     created_at: Option<String>,
     updated_at: Option<String>,
+}
+
+impl EntitySchema for Post {
+    fn table_name() -> &'static str {
+        "test_posts"
+    }
+
+    fn fields() -> Vec<FieldInfo> {
+        vec![
+            FieldInfo {
+                name: "id".to_string(),
+                field_type: FieldType::Integer,
+                constraints: vec![Constraint::NotNull],
+                ui_widget: None,
+                hidden: false,
+            },
+            FieldInfo {
+                name: "title".to_string(),
+                field_type: FieldType::String,
+                constraints: vec![Constraint::NotNull],
+                ui_widget: None,
+                hidden: false,
+            },
+            FieldInfo {
+                name: "content".to_string(),
+                field_type: FieldType::String,
+                constraints: vec![Constraint::NotNull],
+                ui_widget: None,
+                hidden: false,
+            },
+            FieldInfo {
+                name: "created_at".to_string(),
+                field_type: FieldType::String,
+                constraints: vec![],
+                ui_widget: None,
+                hidden: false,
+            },
+            FieldInfo {
+                name: "updated_at".to_string(),
+                field_type: FieldType::String,
+                constraints: vec![],
+                ui_widget: None,
+                hidden: false,
+            },
+        ]
+    }
+
+    fn schema_info() -> SchemaInfo {
+        SchemaInfo {
+            table_name: Self::table_name().to_string(),
+            fields: Self::fields(),
+            auth_policy: AuthPolicy::Public,
+        }
+    }
 }
 
 fn setup_db() -> DbPool {
@@ -28,7 +81,8 @@ fn setup_db() -> DbPool {
             updated_at TEXT NOT NULL
         )",
         [],
-    ).expect("failed to create table");
+    )
+    .expect("failed to create table");
     pool
 }
 
@@ -49,7 +103,10 @@ fn test_crud_lifecycle() {
     assert_eq!(id, 1);
 
     // 2. Find by ID
-    let found = repo.find_by_id(id).expect("failed to find").expect("not found");
+    let found = repo
+        .find_by_id(id)
+        .expect("failed to find")
+        .expect("not found");
     assert_eq!(found.title, "Hello");
     assert!(found.created_at.is_some());
     assert!(found.updated_at.is_some());
@@ -60,7 +117,10 @@ fn test_crud_lifecycle() {
     to_update.title = "Updated".to_string();
     repo.update(id, &to_update).expect("failed to update");
 
-    let updated = repo.find_by_id(id).expect("failed to find").expect("not found");
+    let updated = repo
+        .find_by_id(id)
+        .expect("failed to find")
+        .expect("not found");
     assert_eq!(updated.title, "Updated");
     assert_eq!(updated.created_at.as_ref().unwrap(), &original_created_at);
     assert!(updated.updated_at.is_some());
@@ -70,7 +130,12 @@ fn test_crud_lifecycle() {
     assert_eq!(count, 1);
 
     // 5. Find All
-    let all = repo.find_all(&Pagination { page: 1, per_page: 10 }).expect("failed to find all");
+    let all = repo
+        .find_all(&Pagination {
+            page: 1,
+            per_page: 10,
+        })
+        .expect("failed to find all");
     assert_eq!(all.len(), 1);
 
     // 6. Delete

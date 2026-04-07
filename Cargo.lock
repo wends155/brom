@@ -277,8 +277,6 @@ version = "0.1.0"
 dependencies = [
  "brom-auth",
  "brom-core",
- "brom-macros",
- "brom-server",
  "chrono",
  "hex",
  "r2d2",
@@ -290,7 +288,6 @@ dependencies = [
  "sha2",
  "thiserror",
  "tracing",
- "utoipa",
 ]
 
 [[package]]

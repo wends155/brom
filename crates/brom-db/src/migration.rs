@@ -76,7 +76,11 @@ impl<'a> MigrationRunner<'a> {
             return Ok(Vec::new());
         }
 
-        let mut entries: Vec<_> = std::fs::read_dir(migrations_dir)?
+        let canonical_dir = migrations_dir.canonicalize().map_err(|e| {
+            DbError::PoolError(format!("failed to canonicalize migrations dir: {e}"))
+        })?;
+
+        let mut entries: Vec<_> = std::fs::read_dir(&canonical_dir)?
             .filter_map(Result::ok)
             .filter(|e| e.path().extension().is_some_and(|ext| ext == "sql"))
             .collect();
@@ -91,13 +95,21 @@ impl<'a> MigrationRunner<'a> {
         let mut applied = Vec::new();
         for entry in entries {
             let path = entry.path();
-            let version = path
+            let canonical_path = path.canonicalize().map_err(|e| {
+                DbError::PoolError(format!("failed to canonicalize migration path: {e}"))
+            })?;
+
+            if !canonical_path.starts_with(&canonical_dir) {
+                return Err(DbError::PoolError("path traversal detected".into()));
+            }
+
+            let version = canonical_path
                 .file_stem()
                 .and_then(|s| s.to_str())
                 .ok_or_else(|| DbError::PoolError("invalid migration filename".into()))?
                 .to_string();
 
-            let sql = std::fs::read_to_string(&path).map_err(|e| {
+            let sql = std::fs::read_to_string(&canonical_path).map_err(|e| {
                 DbError::PoolError(format!("failed to read migration {version}: {e}"))
             })?;
             let checksum = format!("{:x}", Sha256::digest(sql.as_bytes()));
