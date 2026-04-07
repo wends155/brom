@@ -69,6 +69,11 @@ stats-doc-comments src_dir="src/":
 git-diff-last:
     git diff HEAD~1..HEAD
 
+# Disable interactive Git credential prompts for this repository
+disable-git-prompts:
+    git config --local core.terminalprompt false
+    git config --local credential.interactive false
+
 # Check PowerShell version safely
 pwsh-version:
     @pwsh -NoProfile -Command 'Write-Output $PSVersionTable.PSVersion.ToString()'

@@ -180,3 +180,9 @@
 > * **New Constraints:** Phase 3D is now the mandatory gateway (🔒) for Phase 4 (Tooling) and Phase 5 (UI).
 > * **Pruned:** The "Phase 3B: REST API & Codegen" catch-all phase is replaced with bounded, verifiable milestones.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide. Fidelity to Plan: 100%.
+> * **Status:** Session closed after roadmap restructuring. Phase 3B implementation is planned and pending approval.
+
+> 📝 **Context Update:**
+> * **Feature:** Operations Toolcheck Hardening
+> * **Changes:** Migrated git credential operations out of `.agent/workflows/toolcheck.md` and into `justfile` recipe `disable-git-prompts` to prevent IDE constraint violations.
+> * **Verification:** Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide.

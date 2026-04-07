@@ -28,11 +28,7 @@ Run the following checks. All are auto-runnable:
 // turbo
 - `just verify-toolchain` (fast multi-tool version check)
 // turbo
-- `git config credential.helper`
-
-If the output matches `manager`, `wincred`, or `osxkeychain`, set these env vars for the session. Execute each command separately to avoid IDE interception rules:
-- `$env:GCM_INTERACTIVE = 'never'`
-- `$env:GIT_TERMINAL_PROMPT = '0'`
+- `just disable-git-prompts`
 
 **Rust Toolchain:**
 // turbo
