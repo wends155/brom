@@ -44,20 +44,11 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
     let mut public_fields = Vec::new();
     let mut public_field_idents = Vec::new();
     for f in &fields.named {
-        if let Some(info) = expand_field(f, &mut errors) {
-            field_infos.push(info);
-        }
+        let Some((info, attrs)) = expand_field(f, &mut errors) else {
+            continue;
+        };
 
-        let attrs = BromFieldAttrs::parse(f).unwrap_or(BromFieldAttrs {
-            unique: false,
-            not_null: false,
-            default: None,
-            hidden: false,
-            ui_widget: None,
-            link_target: None,
-            many_many_target: None,
-            many_many_junction: None,
-        });
+        field_infos.push(info);
 
         if !attrs.hidden {
             let mut pub_f = f.clone();
@@ -129,20 +120,20 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
     Ok(expanded)
 }
 
-fn expand_field(f: &syn::Field, errors: &mut Option<syn::Error>) -> Option<TokenStream> {
-    #[allow(clippy::single_match_else)]
-    let name = match f.ident.as_ref() {
-        Some(id) => id.to_string(),
-        None => {
-            let e = syn::Error::new_spanned(f, "Field must have an identifier");
-            if let Some(errs) = errors {
-                errs.combine(e);
-            } else {
-                *errors = Some(e);
-            }
-            return None;
+fn expand_field(
+    f: &syn::Field,
+    errors: &mut Option<syn::Error>,
+) -> Option<(TokenStream, BromFieldAttrs)> {
+    let Some(ident) = f.ident.as_ref() else {
+        let e = syn::Error::new_spanned(f, "Field must have an identifier");
+        if let Some(errs) = errors {
+            errs.combine(e);
+        } else {
+            *errors = Some(e);
         }
+        return None;
     };
+    let name = ident.to_string();
 
     #[allow(clippy::single_match_else)]
     let attrs = match BromFieldAttrs::parse(f) {
@@ -177,15 +168,18 @@ fn expand_field(f: &syn::Field, errors: &mut Option<syn::Error>) -> Option<Token
         quote!(None)
     };
 
-    Some(quote! {
-        FieldInfo {
-            name: #name.to_string(),
-            field_type: #field_type,
-            constraints: vec![#(#constraints),*],
-            ui_widget: #ui_widget,
-            hidden: #hidden,
-        }
-    })
+    Some((
+        quote! {
+            FieldInfo {
+                name: #name.to_string(),
+                field_type: #field_type,
+                constraints: vec![#(#constraints),*],
+                ui_widget: #ui_widget,
+                hidden: #hidden,
+            }
+        },
+        attrs,
+    ))
 }
 
 #[cfg(test)]

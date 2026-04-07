@@ -168,3 +168,9 @@
 > * **Lints:** Remediated 20+ clippy lints across `brom-macros` and `brom-server`. Suppressed macro-generated lints in `openapi.rs`. Fixed `BromEntity` macro to strip `brom` attributes from derived `Public` structs.
 > * **Verification:** Achieved Zero-Exit state across `fmt`, `clippy`, `test`, and `sg scan`.
 
+> 📝 **Context Update:**
+> * **Feature:** Phase 3B Audit Remediation & Regression Fixes
+> * **Changes:** Remediated outstanding audit findings and regression issues in `brom-macros`.
+> * **Audit Fixes:** Replaced non-compliant `.unwrap()` with documented `.expect()` in `entity.rs`. Updated `STUB` markers in CLI to align with roadmap.
+> * **Macro Fixes:** Implemented robust error accumulation in `BromEntity` to prevent swallowed syn-errors. Fixed regression in `pass_web.rs` by updating `router` -> `public_router`.
+> * **Verification:** Restored Zero-Exit state. All workspace targets pass `just verify` (fmt, clippy, test, and sg scan).
