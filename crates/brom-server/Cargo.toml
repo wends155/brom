@@ -23,6 +23,7 @@ serde.workspace = true
 tokio.workspace = true
 
 [dev-dependencies]
+brom-macros = { workspace = true }
 mockall = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt"] }
 brom-auth = { workspace = true, features = ["testing"] }

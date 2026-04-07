@@ -23,7 +23,13 @@ pub struct PaginatedResponse<T: Serialize> {
 
 impl<T: Serialize> PaginatedResponse<T> {
     /// Creates a new `PaginatedResponse`.
-    pub fn new(data: Vec<T>, total_items: i64, total_pages: i64, current_page: u64, per_page: u64) -> Self {
+    pub fn new(
+        data: Vec<T>,
+        total_items: i64,
+        total_pages: i64,
+        current_page: u64,
+        per_page: u64,
+    ) -> Self {
         Self {
             data,
             meta: PaginationMeta {

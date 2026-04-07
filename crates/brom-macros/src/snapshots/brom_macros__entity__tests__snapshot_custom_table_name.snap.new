@@ -1,21 +1,18 @@
 ---
 source: crates/brom-macros/src/entity.rs
+assertion_line: 221
 expression: expand_and_format(&input)
 ---
 #[automatically_derived]
 impl ::brom_core::EntitySchema for Post {
     fn table_name() -> &'static str {
-        "post"
+        "blog_posts"
     }
     fn fields() -> Vec<::brom_core::FieldInfo> {
         use ::brom_core::{FieldInfo, FieldType, Constraint};
         vec![
             FieldInfo { name : "title".to_string(), field_type : FieldType::String,
-            constraints : vec![], ui_widget : None, hidden : false, }, FieldInfo { name :
-            "body".to_string(), field_type : FieldType::String, constraints : vec![],
-            ui_widget : None, hidden : false, }, FieldInfo { name : "published"
-            .to_string(), field_type : FieldType::Boolean, constraints : vec![],
-            ui_widget : None, hidden : false, }
+            constraints : vec![], ui_widget : None, hidden : false, }
         ]
     }
     fn schema_info() -> ::brom_core::SchemaInfo {
@@ -29,16 +26,10 @@ impl ::brom_core::EntitySchema for Post {
 #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
 pub struct PostPublic {
     pub title: String,
-    pub body: String,
-    pub published: bool,
 }
 impl From<Post> for PostPublic {
     fn from(item: Post) -> Self {
-        Self {
-            title: item.title,
-            body: item.body,
-            published: item.published,
-        }
+        Self { title: item.title }
     }
 }
 #[automatically_derived]

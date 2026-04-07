@@ -27,8 +27,23 @@ impl ::brom_core::EntitySchema for User {
         }
     }
 }
+#[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
+pub struct UserPublic {
+    #[brom(unique)]
+    pub email: String,
+    #[brom(not_null, default = "Anonymous")]
+    pub display_name: String,
+}
+impl From<User> for UserPublic {
+    fn from(item: User) -> Self {
+        Self {
+            email: item.email,
+            display_name: item.display_name,
+        }
+    }
+}
 #[automatically_derived]
-pub mod user_api {
+pub mod user_admin_api {
     use super::*;
     use ::brom_server::axum::{
         extract::{State, Path},
@@ -41,7 +56,7 @@ pub mod user_api {
         get,
         path = "/admin/api/entities/user",
         responses((status = 200, description = "List all items", body = [User])),
-        tag = "Entity User"
+        tag = "Admin User"
     )]
     pub async fn list_handler(
         state: State<AppState>,
@@ -53,12 +68,12 @@ pub mod user_api {
     #[::brom_server::utoipa::path(
         get,
         path = "/admin/api/entities/user/{id}",
-        params(("id" = i64, Path, description = "The ID of the entity to retrieve")),
+        params(("id" = i64, Path, description = "ID")),
         responses(
             (status = 200, description = "Get item by ID", body = User),
-            (status = 404, description = "Item not found")
+            (status = 404, description = "Not found")
         ),
-        tag = "Entity User"
+        tag = "Admin User"
     )]
     pub async fn get_handler(
         state: State<AppState>,
@@ -81,7 +96,7 @@ pub mod user_api {
         path = "/admin/api/entities/user",
         request_body = User,
         responses((status = 201, description = "Item created", body = User)),
-        tag = "Entity User"
+        tag = "Admin User"
     )]
     pub async fn create_handler(
         state: State<AppState>,
@@ -102,13 +117,13 @@ pub mod user_api {
     #[::brom_server::utoipa::path(
         put,
         path = "/admin/api/entities/user/{id}",
-        params(("id" = i64, Path, description = "The ID of the entity to update")),
+        params(("id" = i64, Path, description = "ID")),
         request_body = User,
         responses(
             (status = 200, description = "Item updated", body = User),
-            (status = 404, description = "Item not found")
+            (status = 404, description = "Not found")
         ),
-        tag = "Entity User"
+        tag = "Admin User"
     )]
     pub async fn update_handler(
         state: State<AppState>,
@@ -131,12 +146,12 @@ pub mod user_api {
     #[::brom_server::utoipa::path(
         delete,
         path = "/admin/api/entities/user/{id}",
-        params(("id" = i64, Path, description = "The ID of the entity to delete")),
+        params(("id" = i64, Path, description = "ID")),
         responses(
             (status = 204, description = "Item deleted"),
-            (status = 404, description = "Item not found")
+            (status = 404, description = "Not found")
         ),
-        tag = "Entity User"
+        tag = "Admin User"
     )]
     pub async fn delete_handler(
         state: State<AppState>,
@@ -149,21 +164,88 @@ pub mod user_api {
     }
 }
 #[automatically_derived]
+pub mod user_public_api {
+    use super::*;
+    use ::brom_server::axum::{
+        extract::{State, Path},
+        Json,
+    };
+    use ::brom_server::AppState;
+    use ::brom_core::{Repository, Pagination};
+    use ::brom_db::SqliteRepository;
+    use ::brom_server::{DataEnvelope, PaginatedResponse};
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/api/v1/entities/user",
+        responses(
+            (
+                status = 200,
+                description = "List all items",
+                body = PaginatedResponse<UserPublic>
+            )
+        ),
+        tag = "Public User"
+    )]
+    pub async fn list_handler(
+        state: State<AppState>,
+    ) -> Result<Json<PaginatedResponse<UserPublic>>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<User>::new(state.db.clone());
+        let items = repo.find_all(&Pagination::default())?;
+        let pub_items = items.into_iter().map(Into::into).collect();
+        Ok(Json(PaginatedResponse::new(pub_items, 0, 0, 1, 50)))
+    }
+    #[::brom_server::utoipa::path(
+        get,
+        path = "/api/v1/entities/user/{id}",
+        params(("id" = i64, Path, description = "ID")),
+        responses(
+            (
+                status = 200,
+                description = "Get item by ID",
+                body = DataEnvelope<UserPublic>
+            ),
+            (status = 404, description = "Not found")
+        ),
+        tag = "Public User"
+    )]
+    pub async fn get_handler(
+        state: State<AppState>,
+        id: Path<i64>,
+    ) -> Result<Json<DataEnvelope<UserPublic>>, ::brom_server::ServerError> {
+        let id = id.0;
+        let repo = SqliteRepository::<User>::new(state.db.clone());
+        let item = repo
+            .find_by_id(id)?
+            .ok_or(
+                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                    entity: "user",
+                    id,
+                }),
+            )?;
+        Ok(Json(DataEnvelope::new(item.into())))
+    }
+}
+#[automatically_derived]
 impl User {
-    /// Generated Axum router for this entity.
-    pub fn router() -> ::brom_server::axum::Router<::brom_server::AppState> {
+    pub fn admin_router() -> ::brom_server::axum::Router<::brom_server::AppState> {
         use ::brom_server::axum::routing::get;
         ::brom_server::axum::Router::<::brom_server::AppState>::new()
             .route(
                 "/admin/api/entities/user",
-                get(user_api::list_handler).post(user_api::create_handler),
+                get(user_admin_api::list_handler).post(user_admin_api::create_handler),
             )
             .route(
                 "/admin/api/entities/user/{id}",
-                get(user_api::get_handler)
-                    .put(user_api::update_handler)
-                    .delete(user_api::delete_handler),
+                get(user_admin_api::get_handler)
+                    .put(user_admin_api::update_handler)
+                    .delete(user_admin_api::delete_handler),
             )
+    }
+    pub fn public_router() -> ::brom_server::axum::Router<::brom_server::AppState> {
+        use ::brom_server::axum::routing::get;
+        ::brom_server::axum::Router::<::brom_server::AppState>::new()
+            .route("/api/v1/entities/user", get(user_public_api::list_handler))
+            .route("/api/v1/entities/user/{id}", get(user_public_api::get_handler))
     }
 }
 #[automatically_derived]
@@ -173,11 +255,13 @@ mod user_openapi_inner {
     #[derive(utoipa::OpenApi)]
     #[openapi(
         paths(
-            user_api::list_handler,
-            user_api::get_handler,
-            user_api::create_handler,
-            user_api::update_handler,
-            user_api::delete_handler,
+            user_admin_api::list_handler,
+            user_admin_api::get_handler,
+            user_admin_api::create_handler,
+            user_admin_api::update_handler,
+            user_admin_api::delete_handler,
+            user_public_api::list_handler,
+            user_public_api::get_handler,
         ),
         components(schemas(User))
     )]

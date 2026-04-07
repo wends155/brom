@@ -40,9 +40,28 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
     };
 
     let mut field_infos = Vec::new();
+    let mut public_fields = Vec::new();
+    let mut public_field_idents = Vec::new();
     for f in &fields.named {
         if let Some(info) = expand_field(f, &mut errors) {
             field_infos.push(info);
+        }
+
+        let attrs = BromFieldAttrs::parse(f).unwrap_or(BromFieldAttrs {
+            unique: false,
+            not_null: false,
+            default: None,
+            hidden: false,
+            ui_widget: None,
+            link_target: None,
+            many_many_target: None,
+            many_many_junction: None,
+        });
+
+        if !attrs.hidden {
+            public_fields.push(f.clone());
+            #[allow(clippy::unwrap_used)]
+            public_field_idents.push(f.ident.clone().unwrap());
         }
     }
 
@@ -50,7 +69,16 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
         return Err(errs);
     }
 
-    let routes = crate::routes::expand_routes(struct_name);
+    let public_struct_name = syn::Ident::new(&format!("{struct_name}Public"), struct_name.span());
+
+    let policy_str = struct_attrs.as_ref().and_then(|a| a.auth_policy.as_deref());
+    let policy_token = match policy_str {
+        Some("AdminOnly") => quote!(::brom_core::AuthPolicy::AdminOnly),
+        Some("ApiKey") => quote!(::brom_core::AuthPolicy::ApiKey),
+        _ => quote!(::brom_core::AuthPolicy::Public), // Default
+    };
+
+    let routes = crate::routes::expand_routes(struct_name, policy_str);
     let openapi = crate::openapi::expand_openapi(struct_name);
 
     let expanded = quote! {
@@ -71,7 +99,20 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
                 ::brom_core::SchemaInfo {
                     table_name: Self::table_name().to_string(),
                     fields: Self::fields(),
-                    auth_policy: ::brom_core::AuthPolicy::Public, // Default for now
+                    auth_policy: #policy_token,
+                }
+            }
+        }
+
+        #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
+        pub struct #public_struct_name {
+            #(#public_fields),*
+        }
+
+        impl From<#struct_name> for #public_struct_name {
+            fn from(item: #struct_name) -> Self {
+                Self {
+                    #(#public_field_idents: item.#public_field_idents),*
                 }
             }
         }
@@ -149,10 +190,12 @@ mod tests {
     use insta::assert_snapshot;
     use syn::parse_quote;
 
-    /// Helper: expand a `DeriveInput` and format the result.
     fn expand_and_format(input: &syn::DeriveInput) -> String {
         let tokens = expand_brom_entity(input).unwrap();
-        let file: syn::File = syn::parse2(tokens).unwrap();
+        let file: syn::File = match syn::parse2(tokens.clone()) {
+            Ok(f) => f,
+            Err(e) => panic!("Parse failed: {}\nTokens:\n{}", e, tokens),
+        };
         prettyplease::unparse(&file)
     }
 

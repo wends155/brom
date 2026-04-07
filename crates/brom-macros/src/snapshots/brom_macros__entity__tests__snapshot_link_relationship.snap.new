@@ -1,21 +1,20 @@
 ---
 source: crates/brom-macros/src/entity.rs
+assertion_line: 248
 expression: expand_and_format(&input)
 ---
 #[automatically_derived]
-impl ::brom_core::EntitySchema for Post {
+impl ::brom_core::EntitySchema for Comment {
     fn table_name() -> &'static str {
-        "post"
+        "comment"
     }
     fn fields() -> Vec<::brom_core::FieldInfo> {
         use ::brom_core::{FieldInfo, FieldType, Constraint};
         vec![
-            FieldInfo { name : "title".to_string(), field_type : FieldType::String,
+            FieldInfo { name : "body".to_string(), field_type : FieldType::String,
             constraints : vec![], ui_widget : None, hidden : false, }, FieldInfo { name :
-            "body".to_string(), field_type : FieldType::String, constraints : vec![],
-            ui_widget : None, hidden : false, }, FieldInfo { name : "published"
-            .to_string(), field_type : FieldType::Boolean, constraints : vec![],
-            ui_widget : None, hidden : false, }
+            "post_id".to_string(), field_type : FieldType::Link { target : "post"
+            .to_string() }, constraints : vec![], ui_widget : None, hidden : false, }
         ]
     }
     fn schema_info() -> ::brom_core::SchemaInfo {
@@ -27,22 +26,21 @@ impl ::brom_core::EntitySchema for Post {
     }
 }
 #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
-pub struct PostPublic {
-    pub title: String,
+pub struct CommentPublic {
     pub body: String,
-    pub published: bool,
+    #[brom(link = "post")]
+    pub post_id: i64,
 }
-impl From<Post> for PostPublic {
-    fn from(item: Post) -> Self {
+impl From<Comment> for CommentPublic {
+    fn from(item: Comment) -> Self {
         Self {
-            title: item.title,
             body: item.body,
-            published: item.published,
+            post_id: item.post_id,
         }
     }
 }
 #[automatically_derived]
-pub mod post_admin_api {
+pub mod comment_admin_api {
     use super::*;
     use ::brom_server::axum::{
         extract::{State, Path},
@@ -53,38 +51,38 @@ pub mod post_admin_api {
     use ::brom_db::SqliteRepository;
     #[::brom_server::utoipa::path(
         get,
-        path = "/admin/api/entities/post",
-        responses((status = 200, description = "List all items", body = [Post])),
-        tag = "Admin Post"
+        path = "/admin/api/entities/comment",
+        responses((status = 200, description = "List all items", body = [Comment])),
+        tag = "Admin Comment"
     )]
     pub async fn list_handler(
         state: State<AppState>,
-    ) -> Result<Json<Vec<Post>>, ::brom_server::ServerError> {
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+    ) -> Result<Json<Vec<Comment>>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<Comment>::new(state.db.clone());
         let items = repo.find_all(&Pagination::default())?;
         Ok(Json(items))
     }
     #[::brom_server::utoipa::path(
         get,
-        path = "/admin/api/entities/post/{id}",
+        path = "/admin/api/entities/comment/{id}",
         params(("id" = i64, Path, description = "ID")),
         responses(
-            (status = 200, description = "Get item by ID", body = Post),
+            (status = 200, description = "Get item by ID", body = Comment),
             (status = 404, description = "Not found")
         ),
-        tag = "Admin Post"
+        tag = "Admin Comment"
     )]
     pub async fn get_handler(
         state: State<AppState>,
         id: Path<i64>,
-    ) -> Result<Json<Post>, ::brom_server::ServerError> {
+    ) -> Result<Json<Comment>, ::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let repo = SqliteRepository::<Comment>::new(state.db.clone());
         let item = repo
             .find_by_id(id)?
             .ok_or(
                 ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
-                    entity: "post",
+                    entity: "comment",
                     id,
                 }),
             )?;
@@ -92,22 +90,22 @@ pub mod post_admin_api {
     }
     #[::brom_server::utoipa::path(
         post,
-        path = "/admin/api/entities/post",
-        request_body = Post,
-        responses((status = 201, description = "Item created", body = Post)),
-        tag = "Admin Post"
+        path = "/admin/api/entities/comment",
+        request_body = Comment,
+        responses((status = 201, description = "Item created", body = Comment)),
+        tag = "Admin Comment"
     )]
     pub async fn create_handler(
         state: State<AppState>,
-        payload: Json<Post>,
-    ) -> Result<Json<Post>, ::brom_server::ServerError> {
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        payload: Json<Comment>,
+    ) -> Result<Json<Comment>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<Comment>::new(state.db.clone());
         let id = repo.create(&payload.0)?;
         let item = repo
             .find_by_id(id)?
             .ok_or(
                 ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
-                    entity: "post",
+                    entity: "comment",
                     id,
                 }),
             )?;
@@ -115,28 +113,28 @@ pub mod post_admin_api {
     }
     #[::brom_server::utoipa::path(
         put,
-        path = "/admin/api/entities/post/{id}",
+        path = "/admin/api/entities/comment/{id}",
         params(("id" = i64, Path, description = "ID")),
-        request_body = Post,
+        request_body = Comment,
         responses(
-            (status = 200, description = "Item updated", body = Post),
+            (status = 200, description = "Item updated", body = Comment),
             (status = 404, description = "Not found")
         ),
-        tag = "Admin Post"
+        tag = "Admin Comment"
     )]
     pub async fn update_handler(
         state: State<AppState>,
         id: Path<i64>,
-        payload: Json<Post>,
-    ) -> Result<Json<Post>, ::brom_server::ServerError> {
+        payload: Json<Comment>,
+    ) -> Result<Json<Comment>, ::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let repo = SqliteRepository::<Comment>::new(state.db.clone());
         repo.update(id, &payload.0)?;
         let item = repo
             .find_by_id(id)?
             .ok_or(
                 ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
-                    entity: "post",
+                    entity: "comment",
                     id,
                 }),
             )?;
@@ -144,26 +142,26 @@ pub mod post_admin_api {
     }
     #[::brom_server::utoipa::path(
         delete,
-        path = "/admin/api/entities/post/{id}",
+        path = "/admin/api/entities/comment/{id}",
         params(("id" = i64, Path, description = "ID")),
         responses(
             (status = 204, description = "Item deleted"),
             (status = 404, description = "Not found")
         ),
-        tag = "Admin Post"
+        tag = "Admin Comment"
     )]
     pub async fn delete_handler(
         state: State<AppState>,
         id: Path<i64>,
     ) -> Result<StatusCode, ::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let repo = SqliteRepository::<Comment>::new(state.db.clone());
         repo.delete(id)?;
         Ok(StatusCode::NO_CONTENT)
     }
 }
 #[automatically_derived]
-pub mod post_public_api {
+pub mod comment_public_api {
     use super::*;
     use ::brom_server::axum::{
         extract::{State, Path},
@@ -175,49 +173,49 @@ pub mod post_public_api {
     use ::brom_server::{DataEnvelope, PaginatedResponse};
     #[::brom_server::utoipa::path(
         get,
-        path = "/api/v1/entities/post",
+        path = "/api/v1/entities/comment",
         responses(
             (
                 status = 200,
                 description = "List all items",
-                body = PaginatedResponse<PostPublic>
+                body = PaginatedResponse<CommentPublic>
             )
         ),
-        tag = "Public Post"
+        tag = "Public Comment"
     )]
     pub async fn list_handler(
         state: State<AppState>,
-    ) -> Result<Json<PaginatedResponse<PostPublic>>, ::brom_server::ServerError> {
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+    ) -> Result<Json<PaginatedResponse<CommentPublic>>, ::brom_server::ServerError> {
+        let repo = SqliteRepository::<Comment>::new(state.db.clone());
         let items = repo.find_all(&Pagination::default())?;
         let pub_items = items.into_iter().map(Into::into).collect();
         Ok(Json(PaginatedResponse::new(pub_items, 0, 0, 1, 50)))
     }
     #[::brom_server::utoipa::path(
         get,
-        path = "/api/v1/entities/post/{id}",
+        path = "/api/v1/entities/comment/{id}",
         params(("id" = i64, Path, description = "ID")),
         responses(
             (
                 status = 200,
                 description = "Get item by ID",
-                body = DataEnvelope<PostPublic>
+                body = DataEnvelope<CommentPublic>
             ),
             (status = 404, description = "Not found")
         ),
-        tag = "Public Post"
+        tag = "Public Comment"
     )]
     pub async fn get_handler(
         state: State<AppState>,
         id: Path<i64>,
-    ) -> Result<Json<DataEnvelope<PostPublic>>, ::brom_server::ServerError> {
+    ) -> Result<Json<DataEnvelope<CommentPublic>>, ::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let repo = SqliteRepository::<Comment>::new(state.db.clone());
         let item = repo
             .find_by_id(id)?
             .ok_or(
                 ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
-                    entity: "post",
+                    entity: "comment",
                     id,
                 }),
             )?;
@@ -225,45 +223,46 @@ pub mod post_public_api {
     }
 }
 #[automatically_derived]
-impl Post {
+impl Comment {
     pub fn admin_router() -> ::brom_server::axum::Router<::brom_server::AppState> {
         use ::brom_server::axum::routing::get;
         ::brom_server::axum::Router::<::brom_server::AppState>::new()
             .route(
-                "/admin/api/entities/post",
-                get(post_admin_api::list_handler).post(post_admin_api::create_handler),
+                "/admin/api/entities/comment",
+                get(comment_admin_api::list_handler)
+                    .post(comment_admin_api::create_handler),
             )
             .route(
-                "/admin/api/entities/post/{id}",
-                get(post_admin_api::get_handler)
-                    .put(post_admin_api::update_handler)
-                    .delete(post_admin_api::delete_handler),
+                "/admin/api/entities/comment/{id}",
+                get(comment_admin_api::get_handler)
+                    .put(comment_admin_api::update_handler)
+                    .delete(comment_admin_api::delete_handler),
             )
     }
     pub fn public_router() -> ::brom_server::axum::Router<::brom_server::AppState> {
         use ::brom_server::axum::routing::get;
         ::brom_server::axum::Router::<::brom_server::AppState>::new()
-            .route("/api/v1/entities/post", get(post_public_api::list_handler))
-            .route("/api/v1/entities/post/{id}", get(post_public_api::get_handler))
+            .route("/api/v1/entities/comment", get(comment_public_api::list_handler))
+            .route("/api/v1/entities/comment/{id}", get(comment_public_api::get_handler))
     }
 }
 #[automatically_derived]
-mod post_openapi_inner {
+mod comment_openapi_inner {
     use super::*;
     use ::brom_server::utoipa;
     #[derive(utoipa::OpenApi)]
     #[openapi(
         paths(
-            post_admin_api::list_handler,
-            post_admin_api::get_handler,
-            post_admin_api::create_handler,
-            post_admin_api::update_handler,
-            post_admin_api::delete_handler,
-            post_public_api::list_handler,
-            post_public_api::get_handler,
+            comment_admin_api::list_handler,
+            comment_admin_api::get_handler,
+            comment_admin_api::create_handler,
+            comment_admin_api::update_handler,
+            comment_admin_api::delete_handler,
+            comment_public_api::list_handler,
+            comment_public_api::get_handler,
         ),
-        components(schemas(Post))
+        components(schemas(Comment))
     )]
-    pub struct PostApi;
+    pub struct CommentApi;
 }
-pub use post_openapi_inner::PostApi;
+pub use comment_openapi_inner::CommentApi;

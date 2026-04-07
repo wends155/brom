@@ -1,5 +1,6 @@
 ---
 source: crates/brom-macros/src/entity.rs
+assertion_line: 210
 expression: expand_and_format(&input)
 ---
 #[automatically_derived]

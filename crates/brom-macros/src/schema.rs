@@ -3,6 +3,7 @@ use syn::{DeriveInput, Field, Type};
 
 pub struct BromStructAttrs {
     pub table_name: Option<String>,
+    pub auth_policy: Option<String>,
 }
 
 pub struct BromFieldAttrs {
@@ -19,6 +20,7 @@ pub struct BromFieldAttrs {
 impl BromStructAttrs {
     pub fn parse(input: &DeriveInput) -> syn::Result<Self> {
         let mut table_name = None;
+        let mut auth_policy = None;
         let mut errors: Option<syn::Error> = None;
 
         for attr in &input.attrs {
@@ -31,6 +33,11 @@ impl BromStructAttrs {
                     let value = meta.value()?;
                     let s: syn::LitStr = value.parse()?;
                     table_name = Some(s.value());
+                    Ok(())
+                } else if meta.path.is_ident("auth_policy") {
+                    let value = meta.value()?;
+                    let s: syn::LitStr = value.parse()?;
+                    auth_policy = Some(s.value());
                     Ok(())
                 } else {
                     Err(meta.error("unrecognized brom attribute"))
@@ -48,7 +55,10 @@ impl BromStructAttrs {
             return Err(errs);
         }
 
-        Ok(Self { table_name })
+        Ok(Self {
+            table_name,
+            auth_policy,
+        })
     }
 }
 

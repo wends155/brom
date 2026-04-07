@@ -32,9 +32,11 @@ impl IntoResponse for ServerError {
             ServerError::Core(brom_core::Error::NotFound { .. }) => {
                 (StatusCode::NOT_FOUND, "NotFound", self.to_string())
             }
-            ServerError::Core(brom_core::Error::ValidationError { .. }) => {
-                (StatusCode::BAD_REQUEST, "ValidationFailed", self.to_string())
-            }
+            ServerError::Core(brom_core::Error::ValidationError { .. }) => (
+                StatusCode::BAD_REQUEST,
+                "ValidationFailed",
+                self.to_string(),
+            ),
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "InternalError",
@@ -136,7 +138,7 @@ mod tests {
             field: "title".into(),
             message: "validation msg".into(),
         });
-        
+
         let mut response = err.into_response();
         let body_bytes = http_body_util::BodyExt::collect(response.body_mut())
             .await
@@ -145,7 +147,13 @@ mod tests {
         let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
 
         assert_eq!(body["error"], "ValidationFailed");
-        assert_eq!(body["message"], "validation error for field 'title': validation msg");
-        assert_eq!(body["fields"]["title"][0], "validation error for field 'title': validation msg");
+        assert_eq!(
+            body["message"],
+            "validation error for field 'title': validation msg"
+        );
+        assert_eq!(
+            body["fields"]["title"][0],
+            "validation error for field 'title': validation msg"
+        );
     }
 }

@@ -12,6 +12,11 @@ coverage:
 coverage-html:
     cargo llvm-cov --all-features --workspace --html
 
+# Format and lint code
+lint:
+    cargo fmt
+    cargo clippy -- -D warnings
+
 # Audit architecture sections
 audit-sections:
     rg -n "## " architecture.md
@@ -76,4 +81,10 @@ verify-toolchain: pwsh-version
     rustc --version
     cargo --version
     cargo clippy --version
-    rustfmt --version
+
+# Run the complete TARS zero-exit verification pipeline
+verify:
+    cargo fmt --all --check
+    cargo clippy --workspace --all-targets -- -D warnings
+    cargo test --workspace
+    sg scan

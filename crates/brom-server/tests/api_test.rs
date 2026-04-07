@@ -226,3 +226,92 @@ async fn unknown_route_returns_404() {
     let response = app.oneshot(request).await.unwrap();
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn api_keys_crud() {
+    let state = common::test_app_state();
+    let (user_id, _) = common::seed_admin_user(&state);
+    let token = common::create_test_session(&state, user_id);
+
+    // 1. List keys (should be empty)
+    let (status, body) = send_json(state.clone(), "GET", "/admin/api/keys", None).await;
+    // Unauthorized without cookie
+    assert_eq!(status, StatusCode::UNAUTHORIZED);
+
+    // Properly authenticated list Request
+    let app = build_router(state.clone(), vec![]);
+    let request = Request::builder()
+        .method("GET")
+        .uri("/admin/api/keys")
+        .header(header::COOKIE, format!("brom_session={token}"))
+        .body(Body::empty())
+        .unwrap();
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let json: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert!(json.is_array());
+    assert_eq!(json.as_array().unwrap().len(), 0);
+
+    // 2. Create Key
+    let app = build_router(state.clone(), vec![]);
+    let request = Request::builder()
+        .method("POST")
+        .uri("/admin/api/keys")
+        .header(header::COOKIE, format!("brom_session={token}"))
+        .header(header::CONTENT_TYPE, "application/json")
+        .body(Body::from(
+            serde_json::to_vec(&json!({
+                "name": "Test Key",
+                "permissions": "read"
+            }))
+            .unwrap(),
+        ))
+        .unwrap();
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::CREATED);
+    let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let create_json: Value = serde_json::from_slice(&body_bytes).unwrap();
+    let raw_key = create_json["raw_key"].as_str().unwrap().to_string();
+    assert_eq!(raw_key.len(), 64);
+    let key_id = create_json["record"]["id"].as_i64().unwrap();
+
+    // 3. List keys (should have 1)
+    let app = build_router(state.clone(), vec![]);
+    let request = Request::builder()
+        .method("GET")
+        .uri("/admin/api/keys")
+        .header(header::COOKIE, format!("brom_session={token}"))
+        .body(Body::empty())
+        .unwrap();
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let json: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(json.as_array().unwrap().len(), 1);
+
+    // 4. Revoke key
+    let app = build_router(state.clone(), vec![]);
+    let request = Request::builder()
+        .method("DELETE")
+        .uri(&format!("/admin/api/keys/{}", key_id))
+        .header(header::COOKIE, format!("brom_session={token}"))
+        .body(Body::empty())
+        .unwrap();
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::NO_CONTENT);
+
+    // 5. List keys again (should be empty)
+    let app = build_router(state.clone(), vec![]);
+    let request = Request::builder()
+        .method("GET")
+        .uri("/admin/api/keys")
+        .header(header::COOKIE, format!("brom_session={token}"))
+        .body(Body::empty())
+        .unwrap();
+    let response = app.oneshot(request).await.unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
+    let json: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(json.as_array().unwrap().len(), 0);
+}

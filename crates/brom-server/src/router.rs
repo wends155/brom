@@ -110,6 +110,14 @@ pub fn build_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>)
         .route("/admin/api/login", post(login))
         .route("/admin/api/logout", post(logout))
         .route("/admin/api/schema", get(schema_api::get_schema))
+        .route(
+            "/admin/api/keys",
+            get(crate::api_keys::list_keys).post(crate::api_keys::create_key),
+        )
+        .route(
+            "/admin/api/keys/{id}",
+            axum::routing::delete(crate::api_keys::revoke_key),
+        )
         .merge(openapi::swagger_ui())
         .layer(middleware::cors_layer(cors_origins))
         .layer(middleware::security_headers_layer())

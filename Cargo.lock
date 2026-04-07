@@ -316,6 +316,7 @@ dependencies = [
  "brom-auth",
  "brom-core",
  "brom-db",
+ "brom-macros",
  "dotenvy",
  "http-body-util",
  "mockall",

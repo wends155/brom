@@ -8,6 +8,22 @@ use utoipa_swagger_ui::SwaggerUi;
 /// are dynamically discovered in the generated Swagger UI configuration.
 #[derive(OpenApi)]
 #[openapi(
+    paths(
+        crate::router::login,
+        crate::router::logout,
+        crate::api_keys::list_keys,
+        crate::api_keys::create_key,
+        crate::api_keys::revoke_key,
+    ),
+    components(
+        schemas(
+            crate::router::LoginRequest,
+            crate::router::LoginResponse,
+            crate::api_keys::ApiKeyRecordDto,
+            crate::api_keys::CreateApiKeyRequest,
+            crate::api_keys::CreateApiKeyResponse,
+        )
+    ),
     info(
         title = "brom API",
         version = "0.1.0",

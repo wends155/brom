@@ -1,14 +1,15 @@
 //! Axum REST API and Server components for the brom headless CMS framework.
 
+pub mod api_keys;
 pub mod config;
 pub mod error;
 pub mod extractor;
 pub mod middleware;
 pub mod openapi;
+pub mod response;
 pub mod router;
 pub mod schema_api;
 pub mod state;
-pub mod response;
 
 pub use error::ServerError;
 pub use extractor::{RequireAdmin, RequireApiKey};

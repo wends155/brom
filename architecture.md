@@ -280,14 +280,12 @@ brom/
 
 ### Verification Pipeline
 
-```
-cargo fmt --all --check
-cargo clippy --workspace --all-targets
-cargo test --workspace
-sg scan
+```powershell
+just verify
 ```
 
-All four commands must exit `0` before any commit.
+This recipe executes the complete 4-step pipeline (`fmt`, `clippy`, `test`, `sg scan`).
+All commands must exit `0` before any commit.
 
 ## 8. Error Handling Strategy
 
