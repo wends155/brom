@@ -160,8 +160,35 @@ impl<'a> MigrationRunner<'a> {
 
         let mut applied = Vec::new();
         for entry in entries {
-            let path = entry.path();
-            let canonical_path = path.canonicalize().map_err(|e| {
+            let file_name = entry.file_name();
+            let file_name_str = file_name
+                .to_str()
+                .ok_or_else(|| DbError::PoolError("invalid UTF-8 in migration filename".into()))?;
+
+            // Structural Validation: YYYYMMDD_HHMMSS_name.sql
+            let stem = Path::new(file_name_str)
+                .file_stem()
+                .and_then(|s| s.to_str())
+                .ok_or_else(|| DbError::PoolError("invalid migration filename".into()))?;
+
+            let parts: Vec<&str> = stem.splitn(3, '_').collect();
+            if parts.len() < 3
+                || parts[0].len() != 8
+                || !parts[0].chars().all(|c| c.is_ascii_digit())
+                || parts[1].len() != 6
+                || !parts[1].chars().all(|c| c.is_ascii_digit())
+            {
+                return Err(DbError::PoolError(format!(
+                    "invalid migration filename format: {file_name_str}. Expected YYYYMMDD_HHMMSS_name.sql"
+                )));
+            }
+
+            let version = stem.to_string();
+            let name = parts[2].to_string();
+
+            // Explicit path joining from canonical base to prevent traversal
+            let target_path = canonical_dir.join(file_name_str);
+            let canonical_path = target_path.canonicalize().map_err(|e| {
                 DbError::PoolError(format!("failed to canonicalize migration path: {e}"))
             })?;
 
@@ -169,12 +196,7 @@ impl<'a> MigrationRunner<'a> {
                 return Err(DbError::PoolError("path traversal detected".into()));
             }
 
-            let version = canonical_path
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .ok_or_else(|| DbError::PoolError("invalid migration filename".into()))?
-                .to_string();
-
+            // narsil-ignore: CWE-22 - Path validated via strict structural check and directory canonicalization containment.
             let sql = std::fs::read_to_string(&canonical_path).map_err(|e| {
                 DbError::PoolError(format!("failed to read migration {version}: {e}"))
             })?;
@@ -196,14 +218,6 @@ impl<'a> MigrationRunner<'a> {
                     )));
                 }
             } else {
-                // Extract human-readable name from filename
-                // e.g., "20260406_120000_add_posts" -> "add_posts"
-                let name = version
-                    .splitn(3, '_')
-                    .nth(2)
-                    .unwrap_or(&version)
-                    .to_string();
-
                 tx.execute_batch(&sql).map_err(|e| {
                     DbError::PoolError(format!("failed to execute migration {version}: {e}"))
                 })?;

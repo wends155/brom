@@ -21,56 +21,88 @@ pub trait EntitySchema: Sized + Send + Sync + 'static {
     fn schema_info() -> SchemaInfo;
 }
 
+/// Metadata for a single field of an entity.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FieldInfo {
+    /// The programmatic name of the field.
     pub name: String,
+    /// The storage and logic type of the field.
     pub field_type: FieldType,
+    /// Constraints applied to this field (e.g., `NotNull`).
     pub constraints: Vec<Constraint>,
+    /// Optional UI widget identifier for rendering.
     pub ui_widget: Option<String>,
+    /// Whether the field is hidden from the public UI.
     pub hidden: bool,
 }
 
+/// High-level data types supported by the `brom` entity system.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum FieldType {
+    /// A UTF-8 string.
     String,
+    /// A 64-bit signed integer.
     Integer,
+    /// A double-precision floating point number.
     Float,
+    /// A boolean value.
     Boolean,
+    /// A timestamp.
     DateTime,
+    /// A 1:N relationship to another entity.
     Link {
+        /// The target entity table name.
         target: String,
     },
+    /// An M:N relationship to another entity.
     ManyToMany {
+        /// The target entity table name.
         target: String,
+        /// The automatically generated junction table name.
         junction_table: String,
     },
 }
 
+/// Schema-level constraints for database fields.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Constraint {
+    /// Field must be unique across all records.
     Unique,
+    /// Field cannot be null.
     NotNull,
+    /// Default value for the field.
     Default(String),
 }
 
+/// Complete schema information including auth policy.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SchemaInfo {
+    /// The database table name.
     pub table_name: String,
+    /// Metadata for all fields in the entity.
     pub fields: Vec<FieldInfo>,
+    /// The security policy governing access.
     pub auth_policy: AuthPolicy,
 }
 
+/// Security policy governing endpoint and database access.
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub enum AuthPolicy {
+    /// No authentication required.
     #[default]
     Public,
+    /// Valid API key required for bearer authentication.
     ApiKey,
+    /// Admin login session required.
     AdminOnly,
 }
 
+/// High-level pagination metadata for list responses.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pagination {
+    /// Current page number (1-indexed).
     pub page: u64,
+    /// Number of items per page.
     pub per_page: u64,
 }
 

@@ -186,3 +186,17 @@
 > * **Feature:** Operations Toolcheck Hardening
 > * **Changes:** Migrated git credential operations out of `.agent/workflows/toolcheck.md` and into `justfile` recipe `disable-git-prompts` to prevent IDE constraint violations.
 > * **Verification:** Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide.
+
+> 📝 **Context Update:**
+> * **Feature:** Documentation and Behavioral Spec Synchronization
+> * **Changes:** Applied comprehensive `///` documentation to public endpoints, generic data envelopes, and entity metadata structures. Synchronized `spec.md` with `brom-server` contracts and API behavioral scenarios.
+> * **New Constraints:** Any new public traits, structs, or route handlers MUST include proper `///` doc comments.
+> * **Pruned:** The `missing_docs`, `clippy::doc_markdown`, and `clippy::unwrap_used` violations are fully resolved.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, sg scan) passed. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 2B Path Traversal (CWE-22) Remediation
+> * **Changes:** Refactored `MigrationRunner::run_pending` to sequentially validate filename bounds `YYYYMMDD_HHMMSS_name.sql`, followed by an explicit `canonicalize()` boundary lock. `expect_err` usage introduced to preserve pure Zero-Exit integrity in tests.
+> * **New Constraints:** Any dynamic inputs forming path descriptors MUST pass strict structural format validations before canonicalization anchors are enforced. Validated false-positives require `// narsil-ignore: <CWE-ID>` inline tags.
+> * **Pruned:** False positive and true positive tracking for `CWE-22` inside `brom-db`.
+> * **Verification:** Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide. Fidelity to Plan: 100%.

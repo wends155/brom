@@ -41,3 +41,26 @@ fn ensure_internal_tables_is_idempotent() {
         .expect("count");
     assert_eq!(count, 4);
 }
+
+#[test]
+fn run_pending_rejects_invalid_filenames() {
+    let pool = DbPool::in_memory().expect("pool");
+    let runner = MigrationRunner::new(&pool);
+
+    // Create a temporary directory for migrations
+    let temp = std::env::temp_dir().join(format!("brom_test_{}", rand::random::<u32>()));
+    std::fs::create_dir_all(&temp).expect("create dir");
+
+    // Add an invalid filename
+    std::fs::write(temp.join("invalid_format.sql"), "SELECT 1;").expect("write file");
+
+    let result = runner.run_pending(&temp);
+    assert!(result.is_err());
+    let err = result
+        .expect_err("should fail with path traversal error")
+        .to_string();
+    assert!(err.contains("invalid migration filename") || err.contains("structural validation"));
+
+    // Cleanup
+    let _ = std::fs::remove_dir_all(&temp);
+}
