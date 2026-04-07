@@ -23,6 +23,7 @@ pub fn test_app_state() -> AppState {
 
 /// Seeds an admin user with known credentials.
 /// Returns (`user_id`, `raw_password`).
+#[allow(dead_code)]
 pub fn seed_admin_user(state: &AppState) -> (i64, String) {
     let password = "test_password_123";
     let hash = brom_auth::password::hash_password(password).expect("hash");
@@ -38,6 +39,7 @@ pub fn seed_admin_user(state: &AppState) -> (i64, String) {
 }
 
 /// Creates a real session via the `SessionStore` trait and returns the token.
+#[allow(dead_code)]
 pub fn create_test_session(state: &AppState, user_id: i64) -> String {
     state
         .session_store

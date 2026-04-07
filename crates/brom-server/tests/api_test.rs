@@ -234,7 +234,7 @@ async fn api_keys_crud() {
     let token = common::create_test_session(&state, user_id);
 
     // 1. List keys (should be empty)
-    let (status, body) = send_json(state.clone(), "GET", "/admin/api/keys", None).await;
+    let (status, _body) = send_json(state.clone(), "GET", "/admin/api/keys", None).await;
     // Unauthorized without cookie
     assert_eq!(status, StatusCode::UNAUTHORIZED);
 
@@ -294,7 +294,7 @@ async fn api_keys_crud() {
     let app = build_router(state.clone(), vec![]);
     let request = Request::builder()
         .method("DELETE")
-        .uri(&format!("/admin/api/keys/{}", key_id))
+        .uri(format!("/admin/api/keys/{key_id}"))
         .header(header::COOKIE, format!("brom_session={token}"))
         .body(Body::empty())
         .unwrap();

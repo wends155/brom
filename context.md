@@ -162,3 +162,9 @@
 > * **New Constraints:** Any implementation regarding the REST API routes and endpoints MUST align with the design formalized in `api.md`.
 > * **Pruned:** (None)
 
+> 📝 **Context Update:**
+> * **Feature:** TARS Zero-Exit Verification Pipeline
+> * **Changes:** Implemented `just verify` consolidated recipe. Updated `architecture.md` §7 to mandate `just verify` for all TARS quality gates. 
+> * **Lints:** Remediated 20+ clippy lints across `brom-macros` and `brom-server`. Suppressed macro-generated lints in `openapi.rs`. Fixed `BromEntity` macro to strip `brom` attributes from derived `Public` structs.
+> * **Verification:** Achieved Zero-Exit state across `fmt`, `clippy`, `test`, and `sg scan`.
+

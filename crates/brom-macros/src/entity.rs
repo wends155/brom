@@ -4,6 +4,7 @@ use syn::{Data, DeriveInput, Fields};
 
 use crate::schema::{BromFieldAttrs, BromStructAttrs, map_type_to_field_type};
 
+#[allow(clippy::too_many_lines)]
 pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
     let struct_name = &input.ident;
     let mut errors: Option<syn::Error> = None;
@@ -59,9 +60,13 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
         });
 
         if !attrs.hidden {
-            public_fields.push(f.clone());
-            #[allow(clippy::unwrap_used)]
-            public_field_idents.push(f.ident.clone().unwrap());
+            let mut pub_f = f.clone();
+            // Strip the #[brom(...)] helper attributes from the public struct
+            pub_f.attrs.retain(|attr| !attr.path().is_ident("brom"));
+
+            public_fields.push(pub_f);
+            #[allow(clippy::expect_used)] // Infallible: BromEntity only derives on named structs
+            public_field_idents.push(f.ident.clone().expect("Struct fields must be named"));
         }
     }
 

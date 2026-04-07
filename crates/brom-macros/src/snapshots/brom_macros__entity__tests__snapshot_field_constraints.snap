@@ -29,9 +29,7 @@ impl ::brom_core::EntitySchema for User {
 }
 #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
 pub struct UserPublic {
-    #[brom(unique)]
     pub email: String,
-    #[brom(not_null, default = "Anonymous")]
     pub display_name: String,
 }
 impl From<User> for UserPublic {
@@ -187,12 +185,22 @@ pub mod user_public_api {
         tag = "Public User"
     )]
     pub async fn list_handler(
-        state: State<AppState>,
-    ) -> Result<Json<PaginatedResponse<UserPublic>>, ::brom_server::ServerError> {
-        let repo = SqliteRepository::<User>::new(state.db.clone());
-        let items = repo.find_all(&Pagination::default())?;
+        state: ::brom_server::axum::extract::State<::brom_server::AppState>,
+    ) -> Result<
+        ::brom_server::axum::Json<::brom_server::PaginatedResponse<UserPublic>>,
+        ::brom_server::ServerError,
+    > {
+        let repo = ::brom_db::SqliteRepository::<User>::new(state.db.clone());
+        let items = ::brom_core::Repository::find_all(
+            &repo,
+            &::brom_core::Pagination::default(),
+        )?;
         let pub_items = items.into_iter().map(Into::into).collect();
-        Ok(Json(PaginatedResponse::new(pub_items, 0, 0, 1, 50)))
+        Ok(
+            ::brom_server::axum::Json(
+                ::brom_server::PaginatedResponse::new(pub_items, 0, 0, 1, 50),
+            ),
+        )
     }
     #[::brom_server::utoipa::path(
         get,
@@ -209,20 +217,22 @@ pub mod user_public_api {
         tag = "Public User"
     )]
     pub async fn get_handler(
-        state: State<AppState>,
-        id: Path<i64>,
-    ) -> Result<Json<DataEnvelope<UserPublic>>, ::brom_server::ServerError> {
+        state: ::brom_server::axum::extract::State<::brom_server::AppState>,
+        id: ::brom_server::axum::extract::Path<i64>,
+    ) -> Result<
+        ::brom_server::axum::Json<::brom_server::DataEnvelope<UserPublic>>,
+        ::brom_server::ServerError,
+    > {
         let id = id.0;
-        let repo = SqliteRepository::<User>::new(state.db.clone());
-        let item = repo
-            .find_by_id(id)?
+        let repo = ::brom_db::SqliteRepository::<User>::new(state.db.clone());
+        let item = ::brom_core::Repository::find_by_id(&repo, id)?
             .ok_or(
                 ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
                     entity: "user",
                     id,
                 }),
             )?;
-        Ok(Json(DataEnvelope::new(item.into())))
+        Ok(::brom_server::axum::Json(::brom_server::DataEnvelope::new(item.into())))
     }
 }
 #[automatically_derived]
@@ -249,6 +259,7 @@ impl User {
     }
 }
 #[automatically_derived]
+#[allow(clippy::needless_for_each)]
 mod user_openapi_inner {
     use super::*;
     use ::brom_server::utoipa;

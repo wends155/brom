@@ -14,7 +14,7 @@ pub struct Post {
 
 fn main() {
     // The macro should generate Post::router() and PostApi struct.
-    let _router = Post::router();
+    let _router = Post::public_router();
     
     // To call .openapi(), the trait must be in scope.
     let _doc = <PostApi as brom_server::utoipa::OpenApi>::openapi();

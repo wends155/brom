@@ -90,10 +90,10 @@ fn main() {
             }
         }
         Commands::Diff => {
-            println!("STUB(Phase 2): Diff database schema against migrations");
+            println!("STUB(Phase 4): Diff database schema against migrations");
         }
         Commands::New { name } => {
-            println!("STUB(Phase 2): Scaffold new project '{name}'");
+            println!("STUB(Phase 3+): Scaffold new project '{name}'");
         }
     }
 }

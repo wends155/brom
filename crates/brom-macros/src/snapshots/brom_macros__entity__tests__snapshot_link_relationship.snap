@@ -27,7 +27,6 @@ impl ::brom_core::EntitySchema for Comment {
 #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
 pub struct CommentPublic {
     pub body: String,
-    #[brom(link = "post")]
     pub post_id: i64,
 }
 impl From<Comment> for CommentPublic {
@@ -183,12 +182,22 @@ pub mod comment_public_api {
         tag = "Public Comment"
     )]
     pub async fn list_handler(
-        state: State<AppState>,
-    ) -> Result<Json<PaginatedResponse<CommentPublic>>, ::brom_server::ServerError> {
-        let repo = SqliteRepository::<Comment>::new(state.db.clone());
-        let items = repo.find_all(&Pagination::default())?;
+        state: ::brom_server::axum::extract::State<::brom_server::AppState>,
+    ) -> Result<
+        ::brom_server::axum::Json<::brom_server::PaginatedResponse<CommentPublic>>,
+        ::brom_server::ServerError,
+    > {
+        let repo = ::brom_db::SqliteRepository::<Comment>::new(state.db.clone());
+        let items = ::brom_core::Repository::find_all(
+            &repo,
+            &::brom_core::Pagination::default(),
+        )?;
         let pub_items = items.into_iter().map(Into::into).collect();
-        Ok(Json(PaginatedResponse::new(pub_items, 0, 0, 1, 50)))
+        Ok(
+            ::brom_server::axum::Json(
+                ::brom_server::PaginatedResponse::new(pub_items, 0, 0, 1, 50),
+            ),
+        )
     }
     #[::brom_server::utoipa::path(
         get,
@@ -205,20 +214,22 @@ pub mod comment_public_api {
         tag = "Public Comment"
     )]
     pub async fn get_handler(
-        state: State<AppState>,
-        id: Path<i64>,
-    ) -> Result<Json<DataEnvelope<CommentPublic>>, ::brom_server::ServerError> {
+        state: ::brom_server::axum::extract::State<::brom_server::AppState>,
+        id: ::brom_server::axum::extract::Path<i64>,
+    ) -> Result<
+        ::brom_server::axum::Json<::brom_server::DataEnvelope<CommentPublic>>,
+        ::brom_server::ServerError,
+    > {
         let id = id.0;
-        let repo = SqliteRepository::<Comment>::new(state.db.clone());
-        let item = repo
-            .find_by_id(id)?
+        let repo = ::brom_db::SqliteRepository::<Comment>::new(state.db.clone());
+        let item = ::brom_core::Repository::find_by_id(&repo, id)?
             .ok_or(
                 ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
                     entity: "comment",
                     id,
                 }),
             )?;
-        Ok(Json(DataEnvelope::new(item.into())))
+        Ok(::brom_server::axum::Json(::brom_server::DataEnvelope::new(item.into())))
     }
 }
 #[automatically_derived]
@@ -246,6 +257,7 @@ impl Comment {
     }
 }
 #[automatically_derived]
+#[allow(clippy::needless_for_each)]
 mod comment_openapi_inner {
     use super::*;
     use ::brom_server::utoipa;

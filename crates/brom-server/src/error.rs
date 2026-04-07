@@ -58,6 +58,7 @@ impl IntoResponse for ServerError {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used, clippy::expect_used)]
     use super::*;
     use axum::http::StatusCode;
     use axum::response::IntoResponse;
