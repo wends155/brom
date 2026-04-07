@@ -2,6 +2,7 @@ use thiserror::Error;
 
 /// Core domain errors for the brom framework.
 #[derive(Debug, Error)]
+#[non_exhaustive]
 pub enum Error {
     #[error("schema error: {0}")]
     SchemaError(String),
@@ -14,4 +15,10 @@ pub enum Error {
 
     #[error("not found: entity {entity} with id {id}")]
     NotFound { entity: &'static str, id: i64 },
+
+    #[error("database error: {0}")]
+    Database(String),
+
+    #[error("serialization error: {0}")]
+    Serde(String),
 }

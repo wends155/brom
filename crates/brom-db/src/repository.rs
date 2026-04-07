@@ -40,27 +40,31 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
             placeholders.join(", ")
         );
 
-        let json = serde_json::to_value(entity)
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
-        let obj = json.as_object().ok_or_else(|| {
-            brom_core::Error::SchemaError("entity must be a JSON object".to_string())
-        })?;
+        let json = serde_json::to_value(entity).map_err(|e| brom_core::Error::Serde(e.to_string()))?;
+        let obj = json
+            .as_object()
+            .ok_or_else(|| brom_core::Error::Serde("entity must be a JSON object".to_string()))?;
 
+        let now = chrono::Utc::now().to_rfc3339();
         let params: Vec<SqliteValue> = columns
             .iter()
             .map(|col| {
-                obj.get(col)
-                    .cloned()
-                    .map_or(SqliteValue::Null, json_to_sqlite_value)
+                if col == "created_at" || col == "updated_at" {
+                    SqliteValue::Text(now.clone())
+                } else {
+                    obj.get(col)
+                        .cloned()
+                        .map_or(SqliteValue::Null, json_to_sqlite_value)
+                }
             })
             .collect();
 
         let conn = self
             .pool
             .get()
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
         conn.execute(&sql, rusqlite::params_from_iter(params))
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
 
         Ok(conn.last_insert_rowid())
     }
@@ -73,10 +77,10 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         let conn = self
             .pool
             .get()
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
         let mut stmt = conn
             .prepare(&sql)
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
 
         let res = stmt.query_row([id], |row| {
             let mut map = serde_json::Map::new();
@@ -103,11 +107,11 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         match res {
             Ok(json) => {
                 let entity = serde_json::from_value(json)
-                    .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+                    .map_err(|e| brom_core::Error::Serde(e.to_string()))?;
                 Ok(Some(entity))
             }
             Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(brom_core::Error::SchemaError(e.to_string())),
+            Err(e) => Err(brom_core::Error::Database(e.to_string())),
         }
     }
 
@@ -121,10 +125,10 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         let conn = self
             .pool
             .get()
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
         let mut stmt = conn
             .prepare(&sql)
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
 
         let rows = stmt
             .query_map([limit, offset], |row| {
@@ -151,13 +155,13 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
                 }
                 Ok(serde_json::Value::Object(map))
             })
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
 
         let mut entities = Vec::new();
         for row in rows {
-            let json = row.map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            let json = row.map_err(|e| brom_core::Error::Database(e.to_string()))?;
             let entity = serde_json::from_value(json)
-                .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+                .map_err(|e| brom_core::Error::Serde(e.to_string()))?;
             entities.push(entity);
         }
 
@@ -175,18 +179,22 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
             .join(", ");
         let sql = format!("UPDATE {table} SET {set_clause} WHERE id = ?");
 
-        let json = serde_json::to_value(entity)
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
-        let obj = json.as_object().ok_or_else(|| {
-            brom_core::Error::SchemaError("entity must be a JSON object".to_string())
-        })?;
+        let json = serde_json::to_value(entity).map_err(|e| brom_core::Error::Serde(e.to_string()))?;
+        let obj = json
+            .as_object()
+            .ok_or_else(|| brom_core::Error::Serde("entity must be a JSON object".to_string()))?;
 
+        let now = chrono::Utc::now().to_rfc3339();
         let mut params: Vec<SqliteValue> = fields
             .iter()
             .map(|f| {
-                obj.get(&f.name)
-                    .cloned()
-                    .map_or(SqliteValue::Null, json_to_sqlite_value)
+                if f.name == "updated_at" {
+                    SqliteValue::Text(now.clone())
+                } else {
+                    obj.get(&f.name)
+                        .cloned()
+                        .map_or(SqliteValue::Null, json_to_sqlite_value)
+                }
             })
             .collect();
         params.push(SqliteValue::Integer(id));
@@ -194,9 +202,9 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         let conn = self
             .pool
             .get()
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
         conn.execute(&sql, rusqlite::params_from_iter(params))
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
 
         Ok(())
     }
@@ -209,9 +217,9 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         let conn = self
             .pool
             .get()
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
         conn.execute(&sql, [id])
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
 
         Ok(())
     }
@@ -224,9 +232,9 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         let conn = self
             .pool
             .get()
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))?;
+            .map_err(|e| brom_core::Error::Database(e.to_string()))?;
         conn.query_row(&sql, [], |row| row.get(0))
-            .map_err(|e| brom_core::Error::SchemaError(e.to_string()))
+            .map_err(|e| brom_core::Error::Database(e.to_string()))
     }
 }
 

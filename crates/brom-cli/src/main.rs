@@ -16,6 +16,8 @@ struct Cli {
 enum Commands {
     /// Applies database migrations
     Migrate,
+    /// Shows the difference between migrations and current database state
+    Diff,
     /// Scaffolds a new brom project
     New { name: String },
 }
@@ -86,6 +88,9 @@ fn main() {
                     std::process::exit(1);
                 }
             }
+        }
+        Commands::Diff => {
+            println!("STUB(Phase 2): Diff database schema against migrations");
         }
         Commands::New { name } => {
             println!("STUB(Phase 2): Scaffold new project '{name}'");

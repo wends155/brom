@@ -24,4 +24,7 @@ sha2.workspace = true
 
 [dev-dependencies]
 brom-macros.workspace = true
+brom-core.workspace = true
+brom-server.workspace = true
+utoipa.workspace = true
 

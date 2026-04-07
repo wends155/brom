@@ -1,5 +1,6 @@
 use crate::error::DbError;
 use crate::pool::DbPool;
+use rusqlite::OptionalExtension;
 use std::path::Path;
 
 /// Runner for schema migrations.
@@ -53,7 +54,9 @@ impl<'a> MigrationRunner<'a> {
             CREATE TABLE IF NOT EXISTS _brom_migration (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 version TEXT NOT NULL UNIQUE,
-                applied_at TEXT NOT NULL
+                name TEXT NOT NULL,
+                applied_at TEXT NOT NULL,
+                checksum TEXT NOT NULL
             );
             ",
         )?;
@@ -67,6 +70,8 @@ impl<'a> MigrationRunner<'a> {
     /// Returns `DbError` if reading migrations or executing them fails.
     #[tracing::instrument(skip_all)]
     pub fn run_pending(&self, migrations_dir: &Path) -> Result<Vec<String>, DbError> {
+        use sha2::{Digest, Sha256};
+
         if !migrations_dir.exists() {
             return Ok(Vec::new());
         }
@@ -92,24 +97,41 @@ impl<'a> MigrationRunner<'a> {
                 .ok_or_else(|| DbError::PoolError("invalid migration filename".into()))?
                 .to_string();
 
-            let exists: bool = tx
+            let sql = std::fs::read_to_string(&path).map_err(|e| {
+                DbError::PoolError(format!("failed to read migration {version}: {e}"))
+            })?;
+            let checksum = format!("{:x}", Sha256::digest(sql.as_bytes()));
+
+            let row: Option<String> = tx
                 .query_row(
-                    "SELECT EXISTS(SELECT 1 FROM _brom_migration WHERE version = ?)",
+                    "SELECT checksum FROM _brom_migration WHERE version = ?",
                     [&version],
                     |row| row.get(0),
                 )
-                .map_err(|e| DbError::PoolError(e.to_string()))?;
+                .optional()
+                .map_err(|e: rusqlite::Error| DbError::PoolError(e.to_string()))?;
 
-            if !exists {
-                let sql = std::fs::read_to_string(&path).map_err(|e| {
-                    DbError::PoolError(format!("failed to read migration {version}: {e}"))
-                })?;
+            if let Some(stored_checksum) = row {
+                if stored_checksum != checksum {
+                    return Err(DbError::MigrationError(format!(
+                        "checksum mismatch for migration '{version}': expected {stored_checksum}, got {checksum}"
+                    )));
+                }
+            } else {
+                // Extract human-readable name from filename
+                // e.g., "20260406_120000_add_posts" -> "add_posts"
+                let name = version
+                    .splitn(3, '_')
+                    .nth(2)
+                    .unwrap_or(&version)
+                    .to_string();
+
                 tx.execute_batch(&sql).map_err(|e| {
                     DbError::PoolError(format!("failed to execute migration {version}: {e}"))
                 })?;
                 tx.execute(
-                    "INSERT INTO _brom_migration (version, applied_at) VALUES (?, datetime('now'))",
-                    [&version],
+                    "INSERT INTO _brom_migration (version, name, applied_at, checksum) VALUES (?, ?, datetime('now'), ?)",
+                    [&version, &name, &checksum],
                 )
                 .map_err(|e| DbError::PoolError(e.to_string()))?;
                 applied.push(version);

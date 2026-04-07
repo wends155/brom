@@ -134,3 +134,11 @@
 > * **New Constraints:** Any modification to the `BromEntity` expansion logic MUST be verified against these snapshots. Use `INSTA_UPDATE=always cargo test -p brom-macros` to update baselines after intentional structural changes.
 > * **Pruned:** Deferred CLI snapshot testing to `todos.md` until `brom diff` is stable.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test) passed. All 5 new snapshots verified and accepted. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 2B (Persistence & Migrations Hardening)
+> * **Changes:** Refactored `brom-core::Error` with `Database(String)` and `Serde(String)` variants and `#[non_exhaustive]`. Hardened `SqliteRepository` with auto-inject `created_at`/`updated_at` timestamps using `chrono::Utc`. Implemented SHA-256 checksum verification in `MigrationRunner`. Updated `_brom_migration` schema to include `name` and `checksum`. Added `diff` subcommand stub to CLI.
+> * **New Constraints:** Any modification to existing migrations will trigger a checksum mismatch error. Entities using `SqliteRepository` must include `created_at` and `updated_at` fields (as `Option<String>`) to receive auto-timestamps.
+> * **Verification:** Established `repository_test.rs` (CRUD lifecycle) and `migration_test.rs` (idempotency/schema) integration tests in `brom-db`.
+> * **Technical Debt:** `BromEntity` macro is currently coupled with `utoipa` and `brom-server`; integration tests in `brom-db` require these as `dev-dependencies`.
+> * **Audit Outcome:** ❌ FAILED (Verification Gates violated). Linter (`expect_used`) and formatting anomalies detected in Phase 2B tests. Structural violation (`brom-db` testing dynamically references `brom-macros` and `brom-server`). Remediations required via Phase 2B Tech Debt/Plan.
