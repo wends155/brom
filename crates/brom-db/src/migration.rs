@@ -166,10 +166,9 @@ impl<'a> MigrationRunner<'a> {
                 .ok_or_else(|| DbError::PoolError("invalid UTF-8 in migration filename".into()))?;
 
             // Structural Validation: YYYYMMDD_HHMMSS_name.sql
-            let stem = Path::new(file_name_str)
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .ok_or_else(|| DbError::PoolError("invalid migration filename".into()))?;
+            let stem = file_name_str.strip_suffix(".sql").ok_or_else(|| {
+                DbError::PoolError(format!("invalid migration filename: {file_name_str}"))
+            })?;
 
             let parts: Vec<&str> = stem.splitn(3, '_').collect();
             if parts.len() < 3
@@ -186,18 +185,16 @@ impl<'a> MigrationRunner<'a> {
             let version = stem.to_string();
             let name = parts[2].to_string();
 
-            // Explicit path joining from canonical base to prevent traversal
-            let target_path = canonical_dir.join(file_name_str);
-            let canonical_path = target_path.canonicalize().map_err(|e| {
+            let file_path = entry.path().canonicalize().map_err(|e| {
                 DbError::PoolError(format!("failed to canonicalize migration path: {e}"))
             })?;
 
-            if !canonical_path.starts_with(&canonical_dir) {
+            if !file_path.starts_with(&canonical_dir) {
                 return Err(DbError::PoolError("path traversal detected".into()));
             }
 
-            // narsil-ignore: CWE-22 - Path validated via strict structural check and directory canonicalization containment.
-            let sql = std::fs::read_to_string(&canonical_path).map_err(|e| {
+            // narsil-ignore: CWE-22 - Path originates from OS-provided DirEntry, canonicalized, and explicitly bounds-checked against the base migrations directory.
+            let sql = std::fs::read_to_string(&file_path).map_err(|e| {
                 DbError::PoolError(format!("failed to read migration {version}: {e}"))
             })?;
             let checksum = format!("{:x}", Sha256::digest(sql.as_bytes()));

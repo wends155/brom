@@ -195,8 +195,8 @@
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, sg scan) passed. Fidelity to Plan: 100%.
 
 > 📝 **Context Update:**
-> * **Feature:** Phase 2B Path Traversal (CWE-22) Remediation
-> * **Changes:** Refactored `MigrationRunner::run_pending` to sequentially validate filename bounds `YYYYMMDD_HHMMSS_name.sql`, followed by an explicit `canonicalize()` boundary lock. `expect_err` usage introduced to preserve pure Zero-Exit integrity in tests.
-> * **New Constraints:** Any dynamic inputs forming path descriptors MUST pass strict structural format validations before canonicalization anchors are enforced. Validated false-positives require `// narsil-ignore: <CWE-ID>` inline tags.
-> * **Pruned:** False positive and true positive tracking for `CWE-22` inside `brom-db`.
-> * **Verification:** Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide. Fidelity to Plan: 100%.
+> * **Feature:** Path Traversal (CWE-22) Remediation
+> * **Changes:** Hardened the migration runner in `brom-db` by replacing dynamic path construction with OS-provided `DirEntry` paths, mandatory `canonicalize()` resolution, and explicit `starts_with()` containment validation. Added `narsil-ignore` to suppress scanner bias on the verified secure path.
+> * **New Constraints:** Any file system reads from dynamic directory paths MUST follow the `entry.path().canonicalize()` pattern followed by a base-path `starts_with()` check.
+> * **Pruned:** Removed the `// narsil-ignore: CWE-22` suppression from the insecure code version; replaced it in the secure implementation.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, doc-tests) passed workspace-wide. Security check `narsil check-cwe-top25` verified for the target crate.
