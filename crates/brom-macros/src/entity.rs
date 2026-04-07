@@ -194,7 +194,7 @@ mod tests {
         let tokens = expand_brom_entity(input).unwrap();
         let file: syn::File = match syn::parse2(tokens.clone()) {
             Ok(f) => f,
-            Err(e) => panic!("Parse failed: {}\nTokens:\n{}", e, tokens),
+            Err(e) => panic!("Parse failed: {e}\nTokens:\n{tokens}"),
         };
         prettyplease::unparse(&file)
     }

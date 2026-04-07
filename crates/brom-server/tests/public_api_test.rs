@@ -35,7 +35,7 @@ pub struct AdminOnlyData {
 }
 
 /// Helper function to stand up the mock schema
-async fn setup_mock_tables(state: &brom_server::AppState) {
+fn setup_mock_tables(state: &brom_server::AppState) {
     let conn = state.db.get().unwrap();
     conn.execute_batch(
         "
@@ -55,7 +55,7 @@ async fn setup_mock_tables(state: &brom_server::AppState) {
 #[tokio::test]
 async fn test_auth_policy_none() {
     let state = common::test_app_state();
-    setup_mock_tables(&state).await;
+    setup_mock_tables(&state);
 
     // We only mount the public router for this entity
     let app = PublicPost::public_router().with_state(state.clone());
@@ -76,7 +76,7 @@ async fn test_auth_policy_none() {
 #[tokio::test]
 async fn test_auth_policy_api_key() {
     let state = common::test_app_state();
-    setup_mock_tables(&state).await;
+    setup_mock_tables(&state);
 
     // Mock key creation in DB
     let pool = state.db.clone();
@@ -103,7 +103,7 @@ async fn test_auth_policy_api_key() {
     // 2. With API key -> 200
     let req_auth = Request::builder()
         .uri("/api/v1/entities/apikeysetting")
-        .header(header::AUTHORIZATION, format!("Bearer {}", raw_key))
+        .header(header::AUTHORIZATION, format!("Bearer {raw_key}"))
         .body(Body::empty())
         .unwrap();
     let response = app.oneshot(req_auth).await.unwrap();
@@ -117,7 +117,7 @@ async fn test_auth_policy_api_key() {
 #[tokio::test]
 async fn test_auth_policy_admin_only() {
     let state = common::test_app_state();
-    setup_mock_tables(&state).await;
+    setup_mock_tables(&state);
 
     // AdminOnly compiles to `Router::new()` which is empty, so calling it
     // without `.fallback()` on Axum will result in a 404 NOT FOUND from Axum for the route
