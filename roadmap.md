@@ -46,13 +46,15 @@ gantt
 
     section Web Layer
     Phase 3A - Auth Core           :done, p3a, after p2b, 2d
-    Phase 3B - REST API & Codegen  :p3b, after p3a, 3d
+    Phase 3B - API Architecture    :p3b, after p3a, 2d
+    Phase 3C - REST Route Gen      :p3c, after p3b, 2d
+    Phase 3D - OpenAPI & Swagger   :p3d, after p3c, 1d
 
     section Tooling
-    Phase 4 - Schema Diffing       :p4, after p3, 3d
+    Phase 4 - Schema Diffing       :p4, after p3d, 3d
 
     section UI
-    Phase 5 - Admin SPA            :p5, after p3, 7d
+    Phase 5 - Admin SPA            :p5, after p3d, 7d
 ```
 
 | Phase | Name | Focus | Tier | Status | Crates Touched |
@@ -61,9 +63,11 @@ gantt
 | 2A | Derive Macro | Compile-time codegen | M | 🔜 Next | `brom-core`, `brom-macros` |
 | 2B | CRUD & Migrations | Runtime persistence | M | ⏳ Blocked by 2A | `brom-db`, `brom-cli` |
 | 3A | Auth Core | Password, Sessions, RBAC | M | ✅ Done | `brom-auth`, `brom-db` |
-| 3B | REST API & Codegen | Secure HTTP layer | M | 🔜 Next | `brom-auth`, `brom-server`, `brom-macros` |
-| 4 | Schema Diffing | `brom diff` engine | M | ⏳ Blocked by 3 | `brom-cli`, `brom-db` |
-| 5 | Admin SPA | Leptos embedded UI | L | ⏳ Blocked by 3 | `admin`, `brom-server` |
+| 3B | API Architecture | Middleware, Extractor, Server | M | 🔜 Next | `brom-auth`, `brom-server` |
+| 3C | REST Route Gen | BromEntity handler codegen | M | ⏳ Blocked by 3B | `brom-macros` |
+| 3D | OpenAPI & Swagger | Utoipa integration | S | ⏳ Blocked by 3C | `brom-server`, `brom-macros` |
+| 4 | Schema Diffing | `brom diff` engine | M | ⏳ Blocked by 3D | `brom-cli`, `brom-db` |
+| 5 | Admin SPA | Leptos embedded UI | L | ⏳ Blocked by 3D | `admin`, `brom-server` |
 
 ---
 
@@ -75,7 +79,9 @@ graph LR
     P2A["Phase 2A<br/>Derive Macro"]
     P2B["Phase 2B<br/>CRUD & Migrations"]
     P3A["Phase 3A<br/>Auth Core<br/>✅ Done"]
-    P3B["Phase 3B<br/>REST API & Codegen"]
+    P3B["Phase 3B<br/>API Architecture"]
+    P3C["Phase 3C<br/>REST Route Gen"]
+    P3D["Phase 3D<br/>OpenAPI & Swagger"]
     P4["Phase 4<br/>Schema Diffing"]
     P5["Phase 5<br/>Admin SPA"]
 
@@ -83,20 +89,24 @@ graph LR
     P2A --> P2B
     P2B --> P3A
     P3A --> P3B
-    P3B --> P4
-    P3B --> P5
+    P3B --> P3C
+    P3C --> P3D
+    P3D --> P4
+    P3D --> P5
 
     style P1 fill:#2d6a4f,color:#fff
     style P2A fill:#e9c46a,color:#000
     style P2B fill:#264653,color:#fff
     style P3A fill:#2d6a4f,color:#fff
-    style P3B fill:#264653,color:#fff
+    style P3B fill:#e9c46a,color:#000
+    style P3C fill:#264653,color:#fff
+    style P3D fill:#264653,color:#fff
     style P4 fill:#264653,color:#fff
     style P5 fill:#264653,color:#fff
 ```
 
 > **Note:** Phases 4 and 5 are independent of each other — both depend only on
-> Phase 3. They can be developed in parallel or in either order.
+> Phase 3D. They can be developed in parallel or in either order.
 
 ---
 
@@ -350,39 +360,90 @@ Implement the core authentication and authorization logic, including password ha
 
 ---
 
-## Phase 3B: REST API & Codegen
+## Phase 3B: API Architecture & Server Core
 
 > **Status:** Next · **Depends on:** Phase 3A
-> **Crates:** `brom-server` (primary), `brom-macros` (extension), `brom-auth` (supporting)
+> **Crates:** `brom-server` (primary), `brom-auth` (supporting)
 
 ### Objective
 
-Extend the derive macro to generate secure Axum CRUD route handlers and wire up the HTTP layer framework. After this phase, a developer can run a fully functional, authenticated REST API from a single binary.
+Scaffold the Axum server, implement mandatory middleware (CORS, logging), and create the security extractors used by the generated handlers. Implement the static schema discovery API.
 
 ### Scope
 
 | In Scope | Out of Scope |
 |----------|-------------|
-| `brom-auth`: Axum extractors (`RequireAdmin`, `RequireApiKey`) | Admin SPA UI |
-| `brom-server`: Router assembly (admin auth + API routes) | Multi-tenancy |
-| `brom-server`: `GET /admin/api/schema` endpoint | GraphQL API |
+| `brom-auth`: Axum extractors (`RequireAdmin`, `RequireApiKey`) | Handler Codegen (3C) |
+| `brom-server`: Router assembly (base admin routes) | OpenAPI Integration (3D) |
+| `brom-server`: `GET /admin/api/schema` endpoint | Multi-tenancy |
 | `brom-server`: Middleware (CORS, security headers, logging) | — |
-| `brom-server`: OpenAPI / Swagger UI mount | — |
-| `brom-macros`: Route generation (`routes.rs`) | — |
-| `brom-macros`: OpenAPI annotation generation (`openapi.rs`) | — |
-| `Link<T>` / `ManyToMany<T>` macro support | — |
-| `Option<T>` nullable field support | — |
 
 ### New Files (Expected)
 
 | File | Purpose |
 |------|---------|
 | `brom-auth/src/extractor.rs` | `RequireAdmin`, `RequireApiKey` Axum extractors |
-| `brom-server/src/router.rs` | Route assembly |
+| `brom-server/src/router.rs` | Base Router assembly |
 | `brom-server/src/middleware.rs` | CORS, security headers, request logging |
 | `brom-server/src/schema_api.rs` | `GET /admin/api/schema` |
-| `brom-server/src/openapi.rs` | Swagger UI mount |
+
+### New Dependencies (Expected)
+
+| Crate | Purpose | Added To |
+|-------|---------|----------|
+| `tower-http` | CORS, compression middleware | `brom-server` |
+| `axum` | HTTP routing | `brom-server` |
+
+---
+
+## Phase 3C: REST Route Generation
+
+> **Status:** Pending · **Depends on:** Phase 3B
+> **Crates:** `brom-macros` (primary), `brom-server` (consumer)
+
+### Objective
+
+Extend `#[derive(BromEntity)]` to generate Axum route handlers and a router-assembly function for each entity. Implement policy-aware data stripping and relationship (`Link<T>`) handling in the generated code.
+
+### Scope
+
+| In Scope | Out of Scope |
+|----------|-------------|
+| `brom-macros`: `routes.rs` (Handler generation) | Swagger UI (3D) |
+| `Link<T>` / `ManyToMany<T>` macro support | GraphQL API |
+| `Option<T>` nullable field support | — |
+| Policy-driven field visibility (Stripping) | — |
+
+### New Files (Expected)
+
+| File | Purpose |
+|------|---------|
 | `brom-macros/src/routes.rs` | Axum handler code generation |
+
+---
+
+## Phase 3D: OpenAPI & Swagger UI
+
+> **Status:** Pending · **Depends on:** Phase 3C
+> **Crates:** `brom-server` (primary), `brom-macros` (supporting)
+
+### Objective
+
+Integrate `utoipa` for automated OpenAPI 3.0 specification generation. Generate Swagger UI assets and mount the interactive documentation endpoint.
+
+### Scope
+
+| In Scope | Out of Scope |
+|----------|-------------|
+| `brom-macros`: `openapi.rs` (utoipa derive automation) | Static Docs site |
+| `brom-server`: `openapi.rs` (Swagger UI mount) | — |
+| `utoipa` integration for all `BromEntity` types | — |
+
+### New Files (Expected)
+
+| File | Purpose |
+|------|---------|
+| `brom-server/src/openapi.rs` | Swagger UI mount |
 | `brom-macros/src/openapi.rs` | utoipa annotation generation |
 
 ### New Dependencies (Expected)
@@ -392,7 +453,6 @@ Extend the derive macro to generate secure Axum CRUD route handlers and wire up 
 | `utoipa` | OpenAPI spec generation | `brom-server`, `brom-macros` |
 | `utoipa-swagger-ui` | Embedded Swagger UI | `brom-server` |
 | `rust-embed` | Static asset embedding | `brom-server` |
-| `tower-http` | CORS, compression middleware | `brom-server` |
 
 ### API Surface (Expected)
 
@@ -475,7 +535,7 @@ ALTER TABLE _tmp_post RENAME TO post;
 
 ## Phase 5: Admin SPA
 
-> **Status:** Blocked by 3 · **Depends on:** Phase 3
+> **Status:** Blocked by 3D · **Depends on:** Phase 3D
 > **Crates:** `admin` (primary), `brom-server` (embedding)
 
 ### Objective
@@ -550,15 +610,16 @@ Quick reference: "Where does feature X live?"
 | Session management | 3A | `brom-auth`, `brom-db` |
 | API key management | 3A | `brom-auth`, `brom-db` |
 | Axum extractors (`RequireAdmin`, `RequireApiKey`) | 3B | `brom-auth` |
-| `#[derive(BromEntity)]` → Axum route generation | 3B | `brom-macros` |
-| `#[derive(BromEntity)]` → OpenAPI annotations | 3B | `brom-macros` |
-| `Link<T>` macro awareness + FK queries | 3B | `brom-macros`, `brom-db` |
-| `ManyToMany<T>` macro awareness + junction tables | 3B | `brom-macros`, `brom-db` |
-| `Option<T>` nullable field support | 3B | `brom-macros`, `brom-db` |
 | REST API router assembly | 3B | `brom-server` |
 | Middleware (CORS, security headers) | 3B | `brom-server` |
 | `GET /admin/api/schema` | 3B | `brom-server` |
-| Swagger UI | 3B | `brom-server` |
+| `#[derive(BromEntity)]` → Axum route generation | 3C | `brom-macros` |
+| `Link<T>` macro awareness + FK queries | 3C | `brom-macros`, `brom-db` |
+| `ManyToMany<T>` macro awareness + junction tables | 3C | `brom-macros`, `brom-db` |
+| `Option<T>` nullable field support | 3C | `brom-macros`, `brom-db` |
+| `#[derive(BromEntity)]` → OpenAPI annotations | 3D 🔒 | `brom-macros` |
+| OpenAPI spec generation (Utoipa) | 3D 🔒 | `brom-server`, `brom-macros` |
+| Swagger UI mount | 3D 🔒 | `brom-server` |
 | `brom diff` (schema comparison) | 4 | `brom-cli`, `brom-db` |
 | SQLite introspection (`PRAGMA`) | 4 | `brom-db` |
 | Migration rollback (`-- DOWN`) | 4 | `brom-db` |
@@ -584,8 +645,8 @@ Tracks every `STUB(Phase N)` marker from creation to resolution.
 | `SessionStore` trait | Phase 1 | `brom-auth/src/lib.rs` | Phase 3A | Full interface + SQLite impl |
 | `ApiKeyStore` trait | Phase 1 | `brom-auth/src/lib.rs` | Phase 3A | Full interface + SQLite impl |
 | `evaluate_policy()` | Phase 1 | `brom-auth/src/lib.rs` | Phase 3A | Real RBAC evaluation |
-| `routes.rs` (handler gen) | Phase 2A | `brom-macros/src/routes.rs` | Phase 3B | Axum handler generation |
-| `openapi.rs` (annotation gen) | Phase 2A | `brom-macros/src/openapi.rs` | Phase 3B | utoipa annotation generation |
+| `routes.rs` (handler gen) | Phase 2A | `brom-macros/src/routes.rs` | Phase 3C | Axum handler generation |
+| `openapi.rs` (annotation gen) | Phase 2A | `brom-macros/src/openapi.rs` | Phase 3D | utoipa annotation generation |
 | CLI `diff` | Phase 2B | `brom-cli/src/main.rs` | Phase 4 | Schema comparison engine |
 | Migration rollback | Phase 2B | `brom-db/src/migration.rs` | Phase 4 | `-- DOWN` section parsing |
 
@@ -626,3 +687,4 @@ sg scan
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-04-02 | Initial roadmap from brainstorm session | Architect |
+| 2026-04-07 | Split Phase 3B into 3B, 3C, 3D (bounded phases) | Architect |

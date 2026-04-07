@@ -173,4 +173,10 @@
 > * **Changes:** Remediated outstanding audit findings and regression issues in `brom-macros`.
 > * **Audit Fixes:** Replaced non-compliant `.unwrap()` with documented `.expect()` in `entity.rs`. Updated `STUB` markers in CLI to align with roadmap.
 > * **Macro Fixes:** Implemented robust error accumulation in `BromEntity` to prevent swallowed syn-errors. Fixed regression in `pass_web.rs` by updating `router` -> `public_router`.
-> * **Verification:** Restored Zero-Exit state. All workspace targets pass `just verify` (fmt, clippy, test, and sg scan).
+
+> 📝 **Context Update:**
+> * **Feature:** Roadmap Restructuring (Phase 3 Expansion)
+> * **Changes:** Formally split the monolithic Phase 3B into Phase 3B (API Architecture & Server Core), Phase 3C (REST Route Generation), and Phase 3D (OpenAPI & Swagger UI). Updated `roadmap.md` Gantt chart, dependency graph, and feature-to-phase mapping to reflect this new granularity.
+> * **New Constraints:** Phase 3D is now the mandatory gateway (🔒) for Phase 4 (Tooling) and Phase 5 (UI).
+> * **Pruned:** The "Phase 3B: REST API & Codegen" catch-all phase is replaced with bounded, verifiable milestones.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide. Fidelity to Plan: 100%.
