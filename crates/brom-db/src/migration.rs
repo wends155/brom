@@ -10,6 +10,24 @@ pub struct MigrationRunner<'a> {
 
 impl<'a> MigrationRunner<'a> {
     /// Creates a new `MigrationRunner`.
+    ///
+    /// # Arguments
+    ///
+    /// * `pool` - A reference to the initialized `DbPool` from which to draw connections.
+    ///
+    /// # Returns
+    ///
+    /// A lightweight `MigrationRunner` tied to the lifecycle of the provided pool.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom_db::pool::DbPool;
+    /// use brom_db::migration::MigrationRunner;
+    ///
+    /// let pool = DbPool::in_memory().unwrap();
+    /// let runner = MigrationRunner::new(&pool);
+    /// ```
     #[must_use]
     pub const fn new(pool: &'a DbPool) -> Self {
         Self { pool }
@@ -17,8 +35,27 @@ impl<'a> MigrationRunner<'a> {
 
     /// Ensures all internal `_brom_*` tables exist.
     ///
+    /// This method generates the required schema for users, sessions, api keys,
+    /// and the migration tracking table itself during the first run or schema setup.
+    ///
+    /// # Returns
+    ///
+    /// An empty `Result<(), DbError>` on successful execution.
+    ///
     /// # Errors
-    /// Returns `DbError` if table creation fails.
+    ///
+    /// * [`DbError::PoolError`] — if a database connection could not be acquired or table creation fails.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom_db::pool::DbPool;
+    /// use brom_db::migration::MigrationRunner;
+    ///
+    /// let pool = DbPool::in_memory().unwrap();
+    /// let runner = MigrationRunner::new(&pool);
+    /// runner.ensure_internal_tables().expect("Failed to create tables");
+    /// ```
     #[tracing::instrument(skip_all)]
     pub fn ensure_internal_tables(&self) -> Result<(), DbError> {
         let conn = self.pool.get()?;
@@ -66,8 +103,37 @@ impl<'a> MigrationRunner<'a> {
 
     /// Applies all pending migrations from the given directory.
     ///
+    /// Reads `.sql` files from the specified `migrations_dir`, validates them against
+    /// recorded checksums, and executes any missing files in alphabetical order. Both the execution
+    /// and the `_brom_migration` tracking updates happen within a single transaction.
+    ///
+    /// # Arguments
+    ///
+    /// * `migrations_dir` - Path to the directory containing `.sql` migration files.
+    ///
+    /// # Returns
+    ///
+    /// A `Vec<String>` containing the version identifiers of the successfully applied migrations.
+    ///
     /// # Errors
-    /// Returns `DbError` if reading migrations or executing them fails.
+    ///
+    /// * [`DbError::PoolError`] — if directory canonicalization fails, a standard bounds check fails, a database transaction cannot be opened, path traversal is detected, or query execution fails.
+    /// * [`DbError::MigrationError`] — if a migration file's checksum does not match its previously recorded checksum.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom_db::pool::DbPool;
+    /// use brom_db::migration::MigrationRunner;
+    /// use std::path::Path;
+    ///
+    /// let pool = DbPool::in_memory().unwrap();
+    /// let runner = MigrationRunner::new(&pool);
+    /// runner.ensure_internal_tables().unwrap();
+    /// 
+    /// // Assuming a "migrations" directory exists:
+    /// // let applied = runner.run_pending(Path::new("migrations")).unwrap();
+    /// ```
     #[tracing::instrument(skip_all)]
     pub fn run_pending(&self, migrations_dir: &Path) -> Result<Vec<String>, DbError> {
         use sha2::{Digest, Sha256};

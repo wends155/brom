@@ -13,6 +13,30 @@ pub struct SqliteRepository<T> {
 
 impl<T> SqliteRepository<T> {
     /// Creates a new generic repository with the given pool.
+    ///
+    /// # Arguments
+    ///
+    /// * `pool` - An underlying database connection `DbPool`.
+    ///
+    /// # Returns
+    ///
+    /// A configured instance of `SqliteRepository` bound to the provided `DbPool`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom_db::pool::DbPool;
+    /// use brom_db::repository::SqliteRepository;
+    /// use brom_core::EntitySchema;
+    /// use serde::{Serialize, Deserialize};
+    ///
+    /// #[derive(Serialize, Deserialize)]
+    /// struct User { id: i64 }
+    /// // Impl EntitySchema for User...
+    ///
+    /// let pool = DbPool::in_memory().unwrap();
+    /// let repo = SqliteRepository::<User>::new(pool);
+    /// ```
     #[must_use]
     pub const fn new(pool: DbPool) -> Self {
         Self {
