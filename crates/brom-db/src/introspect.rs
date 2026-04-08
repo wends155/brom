@@ -2,7 +2,7 @@ use crate::error::DbError;
 use crate::pool::DbPool;
 use serde::{Deserialize, Serialize};
 
-/// A table as read from the live SQLite database via PRAGMAs.
+/// A table as read from the live `SQLite` database via PRAGMAs.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct IntrospectedTable {
     pub name: String,
@@ -55,7 +55,7 @@ pub fn introspect_schema(pool: &DbPool) -> Result<Vec<IntrospectedTable>, DbErro
 
         // 2. Get columns for this table
         // We use double quotes to escape table names that might be reserved words
-        let mut col_stmt = conn.prepare(&format!("PRAGMA table_info(\"{}\")", name))?;
+        let mut col_stmt = conn.prepare(&format!("PRAGMA table_info(\"{name}\")"))?;
         let columns = col_stmt
             .query_map([], |row| {
                 Ok(IntrospectedColumn {
@@ -69,7 +69,7 @@ pub fn introspect_schema(pool: &DbPool) -> Result<Vec<IntrospectedTable>, DbErro
             .collect::<Result<Vec<_>, rusqlite::Error>>()?;
 
         // 3. Get foreign keys for this table
-        let mut fk_stmt = conn.prepare(&format!("PRAGMA foreign_key_list(\"{}\")", name))?;
+        let mut fk_stmt = conn.prepare(&format!("PRAGMA foreign_key_list(\"{name}\")"))?;
         let foreign_keys = fk_stmt
             .query_map([], |row| {
                 Ok(IntrospectedForeignKey {

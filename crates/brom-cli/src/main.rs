@@ -1,9 +1,9 @@
 //! CLI entrypoint for the brom framework.
 //! Provides commands to generate schemas, run migrations, and bootstrap apps.
 
-use clap::{Parser, Subcommand};
 use brom_cli::config;
 use brom_cli::diff;
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
@@ -51,7 +51,7 @@ fn init_tracing() -> tracing_appender::non_blocking::WorkerGuard {
     guard
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     let _guard = init_tracing();
     let cli = Cli::parse();
 
@@ -95,11 +95,59 @@ fn main() {
         }
         Commands::Diff => {
             let config = config::AppConfig::load();
-            println!("Comparing schema against {}...", config.db_path);
-            // TODO: In Step 12, we will wire this up to a real .brom-schema.json
+            let pool = match brom_db::DbPool::new(&config.db_path) {
+                Ok(p) => p,
+                Err(e) => {
+                    eprintln!("Failed to connect to database '{}': {}", config.db_path, e);
+                    std::process::exit(1);
+                }
+            };
+
+            let live_schema = match brom_db::introspect_schema(&pool) {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("Failed to introspect database: {e}");
+                    std::process::exit(1);
+                }
+            };
+
+            let schema_path = std::path::Path::new(".brom_schema.json");
+            if !schema_path.exists() {
+                eprintln!(
+                    "Error: .brom_schema.json not found. Run 'brom compile' first (not yet implemented)."
+                );
+                std::process::exit(1);
+            }
+
+            let expected_json = std::fs::read_to_string(schema_path).map_err(|e| {
+                eprintln!("Failed to read schema file: {e}");
+                std::process::exit(1);
+            })?;
+            let expected_schema: Vec<brom_core::SchemaInfo> = serde_json::from_str(&expected_json)
+                .map_err(|e| {
+                    eprintln!("Failed to parse schema JSON: {e}");
+                    std::process::exit(1);
+                })?;
+
+            let engine = diff::DiffEngine::new(expected_schema, live_schema);
+            match engine.diff() {
+                Ok(ops) => {
+                    if ops.is_empty() {
+                        println!("No schema changes detected.");
+                    } else {
+                        let (up, down) = diff::generate_migration_sql(&ops);
+                        println!("-- UP\n{up}\n-- DOWN\n{down}");
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error calculating diff: {e}");
+                    std::process::exit(1);
+                }
+            }
         }
         Commands::New { name } => {
             println!("STUB(Phase 3+): Scaffold new project '{name}'");
         }
     }
+    Ok(())
 }

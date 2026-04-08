@@ -4,7 +4,7 @@
 pub mod api_key_store;
 /// Database-specific error types and wrappers.
 pub mod error;
-/// SQLite schema introspection utilities.
+/// `SQLite` schema introspection utilities.
 pub mod introspect;
 /// Automated migration runner and history tracking.
 pub mod migration;

@@ -1,7 +1,7 @@
-use anyhow::Context;
 use brom_core::{Constraint, FieldInfo, FieldType, SchemaInfo};
-use brom_db::introspect::{IntrospectedTable};
+use brom_db::introspect::IntrospectedTable;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::fmt::Write;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum MigrationOp {
@@ -25,10 +25,9 @@ pub enum MigrationOp {
 impl MigrationOp {
     pub fn table_name(&self) -> &str {
         match self {
-            MigrationOp::CreateTable { name, .. } => name,
-            MigrationOp::AlterTableAddColumn { table_name, .. } => table_name,
-            MigrationOp::DropColumn { table_name, .. } => table_name,
-            MigrationOp::DropTable { name } => name,
+            MigrationOp::CreateTable { name, .. } | MigrationOp::DropTable { name } => name,
+            MigrationOp::AlterTableAddColumn { table_name, .. }
+            | MigrationOp::DropColumn { table_name, .. } => table_name,
         }
     }
 }
@@ -47,6 +46,9 @@ impl DiffEngine {
     }
 
     /// Compares expected entities against actual DB state and returns ordered migration operations.
+    ///
+    /// # Errors
+    /// Returns an error if diffing logic fails for internal reasons.
     pub fn diff(&self) -> anyhow::Result<Vec<MigrationOp>> {
         let mut ops = Vec::new();
 
@@ -73,11 +75,9 @@ impl DiffEngine {
         }
 
         // 2. Deleted Tables
-        for (name, _) in &actual_map {
+        for name in actual_map.keys() {
             if !expected_map.contains_key(name) {
-                ops.push(MigrationOp::DropTable {
-                    name: name.clone(),
-                });
+                ops.push(MigrationOp::DropTable { name: name.clone() });
             }
         }
 
@@ -119,10 +119,10 @@ impl DiffEngine {
             }
         }
 
-        Ok(self.topological_sort(ops))
+        Ok(Self::topological_sort(ops))
     }
 
-    fn topological_sort(&self, ops: Vec<MigrationOp>) -> Vec<MigrationOp> {
+    fn topological_sort(ops: Vec<MigrationOp>) -> Vec<MigrationOp> {
         let mut drops = Vec::new();
         let mut creates = Vec::new();
         let mut alters = Vec::new();
@@ -137,7 +137,7 @@ impl DiffEngine {
             }
         }
 
-        let sorted_creates = self.sort_creates_by_dependency(creates);
+        let sorted_creates = Self::sort_creates_by_dependency(creates);
 
         let mut final_ops = Vec::new();
         final_ops.extend(drops);
@@ -147,7 +147,7 @@ impl DiffEngine {
         final_ops
     }
 
-    fn sort_creates_by_dependency(&self, ops: Vec<MigrationOp>) -> Vec<MigrationOp> {
+    fn sort_creates_by_dependency(ops: Vec<MigrationOp>) -> Vec<MigrationOp> {
         let mut adj = HashMap::new();
         let mut in_degree = HashMap::new();
         let mut op_map = HashMap::new();
@@ -206,71 +206,71 @@ impl DiffEngine {
     }
 }
 
-pub fn generate_migration_sql(ops: &[MigrationOp]) -> String {
-    let mut up_sql = String::from("-- UP\n");
-    let mut down_sql = String::from("\n-- DOWN\n");
+pub fn generate_migration_sql(ops: &[MigrationOp]) -> (String, String) {
+    let mut up_sql = String::new();
+    let mut down_sql = String::new();
 
     for op in ops {
         match op {
             MigrationOp::CreateTable { name, columns } => {
-                up_sql.push_str(&format!("CREATE TABLE {} (\n", name));
-                up_sql.push_str("    id TEXT PRIMARY KEY,\n");
+                let _ = writeln!(up_sql, "CREATE TABLE {name} (");
+                let _ = writeln!(up_sql, "    id TEXT PRIMARY KEY,");
                 for col in columns {
                     if matches!(col.field_type, FieldType::ManyToMany { .. }) {
                         continue;
                     }
                     let col_sql = field_to_sql_definition(col);
-                    up_sql.push_str(&format!("    {},\n", col_sql));
+                    let _ = writeln!(up_sql, "    {col_sql},");
                 }
-                up_sql.push_str("    created_at TEXT DEFAULT (datetime('now')),\n");
-                up_sql.push_str("    updated_at TEXT DEFAULT (datetime('now'))\n");
-                up_sql.push_str(");\n");
+                let _ = writeln!(up_sql, "    created_at TEXT DEFAULT (datetime('now')),");
+                let _ = writeln!(up_sql, "    updated_at TEXT DEFAULT (datetime('now'))");
+                let _ = writeln!(up_sql, ");");
 
-                down_sql.push_str(&format!("DROP TABLE {};\n", name));
+                let _ = writeln!(down_sql, "DROP TABLE {name};");
             }
             MigrationOp::AlterTableAddColumn { table_name, column } => {
                 let col_sql = field_to_sql_definition(column);
-                up_sql.push_str(&format!(
-                    "ALTER TABLE {} ADD COLUMN {};\n",
-                    table_name, col_sql
-                ));
-                down_sql.push_str(&format!(
-                    "ALTER TABLE {} DROP COLUMN {};\n",
-                    table_name, column.name
-                ));
+                let _ = writeln!(up_sql, "ALTER TABLE {table_name} ADD COLUMN {col_sql};");
+                let _ = writeln!(
+                    down_sql,
+                    "ALTER TABLE {table_name} DROP COLUMN {};",
+                    column.name
+                );
             }
             MigrationOp::DropColumn {
                 table_name,
                 column_name,
             } => {
-                up_sql.push_str(&format!(
-                    "ALTER TABLE {} DROP COLUMN {};\n",
-                    table_name, column_name
-                ));
-                down_sql.push_str(&format!(
-                    "-- TODO: Manual rollback needed for DropColumn {} on {}\n",
-                    column_name, table_name
-                ));
+                let _ = writeln!(
+                    up_sql,
+                    "ALTER TABLE {table_name} DROP COLUMN {column_name};"
+                );
+                let _ = writeln!(
+                    down_sql,
+                    "-- TODO: Manual rollback needed for DropColumn {column_name} on {table_name}"
+                );
             }
             MigrationOp::DropTable { name } => {
-                up_sql.push_str(&format!("DROP TABLE {};\n", name));
-                down_sql.push_str(&format!("-- TODO: Manual rollback needed for DropTable {}\n", name));
+                let _ = writeln!(up_sql, "DROP TABLE {name};");
+                let _ = writeln!(
+                    down_sql,
+                    "-- TODO: Manual rollback needed for DropTable {name}"
+                );
             }
         }
     }
 
-    format!("{}{}", up_sql, down_sql)
+    (up_sql, down_sql)
 }
 
 fn field_to_sql_definition(field: &FieldInfo) -> String {
     let type_sql = match &field.field_type {
-        FieldType::String => "TEXT",
-        FieldType::Integer => "INTEGER",
+        FieldType::String
+        | FieldType::DateTime
+        | FieldType::Link { .. }
+        | FieldType::ManyToMany { .. } => "TEXT",
+        FieldType::Integer | FieldType::Boolean => "INTEGER",
         FieldType::Float => "REAL",
-        FieldType::Boolean => "INTEGER",
-        FieldType::DateTime => "TEXT",
-        FieldType::Link { .. } => "TEXT",
-        FieldType::ManyToMany { .. } => "TEXT",
     };
 
     let mut def = format!("{} {}", field.name, type_sql);
@@ -279,12 +279,14 @@ fn field_to_sql_definition(field: &FieldInfo) -> String {
         match constraint {
             Constraint::NotNull => def.push_str(" NOT NULL"),
             Constraint::Unique => def.push_str(" UNIQUE"),
-            Constraint::Default(val) => def.push_str(&format!(" DEFAULT '{}'", val)),
+            Constraint::Default(val) => {
+                let _ = write!(def, " DEFAULT '{val}'");
+            }
         }
     }
 
     if let FieldType::Link { target } = &field.field_type {
-        def.push_str(&format!(" REFERENCES {}(id)", target));
+        let _ = write!(def, " REFERENCES {target}(id)");
     }
 
     def

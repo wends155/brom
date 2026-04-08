@@ -512,7 +512,7 @@ erDiagram
 | WASM binary size               | Admin SPA may be 2–5 MB compressed     | `wasm-opt`, code-splitting (future) |
 | Proc-macro compile times       | Increased build times for user projects | Minimize generated code, cache  |
 | No hot-reload for admin SPA    | Dev cycle requires full rebuild        | `trunk serve --watch` for admin dev |
-| `ALTER TABLE` limitations in SQLite | Cannot drop or rename columns natively | Migration tool generates workarounds (recreate table pattern) |
+| `ALTER TABLE` limitations in SQLite | Limited column/constraint modifications | Migration tool uses native `DROP COLUMN` (v3.35.0+) and recreation patterns for other changes |
 | Cross-compilation complexity   | musl + bundled SQLite requires `cross` | Document in README, provide Dockerfile |
 
 ## 15. Data Model

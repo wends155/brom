@@ -227,3 +227,11 @@
 > * **Changes:** Finalized the implementation plan for `brom diff`. Resolved a major architectural contradiction in `architecture.md` regarding modern SQLite native `ALTER TABLE DROP COLUMN` support (available since 3.45 via `rusqlite 0.32`). Established the `.brom-schema.json` strategy for CLI schema ingestion and implemented topological sorting requirements for handling foreign key dependencies.
 > * **New Constraints:** The `brom diff` command will read expected schema metadata from `.brom-schema.json`. Migration files MUST include `-- DOWN` sections for rollback support.
 > * **Pruned:** Removed stale Phase 4 "STUB" assumptions from the implementation roadmap.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Phase 4 Tech Debt Tracking (Migrations)
+> * **Changes:** Formally documented SQLite rollback limitations for `DropColumn` and `DropTable` operations. These operations currently generate SQL comment placeholders in `-- DOWN` migrations, requiring manual intervention for data preservation during rollbacks.
+> * **Technical Debt:**
+>   - `diff.rs:247` (`DropColumn`): Rollback is non-trivial in SQLite without full table recreation patterns; currently requires manual SQL authoring.
+>   - `diff.rs:254` (`DropTable`): Data-preserving rollback is impossible without historical schema snapshots or shadow tables; currently deferred.
+> * **Status:** Tracked as accepted Phase 4 tech debt.

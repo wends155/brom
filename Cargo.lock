@@ -256,6 +256,8 @@ dependencies = [
  "brom-db",
  "clap",
  "dotenvy",
+ "rand 0.8.5",
+ "serde_json",
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
