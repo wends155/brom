@@ -6,14 +6,18 @@ use axum::{
 use serde_json::json;
 use thiserror::Error;
 
+/// Global top-level server error, wrapping nested domain errors.
 #[derive(Debug, Error)]
 pub enum ServerError {
+    /// Domain logic and validation errors.
     #[error(transparent)]
     Core(#[from] brom_core::Error),
 
+    /// Infrastructure and persistence layer errors.
     #[error(transparent)]
     Db(#[from] brom_db::DbError),
 
+    /// Security, credential, and authentication errors.
     #[error(transparent)]
     Auth(#[from] brom_auth::AuthError),
 }

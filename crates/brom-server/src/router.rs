@@ -14,15 +14,21 @@ use crate::{
 };
 use brom_auth::password::verify_password;
 
+/// Payload for generating a new session cookie.
 #[derive(Deserialize, utoipa::ToSchema)]
 pub struct LoginRequest {
+    /// Account email address.
     pub email: String,
+    /// Plaintext password to verify against the stored hash.
     pub password: String,
 }
 
+/// Result of a successful login attempt.
 #[derive(Serialize, utoipa::ToSchema)]
 pub struct LoginResponse {
+    /// Status message or confirmation text.
     pub message: String,
+    /// Internal ID of the authenticated user.
     pub user_id: i64,
 }
 
@@ -120,7 +126,9 @@ pub fn build_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>)
         )
         .merge(openapi::swagger_ui())
         .layer(middleware::cors_layer(cors_origins))
-        .layer(middleware::security_headers_layer())
+        .layer(middleware::x_content_type_options_layer())
+        .layer(middleware::x_frame_options_layer())
+        .layer(middleware::referrer_policy_layer())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }

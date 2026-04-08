@@ -1,14 +1,24 @@
 //! Axum REST API and Server components for the brom headless CMS framework.
 
+/// API key lifecycle and management records.
 pub mod api_keys;
+/// Server configuration and settings mapping.
 pub mod config;
+/// Error definitions and standard conversions into HTTP responses.
 pub mod error;
+/// Authentication and authorization Axum extractors.
 pub mod extractor;
+/// Tower layers and standard Axum middlewares.
 pub mod middleware;
+/// `OpenAPI` integration and Swagger UI serving.
 pub mod openapi;
+/// Standardized JSON response formatting (e.g. `DataEnvelope`).
 pub mod response;
+/// Main router assembly defining routing tables.
 pub mod router;
+/// Catch-all endpoints for entity CRUD operations.
 pub mod schema_api;
+/// Shared application state containers passed across requests.
 pub mod state;
 
 pub use error::ServerError;

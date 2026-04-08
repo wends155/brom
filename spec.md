@@ -6,7 +6,7 @@
 | **Version** | 1.0.0 |
 | **Last Updated** | 2026-04-07 |
 
-> Last verified against: 83c78be
+> Last verified against: cd55934
 
 ## 1. brom-macros
 
@@ -134,3 +134,24 @@ THEN a `401 Unauthorized` response is returned
 GIVEN a Bearer Token with `read` permissions
 WHEN that token attempts a `POST /api/v1/entities` request (requires `write`)
 THEN a `403 Forbidden` response is returned
+
+---
+
+## 5. brom-server
+
+> Axum REST API, server components, standard JSON response formatting, and OpenAPI schema generation.
+
+### Public API
+
+| Component | Responsibility |
+|-----------|----------------|
+| `router` | Assembles the Axum endpoints, combining schema API routes and admin routes. |
+| `middleware` | Implements security headers (`X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options`) and CORS. |
+| `extractor` | Axum extractors (`RequireAdmin`, `RequireApiKey`) to enforce security boundaries at edge. |
+| `response` | Enforces the Data Envelope JSON standard (`DataEnvelope`, `PaginatedResponse`). |
+| `openapi` | Synthesizes and serves the OpenAPI/Swagger specification mapping all generated endpoints. |
+
+### Contract Constraints
+- **Data Envelope Format**: All successful responses must use `{ "data": ... }` to allow top-level metadata injection without breaking client mapping.
+- **Problem Details**: Error responses must map to JSON format containing `error`, `message`, and optionally `fields` corresponding to `RFC 7807` shaped problem details.
+- **Defense in Depth**: Every router mutation involving external access must pass through `middleware` to enforce missing HTTP security headers.

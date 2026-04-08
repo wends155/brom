@@ -122,7 +122,6 @@ brom/
 │   │       ├── password.rs     # Argon2 hashing & verification
 │   │       ├── session.rs      # Session lifecycle (create/validate/expire)
 │   │       ├── api_key.rs      # API key generation & validation
-│   │       ├── extractor.rs    # Axum extractors (RequireAdmin, RequireApiKey)
 │   │       ├── rbac.rs         # Role-based access control logic
 │   │       └── error.rs        # Auth error types
 │   │
@@ -131,6 +130,7 @@ brom/
 │   │       ├── lib.rs
 │   │       ├── router.rs       # Route assembly (admin, API, docs)
 │   │       ├── middleware.rs    # Request logging, CORS, security headers
+│   │       ├── extractor.rs    # Axum extractors (RequireAdmin, RequireApiKey)
 │   │       ├── assets.rs       # rust-embed static file serving
 │   │       ├── schema_api.rs   # GET /admin/api/schema endpoint
 │   │       ├── openapi.rs      # Swagger UI mount
@@ -210,7 +210,7 @@ brom/
 ### brom-auth
 
 - **Owns**: Password hashing (Argon2), session lifecycle, API key
-  generation/validation, RBAC logic, Axum security extractors.
+  generation/validation, RBAC logic.
 - **Does NOT own**: Persistence (delegates to `SessionStore` / `ApiKeyStore`
   traits), HTTP routing.
 - **Trait Interfaces**:
@@ -220,8 +220,9 @@ brom/
 
 ### brom-server
 
-- **Owns**: Axum router assembly, middleware stack, `rust-embed` static asset
-  serving, `/admin/api/schema` endpoint, Swagger UI mount, HTTP error mapping.
+- **Owns**: Axum router assembly, middleware stack, Axum security extractors,
+  `rust-embed` static asset serving, `/admin/api/schema` endpoint,
+  Swagger UI mount, HTTP error mapping.
 - **Does NOT own**: Business logic, persistence, authentication decisions.
 - **Trait Interfaces**:
   - `AssetProvider` — abstraction for embedded static file serving.

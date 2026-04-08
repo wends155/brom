@@ -46,9 +46,9 @@ gantt
 
     section Web Layer
     Phase 3A - Auth Core           :done, p3a, after p2b, 2d
-    Phase 3B - API Architecture    :p3b, after p3a, 2d
-    Phase 3C - REST Route Gen      :p3c, after p3b, 2d
-    Phase 3D - OpenAPI & Swagger   :p3d, after p3c, 1d
+    Phase 3B - API Architecture    :done, p3b, after p3a, 2d
+    Phase 3C - REST Route Gen      :done, p3c, after p3b, 2d
+    Phase 3D - OpenAPI & Swagger   :done, p3d, after p3c, 1d
 
     section Tooling
     Phase 4 - Schema Diffing       :p4, after p3d, 3d
@@ -63,9 +63,9 @@ gantt
 | 2A | Derive Macro | Compile-time codegen | M | 🔜 Next | `brom-core`, `brom-macros` |
 | 2B | CRUD & Migrations | Runtime persistence | M | ⏳ Blocked by 2A | `brom-db`, `brom-cli` |
 | 3A | Auth Core | Password, Sessions, RBAC | M | ✅ Done | `brom-auth`, `brom-db` |
-| 3B | API Architecture | Middleware, Extractor, Server | M | 🔜 Next | `brom-auth`, `brom-server` |
-| 3C | REST Route Gen | BromEntity handler codegen | M | ⏳ Blocked by 3B | `brom-macros` |
-| 3D | OpenAPI & Swagger | Utoipa integration | S | ⏳ Blocked by 3C | `brom-server`, `brom-macros` |
+| 3B | API Architecture | Middleware, Extractor, Server | M | ✅ Done | `brom-auth`, `brom-server` |
+| 3C | REST Route Gen | BromEntity handler codegen | M | ✅ Done | `brom-macros` |
+| 3D | OpenAPI & Swagger | Utoipa integration | S | ✅ Done | `brom-server`, `brom-macros` |
 | 4 | Schema Diffing | `brom diff` engine | M | ⏳ Blocked by 3D | `brom-cli`, `brom-db` |
 | 5 | Admin SPA | Leptos embedded UI | L | ⏳ Blocked by 3D | `admin`, `brom-server` |
 
@@ -79,9 +79,9 @@ graph LR
     P2A["Phase 2A<br/>Derive Macro"]
     P2B["Phase 2B<br/>CRUD & Migrations"]
     P3A["Phase 3A<br/>Auth Core<br/>✅ Done"]
-    P3B["Phase 3B<br/>API Architecture"]
-    P3C["Phase 3C<br/>REST Route Gen"]
-    P3D["Phase 3D<br/>OpenAPI & Swagger"]
+    P3B["Phase 3B<br/>API Architecture<br/>✅ Done"]
+    P3C["Phase 3C<br/>REST Route Gen<br/>✅ Done"]
+    P3D["Phase 3D<br/>OpenAPI & Swagger<br/>✅ Done"]
     P4["Phase 4<br/>Schema Diffing"]
     P5["Phase 5<br/>Admin SPA"]
 
@@ -98,9 +98,9 @@ graph LR
     style P2A fill:#e9c46a,color:#000
     style P2B fill:#264653,color:#fff
     style P3A fill:#2d6a4f,color:#fff
-    style P3B fill:#e9c46a,color:#000
-    style P3C fill:#264653,color:#fff
-    style P3D fill:#264653,color:#fff
+    style P3B fill:#2d6a4f,color:#fff
+    style P3C fill:#2d6a4f,color:#fff
+    style P3D fill:#2d6a4f,color:#fff
     style P4 fill:#264653,color:#fff
     style P5 fill:#264653,color:#fff
 ```
@@ -360,9 +360,9 @@ Implement the core authentication and authorization logic, including password ha
 
 ---
 
-## Phase 3B: API Architecture & Server Core
+## Phase 3B: API Architecture & Server Core ✅
 
-> **Status:** Next · **Depends on:** Phase 3A
+> **Status:** Complete · **Depends on:** Phase 3A
 > **Crates:** `brom-server` (primary), `brom-auth` (supporting)
 
 ### Objective
@@ -396,9 +396,9 @@ Scaffold the Axum server, implement mandatory middleware (CORS, logging), and cr
 
 ---
 
-## Phase 3C: REST Route Generation
+## Phase 3C: REST Route Generation ✅
 
-> **Status:** Pending · **Depends on:** Phase 3B
+> **Status:** Complete · **Depends on:** Phase 3B
 > **Crates:** `brom-macros` (primary), `brom-server` (consumer)
 
 ### Objective
@@ -422,9 +422,9 @@ Extend `#[derive(BromEntity)]` to generate Axum route handlers and a router-asse
 
 ---
 
-## Phase 3D: OpenAPI & Swagger UI
+## Phase 3D: OpenAPI & Swagger UI ✅
 
-> **Status:** Pending · **Depends on:** Phase 3C
+> **Status:** Complete · **Depends on:** Phase 3C
 > **Crates:** `brom-server` (primary), `brom-macros` (supporting)
 
 ### Objective

@@ -200,3 +200,17 @@
 > * **New Constraints:** Any file system reads from dynamic directory paths MUST follow the `entry.path().canonicalize()` pattern followed by a base-path `starts_with()` check.
 > * **Pruned:** Removed the `// narsil-ignore: CWE-22` suppression from the insecure code version; replaced it in the secure implementation.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, doc-tests) passed workspace-wide. Security check `narsil check-cwe-top25` verified for the target crate.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 3B/C/D Hardening & Close-out
+> * **Changes:** Expanded Axum security headers with `X-Frame-Options: DENY` and `Referrer-Policy: strict-origin-when-cross-origin`. Synchronized `architecture.md` with implementation reality (Extractors moved to `brom-server`). Formally closed out Phases 3B, 3C, and 3D in `roadmap.md` and marked "Network Edge Instrumentation" in `todos.md`.
+> * **New Constraints:** Security headers are now distributed across three separate Tower layers in `middleware.rs` for modularity. Any new top-level router layers must preserve this defense-in-depth ordering.
+> * **Pruned:** Removed the stale "Status: Next" markers from Phase 3 documentation.
+> * **Verification:** Full `just verify` (clippy, fmt, test, doc-test, sg scan) passed with exit code 0. Zero-Exit gate satisfied.
+
+> 📝 **Context Update:**
+> * **Feature:** Documentation sync for Phase 3B/C/D
+> * **Changes:** Synchronized `spec.md` with current `brom-server` contracts (API response envelopes, security middleware, problem details). Applied comprehensive `///` documentation to `brom-server`, `brom-db`, `brom-auth`, and `brom-macros` resolving all `missing_docs` warnings. Corrected `doc-markdown` backtick violations in crates.
+> * **New Constraints:** All future public items must include the "What, Why, Arguments, Returns, Errors" doc-comment sections per `doc-rules.md`.
+> * **Pruned:** Stale verification hash (`83c78be`) and all Phase 3 documentation warnings.
+

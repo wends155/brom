@@ -9,7 +9,7 @@ This document captures forward-looking architectural choices and technical tasks
 ## 2. Pervasive Observability (Tracing)
 *   **[ ] Implement File Sink (Phase 2+):** Integrate `tracing-appender` to support `just logs-*` recipes once actual runtime traffic generation begins.
 *   **[ ] Customize Route Tracing (Phase 4):** Refine `tower_http::trace::TraceLayer` to extract unified CMS contexts and trim generic header noise.
-*   **[ ] Network Edge Instrumentation:** Implement `tower_http::trace::TraceLayer` on the Axum router to guarantee span creation, method, URI, and latency logging for *every* request.
+*   **[x] Network Edge Instrumentation:** Implement `tower_http::trace::TraceLayer` on the Axum router to guarantee span creation, method, URI, and latency logging for *every* request.
 *   **[ ] Deep Macro Instrumentation:** Use `#[tracing::instrument(skip_all)]` aggressively on core functions throughout the stack (e.g., `Repository::create`, `evaluate_policy`, `run_pending`).
 *   **[ ] Span Propagation Check:** Ensure that `tracing` context is correctly carried down into `brom-db` so that database operations inherit the parent `request_id`.
 

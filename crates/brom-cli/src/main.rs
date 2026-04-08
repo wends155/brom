@@ -1,3 +1,6 @@
+//! CLI entrypoint for the brom framework.
+//! Provides commands to generate schemas, run migrations, and bootstrap apps.
+
 use clap::{Parser, Subcommand};
 mod config;
 

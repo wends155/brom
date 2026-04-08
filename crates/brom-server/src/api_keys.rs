@@ -8,14 +8,22 @@ use serde::{Deserialize, Serialize};
 
 use crate::{error::ServerError, extractor::RequireAdmin, state::AppState};
 
+/// Data Transfer Object representing an API key without the raw secret.
 #[derive(Debug, Serialize, Deserialize, utoipa::ToSchema)]
 pub struct ApiKeyRecordDto {
+    /// Unique identifier for the API key.
     pub id: i64,
+    /// Human-readable label for the key.
     pub name: String,
+    /// Hint containing the first few characters of the key identifier.
     pub key_prefix: String,
+    /// Access control level or capability tags.
     pub permissions: String,
+    /// ID of the user who owns the key.
     pub user_id: i64,
+    /// ISO 8601 creation timestamp.
     pub created_at: String,
+    /// ISO 8601 timestamp of last usage, if ever used.
     pub last_used_at: Option<String>,
 }
 
@@ -33,15 +41,21 @@ impl From<ApiKeyRecord> for ApiKeyRecordDto {
     }
 }
 
+/// Payload for provisioning a new API key.
 #[derive(Deserialize, utoipa::ToSchema)]
 pub struct CreateApiKeyRequest {
+    /// Human-readable label for the key.
     pub name: String,
+    /// Access control level or capability tags.
     pub permissions: String,
 }
 
+/// Response containing the newly generated API key secret.
 #[derive(Serialize, utoipa::ToSchema)]
 pub struct CreateApiKeyResponse {
+    /// Plaint-text secret token - only shown once upon creation.
     pub raw_key: String,
+    /// Redacted record properties of the newly created key.
     pub record: ApiKeyRecordDto,
 }
 

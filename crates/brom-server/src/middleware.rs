@@ -17,10 +17,26 @@ pub fn cors_layer(origins: Vec<HeaderValue>) -> CorsLayer {
         .allow_credentials(true)
 }
 
-/// Returns a layer that adds common security headers.
-pub fn security_headers_layer() -> SetResponseHeaderLayer<HeaderValue> {
+/// Returns a layer that adds the X-Content-Type-Options: nosniff header.
+pub fn x_content_type_options_layer() -> SetResponseHeaderLayer<HeaderValue> {
     SetResponseHeaderLayer::if_not_present(
         header::X_CONTENT_TYPE_OPTIONS,
         HeaderValue::from_static("nosniff"),
+    )
+}
+
+/// Returns a layer that adds the X-Frame-Options: DENY header.
+pub fn x_frame_options_layer() -> SetResponseHeaderLayer<HeaderValue> {
+    SetResponseHeaderLayer::if_not_present(
+        header::X_FRAME_OPTIONS,
+        HeaderValue::from_static("DENY"),
+    )
+}
+
+/// Returns a layer that adds the Referrer-Policy: strict-origin-when-cross-origin header.
+pub fn referrer_policy_layer() -> SetResponseHeaderLayer<HeaderValue> {
+    SetResponseHeaderLayer::if_not_present(
+        header::HeaderName::from_static("referrer-policy"),
+        HeaderValue::from_static("strict-origin-when-cross-origin"),
     )
 }
