@@ -235,3 +235,10 @@
 >   - `diff.rs:247` (`DropColumn`): Rollback is non-trivial in SQLite without full table recreation patterns; currently requires manual SQL authoring.
 >   - `diff.rs:254` (`DropTable`): Data-preserving rollback is impossible without historical schema snapshots or shadow tables; currently deferred.
 > * **Status:** Tracked as accepted Phase 4 tech debt.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Phase 4 Documentation Sync & Completion
+> * **Changes:** Applied comprehensive `///` documentation to `brom-db/src/introspect.rs` and `brom-cli/src/diff.rs`, resolving all `missing_docs` and `clippy::doc_markdown` warnings. Updated `spec.md` with behavioral contracts for database introspection and schema diffing (topological sorting, destructive rollback restrictions). Finalized Phase 4 with a workspace commitment.
+> * **New Constraints:** (None - adhered to existing `doc-rules.md`)
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, doc-test, sg scan) passed. Commit: `146a759`.
+> * **Status:** Phase 4 Complete. Ready for Phase 5.
