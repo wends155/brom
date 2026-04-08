@@ -6,7 +6,7 @@ pub mod api_key_store;
 pub mod error;
 /// Automated migration runner and history tracking.
 pub mod migration;
-/// SQLite connection pooling and initialization logic.
+/// `SQLite` connection pooling and initialization logic.
 pub mod pool;
 /// Active-record style repository for entity persistence.
 pub mod repository;

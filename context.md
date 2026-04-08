@@ -214,3 +214,10 @@
 > * **New Constraints:** All future public items must include the "What, Why, Arguments, Returns, Errors" doc-comment sections per `doc-rules.md`.
 > * **Pruned:** Stale verification hash (`83c78be`) and all Phase 3 documentation warnings.
 
+> 📝 **Context Update:**
+> * **Feature:** Verification Gate Remediation (Clippy Doc Markdown)
+> * **Changes:** Resolved `clippy::doc_markdown` failures in `brom-macros` and `brom-db` by wrapping technical terms (`SQLite`, `OpenAPI`, `Axum`) in backticks within module-level doc comments.
+> * **New Constraints:** None. Adheres to established `Architecture.md §11` standards.
+> * **Pruned:** The blocking lint warnings that were preventing zero-exit on `just verify`.
+> * **Verification:** Full `just verify` (clippy, fmt, test, doc-test, sg scan) passed workspace-wide. Zero-Exit gate restored.
+
