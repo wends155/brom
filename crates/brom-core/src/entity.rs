@@ -7,11 +7,13 @@ use crate::Error;
 ///
 /// # Safety
 ///
-/// Implementations must ensure that `table_name()` and the `name` field of all `FieldInfo`
-/// returned by `fields()` are compile-time constants (e.g., string literals).
-/// This is a critical security invariant because the repository layer uses these
-/// values to construct dynamic SQL queries. Providing runtime user input here
-/// would introduce risk of SQL injection.
+/// Implementations must ensure that `table_name()` returns a compile-time constant
+/// (the return type `&'static str` enforces this). The `name` field of `FieldInfo`
+/// returned by `fields()` should also be a compile-time constant, though this is
+/// not structurally enforced by the type system (it uses `String` for serde
+/// compatibility). As a defense-in-depth measure, the persistence layer validates
+/// all identifier values at runtime via [`validate_sql_identifier`] before SQL
+/// interpolation.
 pub trait EntitySchema: Sized + Send + Sync + 'static {
     /// `SQLite` table name for this entity.
     fn table_name() -> &'static str;
@@ -72,6 +74,44 @@ pub enum Constraint {
     NotNull,
     /// Default value for the field.
     Default(String),
+}
+
+/// Validates that a string is a safe SQL identifier.
+///
+/// A valid identifier contains only ASCII alphanumeric characters and underscores,
+/// starts with a letter or underscore, and is between 1 and 128 characters.
+///
+/// # Errors
+///
+/// Returns [`Error::SchemaError`] if the identifier contains invalid characters,
+/// is empty, or exceeds 128 characters.
+///
+/// # Panics
+///
+/// This function does not panic. The internal use of `expect` is guarded by an
+/// earlier non-empty check.
+pub fn validate_sql_identifier(s: &str) -> Result<&str, Error> {
+    if s.is_empty() || s.len() > 128 {
+        return Err(Error::SchemaError(format!(
+            "SQL identifier must be 1-128 characters, got {len}",
+            len = s.len()
+        )));
+    }
+    let mut chars = s.chars();
+    // Safety: Guarded by s.is_empty() check above.
+    #[allow(clippy::expect_used)]
+    let first = chars.next().expect("checked non-empty above");
+    if !first.is_ascii_alphabetic() && first != '_' {
+        return Err(Error::SchemaError(format!(
+            "SQL identifier must start with a letter or underscore, got '{first}'"
+        )));
+    }
+    if let Some(bad) = chars.find(|c| !c.is_ascii_alphanumeric() && *c != '_') {
+        return Err(Error::SchemaError(format!(
+            "SQL identifier contains invalid character '{bad}' in '{s}'"
+        )));
+    }
+    Ok(s)
 }
 
 /// Complete schema information including auth policy.
@@ -212,5 +252,21 @@ mod tests {
         let p = Pagination::default();
         assert_eq!(p.page, 1);
         assert_eq!(p.per_page, 25);
+    }
+
+    #[test]
+    fn validate_sql_identifier_accepts_valid() {
+        assert!(validate_sql_identifier("user_name").is_ok());
+        assert!(validate_sql_identifier("_private").is_ok());
+        assert!(validate_sql_identifier("Col123").is_ok());
+    }
+
+    #[test]
+    fn validate_sql_identifier_rejects_invalid() {
+        assert!(validate_sql_identifier("").is_err());
+        assert!(validate_sql_identifier("123abc").is_err());
+        assert!(validate_sql_identifier("drop;--").is_err());
+        assert!(validate_sql_identifier("Robert'); DROP TABLE students;--").is_err());
+        assert!(validate_sql_identifier(&"a".repeat(129)).is_err());
     }
 }

@@ -50,12 +50,16 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     #[tracing::instrument(skip_all)]
     fn create(&self, entity: &T) -> Result<i64, brom_core::Error> {
         let table = T::table_name();
+        brom_core::validate_sql_identifier(table)?;
         let fields = T::fields();
         let columns: Vec<String> = fields
             .iter()
             .map(|f| f.name.clone())
             .filter(|name| name != "id")
             .collect();
+        for col in &columns {
+            brom_core::validate_sql_identifier(col)?;
+        }
         let placeholders: Vec<String> = (1..=columns.len()).map(|_| "?".to_string()).collect();
 
         let sql = format!(
@@ -97,6 +101,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     #[tracing::instrument(skip_all)]
     fn find_by_id(&self, id: i64) -> Result<Option<T>, brom_core::Error> {
         let table = T::table_name();
+        brom_core::validate_sql_identifier(table)?;
         let sql = format!("SELECT * FROM {table} WHERE id = ?");
 
         let conn = self
@@ -143,6 +148,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     #[tracing::instrument(skip_all)]
     fn find_all(&self, pagination: &Pagination) -> Result<Vec<T>, brom_core::Error> {
         let table = T::table_name();
+        brom_core::validate_sql_identifier(table)?;
         let limit = pagination.per_page;
         let offset = (pagination.page.saturating_sub(1)) * pagination.per_page;
         let sql = format!("SELECT * FROM {table} LIMIT ? OFFSET ?");
@@ -196,11 +202,15 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     #[tracing::instrument(skip_all)]
     fn update(&self, id: i64, entity: &T) -> Result<(), brom_core::Error> {
         let table = T::table_name();
+        brom_core::validate_sql_identifier(table)?;
         let fields = T::fields();
         let set_clause = fields
             .iter()
-            .map(|f| format!("{} = ?", f.name))
-            .collect::<Vec<_>>()
+            .map(|f| {
+                brom_core::validate_sql_identifier(&f.name)?;
+                Ok(format!("{} = ?", f.name))
+            })
+            .collect::<Result<Vec<_>, brom_core::Error>>()?
             .join(", ");
         let sql = format!("UPDATE {table} SET {set_clause} WHERE id = ?");
 
@@ -238,6 +248,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     #[tracing::instrument(skip_all)]
     fn delete(&self, id: i64) -> Result<(), brom_core::Error> {
         let table = T::table_name();
+        brom_core::validate_sql_identifier(table)?;
         let sql = format!("DELETE FROM {table} WHERE id = ?");
 
         let conn = self
@@ -253,6 +264,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     #[tracing::instrument(skip_all)]
     fn count(&self) -> Result<i64, brom_core::Error> {
         let table = T::table_name();
+        brom_core::validate_sql_identifier(table)?;
         let sql = format!("SELECT COUNT(*) FROM {table}");
 
         let conn = self

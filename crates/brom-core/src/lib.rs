@@ -5,7 +5,10 @@ pub mod error;
 pub mod relation;
 pub mod schema;
 
-pub use entity::*;
+pub use entity::{
+    AuthPolicy, Constraint, EntitySchema, FieldInfo, FieldType, Pagination, Repository, SchemaInfo,
+    validate_sql_identifier,
+};
 pub use error::Error;
 pub use relation::*;
 pub use schema::*;

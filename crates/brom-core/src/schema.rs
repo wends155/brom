@@ -23,17 +23,54 @@ impl SchemaRegistry {
 
     /// Registers a new schema.
     pub fn register(&self, schema: SchemaInfo) {
-        if let Ok(mut lock) = self.schemas.write() {
-            lock.push(schema);
-        }
+        let mut lock = self
+            .schemas
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        lock.push(schema);
     }
 
     /// Returns a copy of all registered schemas.
     pub fn all_schemas(&self) -> Vec<SchemaInfo> {
-        if let Ok(lock) = self.schemas.read() {
-            lock.clone()
-        } else {
-            Vec::new()
+        let lock = self
+            .schemas
+            .read()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        lock.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{AuthPolicy, FieldInfo, FieldType};
+
+    fn sample_schema(name: &str) -> SchemaInfo {
+        SchemaInfo {
+            table_name: name.to_string(),
+            fields: vec![FieldInfo {
+                name: "id".to_string(),
+                field_type: FieldType::Integer,
+                constraints: vec![],
+                ui_widget: None,
+                hidden: false,
+            }],
+            auth_policy: AuthPolicy::Public,
         }
+    }
+
+    #[test]
+    fn register_and_retrieve() {
+        let reg = SchemaRegistry::new();
+        reg.register(sample_schema("post"));
+        reg.register(sample_schema("tag"));
+        let schemas = reg.all_schemas();
+        assert_eq!(schemas.len(), 2);
+    }
+
+    #[test]
+    fn empty_registry_returns_empty_vec() {
+        let reg = SchemaRegistry::new();
+        assert!(reg.all_schemas().is_empty());
     }
 }

@@ -97,7 +97,13 @@
 > * **Changes:** Performed deep-dive validation of 5 security findings from `/review all all`. Confirmed 3/5 were false positives (insecure randomness in tests, hardcoded test credentials, rusqlite parameter indexing noise). Hardened `EntitySchema` trait in `brom-core` with `# Safety` documentation enforcing compile-time constants for schema metadata.
 > * **New Constraints:** Any manual implementation of `EntitySchema` MUST adhere to the `# Safety` section to prevent SQL injection in the repository's dynamic query builder.
 > * **Deferred:** The JSON allocation bottleneck in `SqliteRepository` is formally deferred to the `roadmap.md` Tech Debt Register for Post-v1 optimization.
-> * **Security:** Production code verified secure. `OsRng` is correctly used for all production token generation; SQL vectors are structurally bounded by the `&'static str` trait contract.
+> * **Security:** Production code verified secure. `OsRng` is correctly used for all production token generation; SQL identifier vectors are hardened via runtime `validate_sql_identifier()` checks in the persistence layer as defense-in-depth.
+
+> 📝 **Context Update:**
+> * **Feature:** SQL Identifier Safety Hardening (brom-core review findings)
+> * **Changes:** Added `validate_sql_identifier()` to `brom-core` for runtime defense-in-depth against SQL identifier injection. Hardened `SqliteRepository` to validate all table and column names before `format!()` interpolation. Fixed `SchemaRegistry` silent-failure on poisoned `RwLock` by recovering data via `unwrap_or_else`. Corrected the stale `context.md` security claim about `&'static str` enforcement — `FieldInfo::name` is `String`, not `&'static str`, and relies on runtime validation.
+> * **New Constraints:** Any code interpolating schema metadata into SQL MUST call `validate_sql_identifier()` first.
+> * **Pruned:** The incorrect claim that `FieldInfo::name` is bounded by `&'static str`.
 > 
 > 📝 **Context Update:**
 > * **Feature:** Project Documentation Foundation

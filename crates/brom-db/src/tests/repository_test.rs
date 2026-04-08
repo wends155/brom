@@ -109,3 +109,12 @@ fn test_sqlite_repository_crud() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test]
+fn existing_schema_uses_valid_identifiers() {
+    // Verify that all field names in the test Post schema are valid identifiers
+    for field in Post::fields() {
+        brom_core::validate_sql_identifier(&field.name).expect("field name should be valid");
+    }
+    brom_core::validate_sql_identifier(Post::table_name()).expect("table name should be valid");
+}
