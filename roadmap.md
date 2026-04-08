@@ -497,25 +497,17 @@ sections.
 | Struct metadata → expected schema comparison | Automatic migration application (that's `migrate`) |
 | Detect: new tables, dropped tables | Cross-database migration support |
 | Detect: new columns, dropped columns, type changes | Data migration (only DDL) |
-| Generate `CREATE TABLE`, `ALTER TABLE ADD COLUMN` | — |
+| Generate `CREATE TABLE`, `ALTER TABLE ADD COLUMN/DROP COLUMN` | — |
 | Generate `-- DOWN` rollback sections | — |
-| Handle SQLite `ALTER TABLE` limitations (recreate pattern) | — |
+| Topological sort of CREATE/DROP statements based on Foreign Keys | — |
 | Timestamped filename generation (`YYYYMMDD_HHMMSS_description.sql`) | — |
 | Migration rollback support in `MigrationRunner` | — |
 
 ### Key Challenge
 
-SQLite does not support `ALTER TABLE DROP COLUMN` (prior to 3.35.0) or
-`ALTER TABLE RENAME COLUMN` (prior to 3.25.0). The diff engine must detect
-these cases and generate the "recreate table" pattern:
+While SQLite historically lacked comprehensive `ALTER TABLE` support, `brom` leverages modern bundled `rusqlite` versions to natively emit `ALTER TABLE DROP COLUMN` and `RENAME COLUMN` operations. 
 
-```sql
--- UP
-CREATE TABLE _tmp_post AS SELECT id, title, body FROM post;
-DROP TABLE post;
-ALTER TABLE _tmp_post RENAME TO post;
--- re-create indices
-```
+The primary architectural challenge is the **Topological Sort**: generated `CREATE TABLE` and `DROP TABLE` statements must be correctly ordered to satisfy foreign key dependencies (e.g., `Link<T>` and `ManyToMany<T>`) without needing to disable `PRAGMA foreign_keys`.
 
 ### New Files (Expected)
 
