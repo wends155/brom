@@ -251,6 +251,7 @@ dependencies = [
 name = "brom-cli"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "brom-core",
  "brom-db",
  "clap",

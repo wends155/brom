@@ -22,7 +22,7 @@ pub trait EntitySchema: Sized + Send + Sync + 'static {
 }
 
 /// Metadata for a single field of an entity.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct FieldInfo {
     /// The programmatic name of the field.
     pub name: String,
@@ -75,7 +75,7 @@ pub enum Constraint {
 }
 
 /// Complete schema information including auth policy.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SchemaInfo {
     /// The database table name.
     pub table_name: String,

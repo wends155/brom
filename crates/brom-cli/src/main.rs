@@ -2,7 +2,8 @@
 //! Provides commands to generate schemas, run migrations, and bootstrap apps.
 
 use clap::{Parser, Subcommand};
-mod config;
+use brom_cli::config;
+use brom_cli::diff;
 
 #[derive(Parser)]
 #[command(
@@ -93,7 +94,9 @@ fn main() {
             }
         }
         Commands::Diff => {
-            println!("STUB(Phase 4): Diff database schema against migrations");
+            let config = config::AppConfig::load();
+            println!("Comparing schema against {}...", config.db_path);
+            // TODO: In Step 12, we will wire this up to a real .brom-schema.json
         }
         Commands::New { name } => {
             println!("STUB(Phase 3+): Scaffold new project '{name}'");
