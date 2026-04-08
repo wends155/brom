@@ -215,7 +215,8 @@ impl<'a> MigrationRunner<'a> {
                     )));
                 }
             } else {
-                tx.execute_batch(&sql).map_err(|e| {
+                let up_sql = parse_up_section(&sql);
+                tx.execute_batch(&up_sql).map_err(|e| {
                     DbError::PoolError(format!("failed to execute migration {version}: {e}"))
                 })?;
                 tx.execute(
@@ -229,5 +230,107 @@ impl<'a> MigrationRunner<'a> {
 
         tx.commit().map_err(|e| DbError::PoolError(e.to_string()))?;
         Ok(applied)
+    }
+
+    /// Rolls back the last applied migration.
+    ///
+    /// Reads the `-- DOWN` section of the most recent migration file recorded in
+    /// `_brom_migration`, executes it, and removes the record from the database.
+    ///
+    /// # Arguments
+    ///
+    /// * `migrations_dir` - Path to the directory containing `.sql` migration files.
+    ///
+    /// # Returns
+    ///
+    /// An empty `Result<(), DbError>` on successful execution.
+    ///
+    /// # Errors
+    ///
+    /// * [`DbError::PoolError`] — if a database connection could not be acquired, no rollback is possible, or query execution fails.
+    #[tracing::instrument(skip_all)]
+    pub fn run_rollback(&self, migrations_dir: &Path) -> Result<(), DbError> {
+        let mut conn = self.pool.get()?;
+        let tx = conn
+            .transaction()
+            .map_err(|e| DbError::PoolError(e.to_string()))?;
+
+        // 1. Get last migration version
+        let version: Option<String> = tx
+            .query_row(
+                "SELECT version FROM _brom_migration ORDER BY id DESC LIMIT 1",
+                [],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(|e| DbError::PoolError(e.to_string()))?;
+
+        if let Some(version) = version {
+            let file_name = format!("{version}.sql");
+            let file_path = migrations_dir.join(&file_name);
+
+            if !file_path.exists() {
+                return Err(DbError::PoolError(format!(
+                    "migration file not found for rollback: {file_name}"
+                )));
+            }
+
+            let sql = std::fs::read_to_string(&file_path).map_err(|e| {
+                DbError::PoolError(format!("failed to read migration {version}: {e}"))
+            })?;
+
+            let down_sql = parse_down_section(&sql);
+            if down_sql.trim().is_empty() {
+                return Err(DbError::PoolError(format!(
+                    "no -- DOWN section found in migration {version}"
+                )));
+            }
+
+            // 2. Execute DOWN sql
+            tx.execute_batch(&down_sql).map_err(|e| {
+                DbError::PoolError(format!("failed to execute rollback for {version}: {e}"))
+            })?;
+
+            // 3. Remove from history
+            tx.execute("DELETE FROM _brom_migration WHERE version = ?", [&version])
+                .map_err(|e| DbError::PoolError(e.to_string()))?;
+
+            tracing::info!(%version, "Rollback successful.");
+        } else {
+            tracing::info!("No migrations to rollback.");
+        }
+
+        tx.commit().map_err(|e| DbError::PoolError(e.to_string()))?;
+        Ok(())
+    }
+}
+
+fn parse_up_section(content: &str) -> String {
+    if !content.contains("-- UP") {
+        return content.to_string();
+    }
+
+    let lines: Vec<&str> = content.lines().collect();
+    let up_start = lines.iter().position(|l| l.trim().starts_with("-- UP"));
+    let down_start = lines.iter().position(|l| l.trim().starts_with("-- DOWN"));
+
+    match (up_start, down_start) {
+        (Some(up), Some(down)) if up < down => lines[up + 1..down].join("\n"),
+        (Some(up), Some(down)) if down < up => lines[up + 1..].join("\n"),
+        (Some(up), None) => lines[up + 1..].join("\n"),
+        _ => content.to_string(),
+    }
+}
+
+fn parse_down_section(content: &str) -> String {
+    let lines: Vec<&str> = content.lines().collect();
+    let down_start = lines.iter().position(|l| l.trim().starts_with("-- DOWN"));
+    let up_start = lines.iter().position(|l| l.trim().starts_with("-- UP"));
+
+    match (down_start, up_start) {
+        (Some(down), Some(up)) if down < up => lines[down + 1..up].join("\n"),
+        (Some(down), Some(up)) if up < down => lines[down + 1..].join("\n"),
+        (Some(down), None) => lines[down + 1..].join("\n"),
+        _ => String::new(),
     }
 }
