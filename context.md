@@ -221,3 +221,9 @@
 > * **Pruned:** The blocking lint warnings that were preventing zero-exit on `just verify`.
 > * **Verification:** Full `just verify` (clippy, fmt, test, doc-test, sg scan) passed workspace-wide. Zero-Exit gate restored.
 
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 4 Planning (Schema Diffing)
+> * **Changes:** Finalized the implementation plan for `brom diff`. Resolved a major architectural contradiction in `architecture.md` regarding modern SQLite native `ALTER TABLE DROP COLUMN` support (available since 3.45 via `rusqlite 0.32`). Established the `.brom-schema.json` strategy for CLI schema ingestion and implemented topological sorting requirements for handling foreign key dependencies.
+> * **New Constraints:** The `brom diff` command will read expected schema metadata from `.brom-schema.json`. Migration files MUST include `-- DOWN` sections for rollback support.
+> * **Pruned:** Removed stale Phase 4 "STUB" assumptions from the implementation roadmap.
