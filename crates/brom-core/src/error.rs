@@ -19,6 +19,31 @@ pub enum Error {
     #[error("database error: {0}")]
     Database(String),
 
+    #[error("unique constraint violation: {entity} with {field}='{value}' already exists")]
+    UniqueViolation {
+        entity: &'static str,
+        field: String,
+        value: String,
+    },
+
     #[error("serialization error: {0}")]
     Serde(String),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_unique_violation_display() {
+        let err = Error::UniqueViolation {
+            entity: "Post",
+            field: "slug".to_string(),
+            value: "hello-world".to_string(),
+        };
+        assert_eq!(
+            err.to_string(),
+            "unique constraint violation: Post with slug='hello-world' already exists"
+        );
+    }
 }
