@@ -1,3 +1,12 @@
+//! # Database Introspection
+//!
+//! Provides utilities for extracting the physical schema from a live `SQLite` database.
+//!
+//! ## Overview
+//!
+//! Introspection is necessary to compare the intended entity schema (derived from Rust code)
+//! against the actual deployed schema to generate database migrations.
+
 use crate::error::DbError;
 use crate::pool::DbPool;
 use serde::{Deserialize, Serialize};
@@ -32,8 +41,17 @@ pub struct IntrospectedForeignKey {
 ///
 /// Excludes internal `_brom_*` tables and `sqlite_*` system tables.
 ///
+/// # Arguments
+///
+/// * `pool` - The `DbPool` providing connection access to the target database.
+///
+/// # Returns
+///
+/// A vector of `IntrospectedTable` representations matching the current DB state.
+///
 /// # Errors
-/// Returns `DbError::QueryError` if PRAGMA queries fail.
+///
+/// * [`DbError::QueryError`] if PRAGMA queries fail or the database is unreadable.
 pub fn introspect_schema(pool: &DbPool) -> Result<Vec<IntrospectedTable>, DbError> {
     let conn = pool.get()?;
 

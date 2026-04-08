@@ -1,8 +1,15 @@
+//! # Schema Diff Engine
+//!
+//! Provides the core logic for comparing declarative `BromEntity` schemas against
+//! physical `SQLite` database schemas, synthesizing the necessary migration steps.
+
 use brom_core::{Constraint, FieldInfo, FieldType, SchemaInfo};
 use brom_db::introspect::IntrospectedTable;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fmt::Write;
 
+/// Represents a discrete schema change operation required to transition
+/// the database state closer to the expected entity declarations.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MigrationOp {
     CreateTable {
@@ -23,6 +30,11 @@ pub enum MigrationOp {
 }
 
 impl MigrationOp {
+    /// Extracts the primary table name targeted by this operation.
+    ///
+    /// # Returns
+    ///
+    /// A string slice representing the table name.
     pub fn table_name(&self) -> &str {
         match self {
             MigrationOp::CreateTable { name, .. } | MigrationOp::DropTable { name } => name,
@@ -32,12 +44,26 @@ impl MigrationOp {
     }
 }
 
+/// Engine responsible for schema synchronization and migration generation.
+///
+/// Holds the expected state (from code) and actual state (from DB) to compute a
+/// minimal set of safe `MigrationOp` transitions.
 pub struct DiffEngine {
     expected_schemas: Vec<SchemaInfo>,
     actual_tables: Vec<IntrospectedTable>,
 }
 
 impl DiffEngine {
+    /// Constructs a new `DiffEngine`.
+    ///
+    /// # Arguments
+    ///
+    /// * `expected` - The intended schemas derived from code via `brom-macros`.
+    /// * `actual` - The physical tables currently existing in the database.
+    ///
+    /// # Returns
+    ///
+    /// A configured `DiffEngine` ready for `diff()` execution.
     pub fn new(expected: Vec<SchemaInfo>, actual: Vec<IntrospectedTable>) -> Self {
         Self {
             expected_schemas: expected,
@@ -206,6 +232,16 @@ impl DiffEngine {
     }
 }
 
+/// Transforms a sequence of migration operations into raw SQL statements.
+///
+/// # Arguments
+///
+/// * `ops` - The sequence of operations to translate.
+///
+/// # Returns
+///
+/// A tuple containing `(up_sql, down_sql)` corresponding to the forward
+/// and rollback query batches.
 pub fn generate_migration_sql(ops: &[MigrationOp]) -> (String, String) {
     let mut up_sql = String::new();
     let mut down_sql = String::new();

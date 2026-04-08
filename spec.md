@@ -6,7 +6,7 @@
 | **Version** | 1.0.0 |
 | **Last Updated** | 2026-04-07 |
 
-> Last verified against: cd55934
+> Last verified against: HEAD
 
 ## 1. brom-macros
 
@@ -111,9 +111,39 @@ stateDiagram-v2
 | Ready | Pending | `diff()` | `.sql` files are generated in `migrations/` directory |
 | Pending | Ready | `migrate()` | Applies new `.sql` files, updates `_brom_migration` |
 
+### Behavioral Scenarios
+
+[HAPPY] Database Introspection
+GIVEN an active SQLite database with standard user tables and internal `_brom_` tables
+WHEN `introspect_schema` is called
+THEN it returns `IntrospectedTable` representations for all user tables
+AND it systematically excludes `_brom_*` and `sqlite_*` internal tables from the result
+
 ---
 
-## 4. brom-auth
+## 4. brom-cli
+
+> Development toolkit executing migrations, introspection, and schema generation.
+
+### Behavioral Scenarios
+
+[HAPPY] Schema Diffing and SQL Generation
+GIVEN an expected declarative schema (from JSON) and an actual physical schema (from introspection)
+WHEN `DiffEngine::diff()` is called
+THEN it computes the minimal sequence of `MigrationOp` transitions
+AND sorts operations topologically (e.g., Creates before Alters, handling foreign-key dependencies)
+AND `generate_migration_sql` outputs matching `up` and `down` SQLite statements
+
+[RESTRICTION] Destructive Rollbacks
+GIVEN a computed `DropColumn` or `DropTable` operation
+WHEN `generate_migration_sql` produces the `down` SQL
+THEN it omits automated table-recreation syntax (due to SQLite `ALTER TABLE DROP COLUMN` limitations)
+AND injects a SQL `-- TODO: Manual rollback needed` comment for developer action
+
+
+---
+
+## 5. brom-auth
 
 > Security primitives for Admin UI and API execution.
 
@@ -137,7 +167,7 @@ THEN a `403 Forbidden` response is returned
 
 ---
 
-## 5. brom-server
+## 6. brom-server
 
 > Axum REST API, server components, standard JSON response formatting, and OpenAPI schema generation.
 
