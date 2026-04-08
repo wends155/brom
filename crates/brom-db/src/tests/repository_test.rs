@@ -111,6 +111,93 @@ fn test_sqlite_repository_crud() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn test_sqlite_repository_unique_violation() -> Result<(), Box<dyn std::error::Error>> {
+    #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+    struct UniquePost {
+        id: i64,
+        slug: String,
+        title: String,
+    }
+
+    impl EntitySchema for UniquePost {
+        fn table_name() -> &'static str {
+            "test_posts_unique"
+        }
+        fn fields() -> Vec<FieldInfo> {
+            vec![
+                FieldInfo {
+                    name: "id".into(),
+                    field_type: FieldType::Integer,
+                    constraints: vec![],
+                    ui_widget: None,
+                    hidden: false,
+                },
+                FieldInfo {
+                    name: "slug".into(),
+                    field_type: FieldType::String,
+                    constraints: vec![],
+                    ui_widget: None,
+                    hidden: false,
+                },
+                FieldInfo {
+                    name: "title".into(),
+                    field_type: FieldType::String,
+                    constraints: vec![],
+                    ui_widget: None,
+                    hidden: false,
+                },
+            ]
+        }
+        fn schema_info() -> SchemaInfo {
+            SchemaInfo {
+                table_name: "test_posts_unique".into(),
+                fields: Self::fields(),
+                auth_policy: AuthPolicy::Public,
+            }
+        }
+    }
+
+    let pool = DbPool::in_memory()?;
+
+    // Create table with UNIQUE constraint
+    let conn = pool.get()?;
+    conn.execute(
+        "CREATE TABLE test_posts_unique (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT UNIQUE, title TEXT)",
+        [],
+    )?;
+
+    let repo = SqliteRepository::<UniquePost>::new(pool);
+    let post1 = UniquePost {
+        id: 0,
+        slug: "dup".into(),
+        title: "First".into(),
+    };
+    let post2 = UniquePost {
+        id: 0,
+        slug: "dup".into(),
+        title: "Second".into(),
+    };
+
+    repo.create(&post1)?;
+    let result = repo.create(&post2);
+
+    match result {
+        Err(brom_core::Error::UniqueViolation {
+            entity,
+            field,
+            value,
+        }) => {
+            assert_eq!(entity, "test_posts_unique");
+            assert_eq!(field, "slug");
+            assert_eq!(value, "dup");
+        }
+        other => panic!("Expected UniqueViolation, got {other:?}"),
+    }
+
+    Ok(())
+}
+
+#[test]
 fn existing_schema_uses_valid_identifiers() {
     // Verify that all field names in the test Post schema are valid identifiers
     for field in Post::fields() {
