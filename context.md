@@ -248,3 +248,8 @@
 > * **New Constraints:** (None - adhered to existing `doc-rules.md`)
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, doc-test, sg scan) passed. Commit: `146a759`.
 > * **Status:** Phase 4 Complete. Ready for Phase 5.
+> 📝 **Context Update:**
+> * **Feature:** Structured Error Propagation Hardening
+> * **Changes:** Finalized the mapping of SQLite `UNIQUE` constraint violations to `brom_core::Error::UniqueViolation` in `brom-db`, using dynamic message parsing to extract entity and field names. Updated `Error::UniqueViolation` to use `String` for dynamic table context. Integrated HTTP 409 Conflict mapping in `brom-server` for these violations.
+> * **New Constraints:** The `entity` field in `UniqueViolation` is now a `String`. All server error tests must use `.into()` for string fields.
+> * **Verification:** Full `just verify` (clippy, fmt, test, doc-test, sg scan) passed with exit code 0. Zero-Exit gate satisfied.
