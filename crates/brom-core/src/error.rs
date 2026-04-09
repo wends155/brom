@@ -21,7 +21,7 @@ pub enum Error {
 
     #[error("unique constraint violation: {entity} with {field}='{value}' already exists")]
     UniqueViolation {
-        entity: String,
+        entity: &'static str,
         field: String,
         value: String,
     },
@@ -37,7 +37,7 @@ mod tests {
     #[test]
     fn test_unique_violation_display() {
         let err = Error::UniqueViolation {
-            entity: "Post".to_string(),
+            entity: "Post",
             field: "slug".to_string(),
             value: "hello-world".to_string(),
         };

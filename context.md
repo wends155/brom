@@ -253,3 +253,9 @@
 > * **Changes:** Finalized the mapping of SQLite `UNIQUE` constraint violations to `brom_core::Error::UniqueViolation` in `brom-db`, using dynamic message parsing to extract entity and field names. Updated `Error::UniqueViolation` to use `String` for dynamic table context. Integrated HTTP 409 Conflict mapping in `brom-server` for these violations.
 > * **New Constraints:** The `entity` field in `UniqueViolation` is now a `String`. All server error tests must use `.into()` for string fields.
 > * **Verification:** Full `just verify` (clippy, fmt, test, doc-test, sg scan) passed with exit code 0. Zero-Exit gate satisfied.
+
+📝 **Context Update:**
+* **Feature:** Error Hardening & Pagination Remediation
+* **Changes:** Remediated a zero-cost abstraction deviation by reverting `UniqueViolation.entity` to `&'static str`, eliminating unnecessary heap allocations during constraint violation mapping. Implemented pagination hardening in `brom-core` with a `MAX_PER_PAGE` (100) bound and a new `Pagination::new()` constructor that saturates bounds (page >= 1, 1 <= per_page <= 100).
+* **New Constraints:** `Pagination` structs must now be initialized via `Pagination::new()` to ensure security bounds are enforced at the type level. `MAX_PER_PAGE` is the project-wide constant for `DoS` prevention.
+* **Verification:** Clean `just verify` (fmt, clippy, test, doc-test, sg scan) passed 100% on Windows. Zero-Exit gate satisfied.

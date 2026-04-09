@@ -144,7 +144,7 @@ mod tests {
     fn unique_violation_returns_409() {
         assert_eq!(
             status_of(ServerError::Core(brom_core::Error::UniqueViolation {
-                entity: "user".into(),
+                entity: "user",
                 field: "email".into(),
                 value: "taken@example.com".into(),
             })),

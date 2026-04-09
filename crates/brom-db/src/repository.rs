@@ -117,7 +117,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
                         }
 
                         brom_core::Error::UniqueViolation {
-                            entity: table.to_string(),
+                            entity: table,
                             field: col.to_string(),
                             value: val_str,
                         }

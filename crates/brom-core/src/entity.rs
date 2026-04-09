@@ -138,12 +138,28 @@ pub enum AuthPolicy {
 }
 
 /// High-level pagination metadata for list responses.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Maximum number of items allowed per page to prevent `DoS`.
+pub const MAX_PER_PAGE: u64 = 100;
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Pagination {
     /// Current page number (1-indexed).
     pub page: u64,
     /// Number of items per page.
     pub per_page: u64,
+}
+
+impl Pagination {
+    /// Creates a new pagination request with boundary enforcement.
+    ///
+    /// - `page` is saturated to at least 1.
+    /// - `per_page` is saturated to at least 1 and capped at `MAX_PER_PAGE`.
+    pub fn new(page: u64, per_page: u64) -> Self {
+        Self {
+            page: page.max(1),
+            per_page: per_page.clamp(1, MAX_PER_PAGE),
+        }
+    }
 }
 
 impl Default for Pagination {
@@ -252,6 +268,24 @@ mod tests {
         let p = Pagination::default();
         assert_eq!(p.page, 1);
         assert_eq!(p.per_page, 25);
+    }
+
+    #[test]
+    fn pagination_new_enforces_boundaries() {
+        // Minimums
+        let p = Pagination::new(0, 0);
+        assert_eq!(p.page, 1);
+        assert_eq!(p.per_page, 1);
+
+        // Maximums
+        let p = Pagination::new(10, 1000);
+        assert_eq!(p.page, 10);
+        assert_eq!(p.per_page, MAX_PER_PAGE);
+
+        // Valid range
+        let p = Pagination::new(5, 50);
+        assert_eq!(p.page, 5);
+        assert_eq!(p.per_page, 50);
     }
 
     #[test]
