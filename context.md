@@ -289,6 +289,11 @@
 * **New Constraints:** Despite IDE changes supporting raw shell operators, they remain strictly banned for agent usage. This ensures atomic verification checks, observability, and enforces the usage of native tools instead of obscure pipelines.
 * **Verification:** Zero-exit gate validated with `just verify`. Scanned workspaces to ensure 0 remaining instances of "IDE interception" or similar claims.
 
+> 📝 **Context Update:**
+> * **Feature:** Phase 5 (Admin SPA) Planning & Spec Alignment
+> * **Changes:** Ran `@[/spec]update` to document missing behavioral contracts for the upcoming Phase 5 Admin SPA and core internal Data Models (`User`, `Session`, `ApiKey`, `Migration`) in `spec.md` (Version 1.1.0). Drafted the multi-phase implementation plan and `task.md` for Phase 5, organizing the Leptos CSR setup and `rust-embed` Axum integration. 
+> * **Next Milestone:** Awaiting "Proceed" approval to begin the Phase 5 Act cycle.
+
 📝 **Context Update:**
 * **Feature:** Phase 4 Architectural Documentation Sync
 * **Changes:** Remediated `architecture.md` structural discrepancies identified in the Phase 4 audit. Synchronized the project layout mappings for `brom-cli`, `brom-db`, and `brom-server` by adding missing modules (e.g., `config.rs`, `introspect.rs`, `response.rs`, `state.rs`, `api_keys.rs`) and removing stale, unimplemented references (e.g., `migrate.rs`, `assets.rs`). Removed false `mockall` MockRepository claims from the module boundaries.
