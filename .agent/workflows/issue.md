@@ -74,6 +74,17 @@ Search the codebase to understand the problem area:
 - **Look for obvious causes**: Missing error handling, logic errors, race conditions, etc.
 - **Check tests**: Are there existing tests covering this area? Are they passing?
 
+> [!TIP]
+> **Structural Diagnostics** — use these `rg` patterns to quickly map the affected area:
+// turbo
+> - `rg "pub (?:struct|enum|trait|type)\s+[A-Z]" <path>` — list public API surface
+// turbo
+> - `rg "->\s*Result<" <path>` — find all fallible function signatures
+// turbo
+> - `rg "^impl" <path>` — locate all implementation blocks
+// turbo
+> - `rg "unsafe\s+(?:fn|impl|\{)" <path>` — audit unsafe boundaries
+
 #### MCP-Enhanced Investigation *(when available)*
 
 If **Narsil MCP** is available, use it to improve investigation accuracy:
@@ -128,4 +139,4 @@ End the report with:
 4. **Ask early** — if the issue is ambiguous, ask questions in Step 1, not Step 4.
 5. **Stay focused** — investigate just enough to produce a clear report; avoid rabbit holes.
 6. **Use MCP tools** — when Narsil or Sequential Thinking are available, prefer them over manual grep/search for higher accuracy.
-7. **Command Execution Constraints** — NEVER use shell operators (&&, ||, ;, >, 2>&1, |) or regex special characters like |, [], {} in rg searches. The IDE automatically blocks auto-run for these intercepted characters. For complex queries or pipelines, substitute native agent tools (like grep_search) or use robust just recipes. One standalone command per run_command call. See GEMINI.md §6.
+7. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.

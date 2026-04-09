@@ -39,6 +39,16 @@ Investigate the request before writing anything:
 - **Map dependencies**: What depends on those files? What do they depend on?
 - **Flag risks**: Security concerns, breaking changes, performance impacts.
 - **Check for existing tests**: Search for test files related to the affected code.
+
+> [!TIP]
+> **Structural scanning** for blast radius estimation:
+// turbo
+> - `rg "pub (?:struct|enum|trait|type)\s+[A-Z]" <affected-path>` — map public types in scope
+// turbo
+> - `rg "use .*<crate>::" <project-root>` — find cross-crate import consumers
+// turbo
+> - `rg "^impl.*for" <affected-path>` — locate trait implementations that may need updating
+
 - **Assess phase scope**: Determine if this is a single-phase or multi-phase plan. Multi-phase indicators: scope touches >3 modules, requires infrastructure setup before features, or depends on stubs from prior phases. If multi-phase, load `phase-rules.md` and include Phase Context / Phase Manifest in the plan.
 
 #### MCP-Enhanced Analysis *(when available)*
@@ -223,4 +233,4 @@ After `/audit` passes, run `/update-doc` scoped to affected files, then summariz
 
 ## Rules
 
-1. **Command Execution Constraints** — NEVER use shell operators (&&, ||, ;, >, 2>&1, |) or regex special characters like |, [], {} in rg searches. The IDE automatically blocks auto-run for these intercepted characters. For complex queries or pipelines, substitute native agent tools (like grep_search) or use robust just recipes. One standalone command per run_command call. See GEMINI.md §6.
+1. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.

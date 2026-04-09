@@ -184,4 +184,4 @@ or:
 5. **Don't block** — unfixable issues are warnings, not blockers. Other workflows fall back to manual investigation.
 6. **Report everything** — even passing items go in the report for the session record.
 7. **Auto-run** — see `GEMINI.md` §6 Auto-Run table. All commands in this workflow are read-only; set `SafeToAutoRun: true` for every `run_command` call.
-8. **Command Execution Constraints** — NEVER use shell operators (&&, ||, ;, >, 2>&1, |) or regex special characters like |, [], {} in rg searches. The IDE automatically blocks auto-run for these intercepted characters. For complex queries or pipelines, substitute native agent tools (like grep_search) or use robust just recipes. One standalone command per run_command call. See GEMINI.md §6.
+8. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.

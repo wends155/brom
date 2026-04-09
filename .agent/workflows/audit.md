@@ -62,7 +62,7 @@ Before auditing, collect all relevant materials:
 - **Changed Files**: `git show --name-only --format="" HEAD` to identify what was created, modified, or deleted.
 - **Implementation Plan**: Locate and re-read the original approved plan (post-implementation only).
 - **Verification Logs**: Review any test output, lint results, or build logs from the Act phase.
-- **Git Diff**: Run `just git-diff-last` to see the exact changes made without triggering IDE regex interception.
+- **Git Diff**: Run `git diff HEAD~1 HEAD` or `just git-diff-last` to see the exact changes made.
 
 ### 2. Compliance Audit
 
@@ -141,6 +141,19 @@ For **multi-file audits** (>5 changed files), the Architect **SHOULD** use `sequ
 - Prioritize findings by severity and impact.
 
 For **single-file audits**, skip sequential thinking — the overhead isn't worth it.
+
+#### Structural Scanning *(rg-based, complements MCP tools)*
+
+> [!TIP]
+> Use these regex patterns for rapid structural checks on changed files:
+// turbo
+> - `rg "pub (?:struct|enum|trait|type)\s+[A-Z]" <changed-files>` — verify public API surface
+// turbo
+> - `rg "->\s*Result<" <changed-files>` — audit error propagation paths
+// turbo
+> - `rg "\.unwrap\(\)" <changed-files>` — find potential panic points (cross-ref with `sg scan`)
+// turbo
+> - `rg "#\[derive\(.*Serialize" <changed-files>` — check serialization coverage
 
 ### 3. Verification Gate
 
@@ -227,4 +240,4 @@ The task is now considered fully closed under the TARS protocol.
 3. **Use MCP tools** — prefer Narsil and Sequential Thinking when available for accuracy.
 4. **Preserve passing items** — document compliant items too, not just failures.
 5. **Respect the Planning Gate** — never tell the Builder to fix without routing through `/plan-making`.
-6. **Command Execution Constraints** — NEVER use shell operators (&&, ||, ;, >, 2>&1, |) or regex special characters like |, [], {} in rg searches. The IDE automatically blocks auto-run for these intercepted characters. For complex queries or pipelines, substitute native agent tools (like grep_search) or use robust just recipes. One standalone command per run_command call. See GEMINI.md §6.
+6. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.

@@ -151,7 +151,6 @@ pub fn validate_sql_identifier(s: &str) -> Result<&str, Error> {
         )));
     }
 
-
     let lower = s.to_ascii_lowercase();
     if RESERVED.iter().any(|r| *r == lower) {
         return Err(Error::SchemaError(format!(

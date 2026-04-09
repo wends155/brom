@@ -41,7 +41,7 @@ bugs, design smells, and performance issues that compliance checklists miss.
 Determine what code to review and which lens to apply:
 
 - **File path** → read the file(s) directly.
-- **`HEAD~N`** → run `git log -n N --oneline` to find the boundary commit hash, then `git diff <hash> HEAD` using the explicit hash (the `~` character is banned by the IDE).
+- **`HEAD~N`** → run `git diff HEAD~N HEAD` to see changes from the last N commits, or use `git log -n N --oneline` to find a specific commit hash.
 - **`staged`** → `git diff --cached --name-only` for staged files.
 - **`all`** → full codebase scan (use Narsil `get_project_structure` if available).
 
@@ -50,13 +50,24 @@ Determine what code to review and which lens to apply:
 Read the scoped files. For diff-based scopes, focus on changed regions but
 read enough surrounding context to understand the logic.
 
+> [!TIP]
+> **Quick structural scan** before applying lenses:
+// turbo
+> - `rg "pub (?:struct|enum|trait|type)\s+[A-Z]" <scope>` — map public API surface
+// turbo
+> - `rg "->\s*Result<" <scope>` — find fallible functions for error path review
+// turbo
+> - `rg "\.clone\(\)" <scope>` — identify potential unnecessary allocations
+// turbo
+> - `rg "unsafe\s+(?:fn|impl|\{)" <scope>` — locate unsafe boundaries for security lens
+
 // turbo
 > [!TIP]
 > For diff-based scopes, run:
 // turbo
 > - `git diff --cached --name-only` (staged)
 // turbo
-> - `git log -n N --name-only --oneline` (recent commits — `~` is banned by IDE; use explicit hashes for diffs)
+> - `git diff HEAD~N HEAD --name-only` (recent commits)
 
 ### 3. Apply Review Lenses
 
@@ -189,4 +200,4 @@ End the report with:
 4. **Use MCP tools** when available for deeper analysis.
 5. **Stay scoped** — review only what was asked. Don't expand to unrelated code.
 6. **Be constructive** — every finding should include a suggestion, not just a complaint.
-7. **Command Execution Constraints** — NEVER use shell operators (&&, ||, ;, >, 2>&1, |) or regex special characters like |, [], {} in rg searches. The IDE automatically blocks auto-run for these intercepted characters. For complex queries or pipelines, substitute native agent tools (like grep_search) or use robust just recipes. One standalone command per run_command call. See GEMINI.md §6.
+7. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.

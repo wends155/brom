@@ -270,3 +270,9 @@
 * **Changes:** Completed the `brom-core` architectural audit remediation. (1) Implemented `ManyToMany::new()` and `Default` for metadata markers. (2) Hardened `validate_sql_identifier` with a 35-word SQLite reserved keyword blocklist. (3) Refactored `MAX_PER_PAGE` from a global `const` to an associated constant on `Pagination`. (4) Replaced wildcard re-exports in `lib.rs` with explicit named exports. (5) Formally registered high-impact technical debt (SchemaRegistry cloning, field allocations, String-based field names) in `roadmap.md`.
 * **New Constraints:** SQL identifiers are now validated against a reserved word blocklist; custom entities must avoid using SQL keywords like `select` or `table` as table names. `MAX_PER_PAGE` must be accessed via `Pagination::MAX_PER_PAGE`.
 * **Verification:** Clean `just verify` (fmt, clippy, test, doc-test, sg scan) passed 100%. Total remediation coverage: 10/10 findings addressed or documented.
+
+> 📝 **Context Update:**
+> * **Feature:** Workflow IDE Constraint Lifting & Structural Diagnostics
+> * **Changes:** Modernized executing environment constraints in `GEMINI.md` and across 14 workflow files to permit regex special characters within `rg` patterns strings (e.g. `rg "pub (?:struct|enum|trait)\s+[A-Z]"`). Implemented the "Structural Diagnostics Toolkit" in `issue.md`, `audit.md`, `plan-making.md`, and `review.md` to equip the Architect with auto-runnable `rg` tips for diagnosing public API surfaces, error propagation, and destructive operations safely without tool interception.
+> * **New Constraints:** Advanced regex searches using `rg` are now fully authorized. However, shell chaining operators (`&&`, `||`, `;`, `>`, `|`) remain strictly prohibited in `run_command` calls.
+> * **Pruned:** The outdated workarounds instructing agents to use `HEAD~1..HEAD` or specific Git log checks to avoid the `~` character have been cleaned up and replaced with native Git diff commands.
