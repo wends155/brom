@@ -311,3 +311,9 @@
 > * **Changes:** Refined `.agent/rules/ipr.md` to harden the Global Execution Order against Builder hallucinations. Bound Target names to explicit blocks, formalized `RED`/`GREEN` keywords for structural TDD, defined Component Group boundaries, implemented tiered action specificity heuristics (Control Flow Override), and mandated `expects:` mechanical verification statements in Post conditions. 
 > * **New Constraints:** All Implementation Plans MUST use `RED`/`GREEN` keywords in their Post-conditions, include explicit commands or grep checks via `expects:`, and avoid subjective prose for control flow actions. 
 > * **Pruned:** Removed the ambiguity of the "component group" definition and loose prose guidelines in the previous iteration of the IPR.
+
+> 📝 **Context Update:**
+> * **Feature:** Verification Gate Remediation (Clippy & Snapshots)
+> * **Changes:** Remediated a blocking clippy violation in `brom-db` by removing an unused `std::io::Read` import. Synchronized stale `brom-cli` migration snapshots caused by the `TODO` -> `ACCEPTED-DEBT` terminology change using `INSTA_UPDATE=always`.
+> * **Verification:** Full `just verify` (fmt, clippy, test, doc-test, sg scan) passed with exit code 0. Zero-Exit gate fully restored.
+> * **Status:** Workspace is clean and verified for Phase 5 development.

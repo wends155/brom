@@ -2,4 +2,4 @@
 source: crates/brom-cli/src/diff.rs
 expression: down
 ---
-"DROP TABLE posts;\nALTER TABLE users DROP COLUMN bio;\n-- TODO: Manual rollback needed for DropColumn old_field on users\n-- TODO: Manual rollback needed for DropTable obsolete_table\n"
+"DROP TABLE posts;\nALTER TABLE users DROP COLUMN bio;\n-- ACCEPTED-DEBT: Manual rollback needed for DropColumn old_field on users\n-- ACCEPTED-DEBT: Manual rollback needed for DropTable obsolete_table\n"
