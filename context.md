@@ -265,3 +265,8 @@
 * **Changes:** Implemented an idempotency guard in `SchemaRegistry::register()` using `any()` check on `table_name`. Added TDD test `register_duplicate_is_idempotent()`. Added `tracing` dependency to `brom-core` to enable structured warnings for duplicate registration attempts. Documented Findings 4 (deep clones) and 5 (sync repository) as accepted technical debt with specific re-evaluation triggers.
 * **New Constraints:** `brom-core` now depends on `tracing`. Duplicate schema registrations will be silently ignored but logged at `WARN` level.
 * **Verification:** Full `just verify` (fmt, clippy, test, doc-test, sg scan) passed with zero-exit. New TDD test confirms idempotency.
+📝 **Context Update:**
+* **Feature:** brom-core Design & Security Remediation
+* **Changes:** Completed the `brom-core` architectural audit remediation. (1) Implemented `ManyToMany::new()` and `Default` for metadata markers. (2) Hardened `validate_sql_identifier` with a 35-word SQLite reserved keyword blocklist. (3) Refactored `MAX_PER_PAGE` from a global `const` to an associated constant on `Pagination`. (4) Replaced wildcard re-exports in `lib.rs` with explicit named exports. (5) Formally registered high-impact technical debt (SchemaRegistry cloning, field allocations, String-based field names) in `roadmap.md`.
+* **New Constraints:** SQL identifiers are now validated against a reserved word blocklist; custom entities must avoid using SQL keywords like `select` or `table` as table names. `MAX_PER_PAGE` must be accessed via `Pagination::MAX_PER_PAGE`.
+* **Verification:** Clean `just verify` (fmt, clippy, test, doc-test, sg scan) passed 100%. Total remediation coverage: 10/10 findings addressed or documented.

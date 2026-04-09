@@ -10,5 +10,5 @@ pub use entity::{
     validate_sql_identifier,
 };
 pub use error::Error;
-pub use relation::*;
-pub use schema::*;
+pub use relation::{Link, ManyToMany};
+pub use schema::SchemaRegistry;

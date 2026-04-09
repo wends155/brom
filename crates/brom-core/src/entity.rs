@@ -91,6 +91,45 @@ pub enum Constraint {
 /// This function does not panic. The internal use of `expect` is guarded by an
 /// earlier non-empty check.
 pub fn validate_sql_identifier(s: &str) -> Result<&str, Error> {
+    // Defense-in-depth: reject critical SQLite reserved words.
+    const RESERVED: &[&str] = &[
+        "select",
+        "insert",
+        "update",
+        "delete",
+        "drop",
+        "create",
+        "alter",
+        "table",
+        "index",
+        "from",
+        "where",
+        "values",
+        "set",
+        "into",
+        "order",
+        "group",
+        "having",
+        "limit",
+        "join",
+        "on",
+        "as",
+        "and",
+        "or",
+        "not",
+        "null",
+        "primary",
+        "foreign",
+        "key",
+        "references",
+        "constraint",
+        "default",
+        "check",
+        "unique",
+        "column",
+        "add",
+    ];
+
     if s.is_empty() || s.len() > 128 {
         return Err(Error::SchemaError(format!(
             "SQL identifier must be 1-128 characters, got {len}",
@@ -111,6 +150,15 @@ pub fn validate_sql_identifier(s: &str) -> Result<&str, Error> {
             "SQL identifier contains invalid character '{bad}' in '{s}'"
         )));
     }
+
+
+    let lower = s.to_ascii_lowercase();
+    if RESERVED.iter().any(|r| *r == lower) {
+        return Err(Error::SchemaError(format!(
+            "SQL identifier '{s}' is a reserved word"
+        )));
+    }
+
     Ok(s)
 }
 
@@ -138,9 +186,6 @@ pub enum AuthPolicy {
 }
 
 /// High-level pagination metadata for list responses.
-/// Maximum number of items allowed per page to prevent `DoS`.
-pub const MAX_PER_PAGE: u64 = 100;
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Pagination {
     /// Current page number (1-indexed).
@@ -150,14 +195,17 @@ pub struct Pagination {
 }
 
 impl Pagination {
+    /// Maximum number of items allowed per page to prevent `DoS`.
+    pub const MAX_PER_PAGE: u64 = 100;
+
     /// Creates a new pagination request with boundary enforcement.
     ///
     /// - `page` is saturated to at least 1.
-    /// - `per_page` is saturated to at least 1 and capped at `MAX_PER_PAGE`.
+    /// - `per_page` is saturated to at least 1 and capped at `Self::MAX_PER_PAGE`.
     pub fn new(page: u64, per_page: u64) -> Self {
         Self {
             page: page.max(1),
-            per_page: per_page.clamp(1, MAX_PER_PAGE),
+            per_page: per_page.clamp(1, Self::MAX_PER_PAGE),
         }
     }
 }
@@ -280,7 +328,7 @@ mod tests {
         // Maximums
         let p = Pagination::new(10, 1000);
         assert_eq!(p.page, 10);
-        assert_eq!(p.per_page, MAX_PER_PAGE);
+        assert_eq!(p.per_page, Pagination::MAX_PER_PAGE);
 
         // Valid range
         let p = Pagination::new(5, 50);
@@ -302,5 +350,20 @@ mod tests {
         assert!(validate_sql_identifier("drop;--").is_err());
         assert!(validate_sql_identifier("Robert'); DROP TABLE students;--").is_err());
         assert!(validate_sql_identifier(&"a".repeat(129)).is_err());
+    }
+
+    #[test]
+    fn validate_sql_identifier_rejects_reserved_words() {
+        let reserved = [
+            "select", "SELECT", "drop", "DROP", "table", "TABLE", "insert", "INSERT", "delete",
+            "DELETE", "update", "UPDATE", "from", "FROM", "where", "WHERE", "create", "CREATE",
+            "alter", "ALTER", "index", "INDEX",
+        ];
+        for word in reserved {
+            assert!(
+                validate_sql_identifier(word).is_err(),
+                "expected '{word}' to be rejected as a reserved word"
+            );
+        }
     }
 }

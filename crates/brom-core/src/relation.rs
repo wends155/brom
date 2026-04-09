@@ -29,6 +29,22 @@ pub struct ManyToMany<T> {
     _marker: PhantomData<T>,
 }
 
+impl<T> ManyToMany<T> {
+    /// Creates a new `ManyToMany` metadata marker.
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T> Default for ManyToMany<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -38,5 +54,14 @@ mod tests {
         struct Dummy;
         let link: Link<Dummy> = Link::new(42);
         assert_eq!(link.id(), 42);
+    }
+
+    #[test]
+    fn many_to_many_constructors() {
+        #[derive(Debug, PartialEq)]
+        struct Dummy;
+        let m1: ManyToMany<Dummy> = ManyToMany::new();
+        let m2: ManyToMany<Dummy> = ManyToMany::default();
+        assert_eq!(m1, m2);
     }
 }

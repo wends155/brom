@@ -657,6 +657,9 @@ Accumulated technical debt tracked across all phases.
 | Admin SPA size optimization | Scheduled | Phase 5 | Post-v1 | `wasm-opt`, code-splitting |
 | No hot-reload for admin | Known constraint | Phase 5 | Post-v1 | `trunk serve --watch` for dev |
 | JSON allocation bottleneck | Performance | Phase 3B | Post-v1 | Optimization: migrate `SqliteRepository` to specialized row-to-struct mapper to avoid `serde_json::Value` intermediary. |
+| `SchemaRegistry` cloning | Performance | Phase 2A | Post-v1 | `SchemaRegistry::all_schemas()` clones the entire registry. Re-evaluate if registry size > 50 entities. |
+| `EntitySchema::fields()` allocation | Performance | Phase 1 | Post-v1 | `fields()` returns `Vec<FieldInfo>`, triggering heap allocations on every metadata access. Planned move to `&'static [FieldInfo]`. |
+| `FieldInfo::name` type | API/Design | Phase 1 | Post-v1 | `FieldInfo::name` is `String` instead of `&'static str`. Requires macro + core refactor. |
 
 ---
 
