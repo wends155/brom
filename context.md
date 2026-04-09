@@ -259,3 +259,9 @@
 * **Changes:** Remediated a zero-cost abstraction deviation by reverting `UniqueViolation.entity` to `&'static str`, eliminating unnecessary heap allocations during constraint violation mapping. Implemented pagination hardening in `brom-core` with a `MAX_PER_PAGE` (100) bound and a new `Pagination::new()` constructor that saturates bounds (page >= 1, 1 <= per_page <= 100).
 * **New Constraints:** `Pagination` structs must now be initialized via `Pagination::new()` to ensure security bounds are enforced at the type level. `MAX_PER_PAGE` is the project-wide constant for `DoS` prevention.
 * **Verification:** Clean `just verify` (fmt, clippy, test, doc-test, sg scan) passed 100% on Windows. Zero-Exit gate satisfied.
+
+📝 **Context Update:**
+* **Feature:** SchemaRegistry Deduplication Guard
+* **Changes:** Implemented an idempotency guard in `SchemaRegistry::register()` using `any()` check on `table_name`. Added TDD test `register_duplicate_is_idempotent()`. Added `tracing` dependency to `brom-core` to enable structured warnings for duplicate registration attempts. Documented Findings 4 (deep clones) and 5 (sync repository) as accepted technical debt with specific re-evaluation triggers.
+* **New Constraints:** `brom-core` now depends on `tracing`. Duplicate schema registrations will be silently ignored but logged at `WARN` level.
+* **Verification:** Full `just verify` (fmt, clippy, test, doc-test, sg scan) passed with zero-exit. New TDD test confirms idempotency.

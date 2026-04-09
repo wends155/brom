@@ -27,6 +27,15 @@ impl SchemaRegistry {
             .schemas
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
+
+        if lock.iter().any(|s| s.table_name == schema.table_name) {
+            tracing::warn!(
+                table_name = %schema.table_name,
+                "schema already registered — skipping duplicate"
+            );
+            return;
+        }
+
         lock.push(schema);
     }
 
@@ -66,6 +75,14 @@ mod tests {
         reg.register(sample_schema("tag"));
         let schemas = reg.all_schemas();
         assert_eq!(schemas.len(), 2);
+    }
+
+    #[test]
+    fn register_duplicate_is_idempotent() {
+        let reg = SchemaRegistry::new();
+        reg.register(sample_schema("post"));
+        reg.register(sample_schema("post"));
+        assert_eq!(reg.all_schemas().len(), 1);
     }
 
     #[test]
