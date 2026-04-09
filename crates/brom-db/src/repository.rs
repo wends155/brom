@@ -94,39 +94,38 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
             .get()
             .map_err(|e| brom_core::Error::Database(e.to_string()))?;
         conn.execute(&sql, rusqlite::params_from_iter(params.clone()))
-            .map_err(|e| {
-                match &e {
-                    rusqlite::Error::SqliteFailure(err, Some(msg))
-                        if err.code == ErrorCode::ConstraintViolation
-                            && msg.contains("UNIQUE constraint failed") =>
-                    {
-                        if let Some(detail) = msg.split(": ").nth(1) {
-                            let parts: Vec<&str> = detail.split('.').collect();
-                            let col = if parts.len() == 2 { parts[1] } else { parts[0] };
+            .map_err(|e| match &e {
+                rusqlite::Error::SqliteFailure(err, Some(msg))
+                    if err.code == ErrorCode::ConstraintViolation
+                        && msg.contains("UNIQUE constraint failed") =>
+                {
+                    if let Some(detail) = msg.split(": ").nth(1) {
+                        let parts: Vec<&str> = detail.split('.').collect();
+                        let col = if parts.len() == 2 { parts[1] } else { parts[0] };
 
-                            let mut val_str = "unknown".to_string();
-                            if let Some(val) = columns
-                                .iter()
-                                .position(|c| c == col)
-                                .and_then(|idx| params.get(idx))
-                            {
-                                val_str = match val {
-                                    SqliteValue::Text(s) => s.clone(),
-                                    SqliteValue::Integer(i) => i.to_string(),
-                                    _ => format!("{val:?}"),
-                                };
-                            }
-
-                            return brom_core::Error::UniqueViolation {
-                                entity: table,
-                                field: col.to_string(),
-                                value: val_str,
+                        let mut val_str = "unknown".to_string();
+                        if let Some(val) = columns
+                            .iter()
+                            .position(|c| c == col)
+                            .and_then(|idx| params.get(idx))
+                        {
+                            val_str = match val {
+                                SqliteValue::Text(s) => s.clone(),
+                                SqliteValue::Integer(i) => i.to_string(),
+                                _ => format!("{val:?}"),
                             };
                         }
+
+                        brom_core::Error::UniqueViolation {
+                            entity: table.to_string(),
+                            field: col.to_string(),
+                            value: val_str,
+                        }
+                    } else {
+                        brom_core::Error::Database(e.to_string())
                     }
-                    _ => {}
                 }
-                brom_core::Error::Database(e.to_string())
+                _ => brom_core::Error::Database(e.to_string()),
             })?;
 
         Ok(conn.last_insert_rowid())

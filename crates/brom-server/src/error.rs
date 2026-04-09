@@ -41,6 +41,9 @@ impl IntoResponse for ServerError {
                 "ValidationFailed",
                 self.to_string(),
             ),
+            ServerError::Core(brom_core::Error::UniqueViolation { .. }) => {
+                (StatusCode::CONFLICT, "UniqueViolation", self.to_string())
+            }
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "InternalError",
@@ -134,6 +137,18 @@ mod tests {
                 "unknown".into(),
             ))),
             StatusCode::INTERNAL_SERVER_ERROR,
+        );
+    }
+
+    #[test]
+    fn unique_violation_returns_409() {
+        assert_eq!(
+            status_of(ServerError::Core(brom_core::Error::UniqueViolation {
+                entity: "user".into(),
+                field: "email".into(),
+                value: "taken@example.com".into(),
+            })),
+            StatusCode::CONFLICT,
         );
     }
 
