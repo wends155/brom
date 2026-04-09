@@ -4,9 +4,9 @@
 |-------|-------|
 | **Project** | brom |
 | **Version** | 1.0.0 |
-| **Last Updated** | 2026-04-07 |
+| **Last Updated** | 2026-04-09 |
 
-> Last verified against: HEAD
+> Last verified against: cc2263c
 
 ## 1. brom-macros
 
@@ -133,6 +133,7 @@ WHEN `DiffEngine::diff()` is called
 THEN it computes the minimal sequence of `MigrationOp` transitions
 AND sorts operations topologically (e.g., Creates before Alters, handling foreign-key dependencies)
 AND `generate_migration_sql` outputs matching `up` and `down` SQLite statements
+AND the exact SQLite syntactic structures are strictly verified via `insta` snapshot tests to prevent regressions
 
 [RESTRICTION] Destructive Rollbacks
 GIVEN a computed `DropColumn` or `DropTable` operation
@@ -185,3 +186,4 @@ THEN a `403 Forbidden` response is returned
 - **Data Envelope Format**: All successful responses must use `{ "data": ... }` to allow top-level metadata injection without breaking client mapping.
 - **Problem Details**: Error responses must map to JSON format containing `error`, `message`, and optionally `fields` corresponding to `RFC 7807` shaped problem details.
 - **Defense in Depth**: Every router mutation involving external access must pass through `middleware` to enforce missing HTTP security headers.
+- **Observability**: All endpoints must be tracked via structured `TraceLayer` middleware, emitting `http_request` spans that include HTTP method, URI, status, and latency. Sensitive functions must use `#[tracing::instrument(skip_all)]` or explicit field redaction.
