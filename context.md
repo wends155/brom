@@ -288,3 +288,9 @@
 * **Changes:** Act phase for the semantic reframing of shell operator constraints (`|`, `>`, `&&`, `||`, `;`) and `pwsh` scripts across the project ecosystem. Addressed factually obsolete warnings about IDE auto-run interception, replacing them with `TARS Execution Discipline` warnings in `GEMINI.md` and `.agent/rules/builder-rules.md`. Removed stale warnings about the `~` character in Git commit hashes.
 * **New Constraints:** Despite IDE changes supporting raw shell operators, they remain strictly banned for agent usage. This ensures atomic verification checks, observability, and enforces the usage of native tools instead of obscure pipelines.
 * **Verification:** Zero-exit gate validated with `just verify`. Scanned workspaces to ensure 0 remaining instances of "IDE interception" or similar claims.
+
+📝 **Context Update:**
+* **Feature:** Phase 4 Architectural Documentation Sync
+* **Changes:** Remediated `architecture.md` structural discrepancies identified in the Phase 4 audit. Synchronized the project layout mappings for `brom-cli`, `brom-db`, and `brom-server` by adding missing modules (e.g., `config.rs`, `introspect.rs`, `response.rs`, `state.rs`, `api_keys.rs`) and removing stale, unimplemented references (e.g., `migrate.rs`, `assets.rs`). Removed false `mockall` MockRepository claims from the module boundaries.
+* **New Constraints:** The dependencies table explicitly marks `rust-embed`, `leptos`, and `trunk` as Phase 5 architectural targets.
+* **Pruned:** The `architecture_recommendations_report.md` action items have been fully resolved.
