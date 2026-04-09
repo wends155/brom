@@ -158,6 +158,11 @@ When a change affects callers/callees across modules:
 > [!IMPORTANT]
 > Number ALL steps globally across ALL files. The Builder follows steps 1, 2, 3... linearly.
 > No per-file numbering. No jumping.
+>
+> Line ranges in `(L##-##)` are advisory hints for initial orientation. The
+> **Target name** (function, struct, module) is the binding anchor. If prior
+> steps shifted line numbers, the Builder locates the target by name using
+> `grep_search` or Narsil `get_symbol_definition` — not by stale line range.
 
 Each step is verification-oriented:
 
@@ -176,6 +181,52 @@ Step N: [NEW/MODIFY/DELETE/TEST] file_path — function_name() (L##-##)
 - `[DELETE]` — remove a file or code block
 - `[TEST]` — write or update a test (TDD Red step)
 
+**Action specificity rules:**
+
+| Step Type | Size | Architect Must Provide |
+|-----------|------|----------------------|
+| `[NEW]` | ≤ 30 lines | Full code body |
+| `[NEW]` | 31–80 lines | All public signatures + core logic paths; internal helpers in prose with structural guidance |
+| `[NEW]` | > 80 lines | **Decompose into multiple steps** (each ≤ 30 lines targeting a specific function/block) — *unless* the file is purely mechanical (schema DDL, config, test fixtures), in which case full body is permitted |
+| `[TEST]` | Any | Full test body (tests are the contract — never prose) |
+| `[MODIFY]` | ≤ 20 changed lines | Code snippet showing the replacement |
+| `[MODIFY]` | > 20 changed lines | Prose + **all new/changed function signatures** (see Control Flow Override below) |
+| `[DELETE]` | Any | Prose — name the target to remove |
+
+**Placeholder convention:** Skeleton code uses `// STUB(Phase N): description`
+markers per `phase-rules.md`. Do NOT use `todo!()` or `unimplemented!()`.
+
+**Control Flow Override:**
+
+Whether a large `[MODIFY]` step needs code depends on what kind of change it
+makes. **If the change alters the number or meaning of code paths through the
+function, include a code snippet regardless of size.**
+
+**Code required** (alters code paths):
+
+| Change Type | Why code is needed |
+|-------------|-------------------|
+| Adding/removing `match` arms | Pattern matching is precise — arm order and exhaustiveness matter |
+| Adding/removing `if`/`else` branches | Branch conditions are design decisions |
+| Adding/removing `?` error propagation | Error paths are interface contracts |
+| Changing function return type | Signature is a contract — every call site is affected |
+| Adding `async`/`await` | Concurrency model is architectural |
+| Loop refactoring (changing iteration) | Iteration boundaries are logic, not style |
+
+**Prose sufficient** (structural/mechanical):
+
+| Change Type | Why prose works |
+|-------------|----------------|
+| Renaming symbols | Find-replace with a rename mapping |
+| Moving code between modules | Source path → destination path |
+| Adding doc comments | Documentation content in prose |
+| Adding `#[derive(...)]` / attributes | List the additions |
+| Deleting dead code | Name the targets to remove |
+| Adding imports | List the imports |
+
+> Quick test for Architects: **"Does this change alter the number or meaning of
+> code paths through the function?"** If yes → include code. If no → prose is fine.
+
 **Pre/Post Vocabulary:**
 
 | Shorthand | Meaning | Default Command |
@@ -186,15 +237,49 @@ Step N: [NEW/MODIFY/DELETE/TEST] file_path — function_name() (L##-##)
 | `TEST` | Tests pass | `cargo test` |
 | `BUILD` | Full build | `cargo build` |
 | `ALL` | FMT + CLIPPY + TEST | Full pipeline |
+| `RED` | Named test compiles but fails | *Per `architecture.md § Toolchain`* |
+| `GREEN` | Previously-RED test now passes | *Per `architecture.md § Toolchain`* |
 
 > [!NOTE]
 > Default commands shown. Projects override in `architecture.md § Toolchain`.
 
+**`RED` / `GREEN` semantics:**
+
+- `RED(test_name)`: The named test **compiles** but **fails** (exit non-zero).
+  The Pre condition (typically `ALL`) already guarantees the rest of the suite
+  is green. If the test doesn't compile, that's a bug in the test code —
+  Builder fixes it before proceeding.
+- `GREEN(test_name)`: The named test **passes** (exit 0). Semantically
+  equivalent to `TEST` but communicates the TDD intent — this is the
+  Red→Green transition, not a generic test run.
+
 Pre/Post can combine shorthand with conditions: `Post: CHECK, no anyhow imports in file`.
+
+Free-form Post conditions **MUST** include the verification command with an
+`expects:` clause in parentheses.
+
+| Notation | Meaning |
+|----------|---------|
+| `expects: 0 matches` | Search returns no results |
+| `expects: ≥1 match` | Search returns at least one result |
+| `expects: exit 0` | Command succeeds |
+| `expects: exit non-zero` | Command fails (expected failure) |
+
+**Examples:**
+
+✅ `Post: CHECK, no anyhow usage (rg "anyhow" src/config.rs expects: 0 matches)`
+✅ `Post: CHECK, uses thiserror (rg "thiserror" src/error.rs expects: ≥1 match)`
+❌ `Post: CHECK, no anyhow in file`
+❌ `Post: CHECK, error handling looks correct`
 
 **🔒 CHECKPOINT** marks where the Builder runs `ALL` and commits.
 
 **Checkpoint frequency:** At minimum, place `🔒` after each component group and after every `[TEST]` step. For S-tier plans, one `🔒` at the end suffices.
+
+> A **component group** is all contiguous steps targeting the same crate (Rust),
+> package (TS/Go), or top-level module. When the plan's execution order crosses
+> a crate/package boundary, place a 🔒 CHECKPOINT before entering the next
+> boundary.
 
 ### Dependency Chain *(L tier)*
 
@@ -346,13 +431,13 @@ Step 1: [TEST] src/config.rs — test_empty_input()
 - Pre: ALL
 - Target: #[cfg(test)] mod tests
 - Action: Add test asserting parse_config("") returns Err(ConfigError::EmptyInput)
-- Post: TEST fails (Red — function doesn't handle empty input yet)
+- Post: RED(test_empty_input)
 
 Step 2: [MODIFY] src/config.rs — parse_config() (L12-30)
-- Pre: Step 1 test exists and fails
+- Pre: Step 1 test exists
 - Target: parse_config() L12
 - Action: Add early return: if input.is_empty() { return Err(ConfigError::EmptyInput); }
-- Post: ALL 🔒
+- Post: GREEN(test_empty_input), ALL 🔒
 
 ### Verification Plan
 | Type | Command |

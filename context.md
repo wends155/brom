@@ -305,3 +305,9 @@
 > * **Changes:** Updated `README.md` to accurately flag the compilation of the embedded Admin SPA and JSON schemas as a Phase 5 target. This corrects documentation drift by accurately representing current functional gaps before the Admin UX development cycle.
 > * **New Constraints:** Features slated for Phase 5 (Leptos CSR, endpoints, Admin UI) should not be described as "current functionality" in standard documentation until Phase 5 Act begins.
 > * **Pruned:** Outdated README presentation of unimplemented capabilities.
+
+> 📝 **Context Update:**
+> * **Feature:** IPR Hardening & Anti-Hallucination Measures
+> * **Changes:** Refined `.agent/rules/ipr.md` to harden the Global Execution Order against Builder hallucinations. Bound Target names to explicit blocks, formalized `RED`/`GREEN` keywords for structural TDD, defined Component Group boundaries, implemented tiered action specificity heuristics (Control Flow Override), and mandated `expects:` mechanical verification statements in Post conditions. 
+> * **New Constraints:** All Implementation Plans MUST use `RED`/`GREEN` keywords in their Post-conditions, include explicit commands or grep checks via `expects:`, and avoid subjective prose for control flow actions. 
+> * **Pruned:** Removed the ambiguity of the "component group" definition and loose prose guidelines in the previous iteration of the IPR.
