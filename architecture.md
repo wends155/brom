@@ -112,8 +112,9 @@ brom/
 │   │       ├── pool.rs         # Connection pool (r2d2 + rusqlite)
 │   │       ├── repository.rs   # Generic Repository<T> impl
 │   │       ├── migration.rs    # Migration runner
-│   │       ├── session.rs      # SqliteSessionStore impl
-│   │       ├── api_key.rs      # SqliteApiKeyStore impl
+│   │       ├── introspect.rs   # SQLite schema introspection
+│   │       ├── session_store.rs # SqliteSessionStore impl
+│   │       ├── api_key_store.rs # SqliteApiKeyStore impl
 │   │       └── error.rs        # DB error types
 │   │
 │   ├── brom-auth/              # Authentication & authorization
@@ -128,21 +129,23 @@ brom/
 │   ├── brom-server/            # Axum web server integration
 │   │   └── src/
 │   │       ├── lib.rs
+│   │       ├── config.rs       # Server configuration
 │   │       ├── router.rs       # Route assembly (admin, API, docs)
 │   │       ├── middleware.rs    # Request logging, CORS, security headers
 │   │       ├── extractor.rs    # Axum extractors (RequireAdmin, RequireApiKey)
-│   │       ├── assets.rs       # rust-embed static file serving
+│   │       ├── response.rs     # Common API responses
+│   │       ├── state.rs        # Application state
+│   │       ├── api_keys.rs     # API key management handlers
 │   │       ├── schema_api.rs   # GET /admin/api/schema endpoint
 │   │       ├── openapi.rs      # Swagger UI mount
 │   │       └── error.rs        # HTTP error mapping (IntoResponse)
 │   │
 │   └── brom-cli/               # Companion CLI tool
 │       └── src/
+│           ├── lib.rs
 │           ├── main.rs
-│           ├── diff.rs         # Schema diffing (structs vs live DB)
-│           ├── migrate.rs      # Apply pending migrations
-│           ├── seed.rs         # Seed data loading
-│           └── init.rs         # Project scaffolding
+│           ├── config.rs       # CLI environment configuration
+│           └── diff.rs         # Schema diffing (structs vs live DB)
 │
 ├── admin/                      # Leptos SPA (separate build target)
 │   ├── Cargo.toml              # Leptos + TailwindCSS dependencies
@@ -185,7 +188,7 @@ brom/
 - **Trait Interfaces**:
   - `EntitySchema` — implemented by `#[derive(BromEntity)]` for each user struct.
   - `Repository<T: EntitySchema>` — generic CRUD interface for persistence.
-- **Mock Availability**: `MockRepository<T>` via `mockall`.
+- **Mock Availability**: None defined generically (Repository requires concrete impls).
 
 ### brom-macros
 
@@ -379,13 +382,13 @@ errors become HTTP responses.
 | `tracing`          | Structured logging             | All crates     |
 | `utoipa`           | OpenAPI spec generation        | `brom-server`, `brom-macros` |
 | `utoipa-swagger-ui`| Embedded Swagger UI            | `brom-server`  |
-| `rust-embed`       | Static asset embedding         | `brom-server`  |
+| `rust-embed`       | Static asset embedding (Phase 5 targeted)      | `brom-server`  |
 | `argon2`           | Password hashing               | `brom-auth`    |
 | `rand`             | API key generation             | `brom-auth`    |
 | `syn` / `quote`    | Proc-macro parsing             | `brom-macros`  |
 | `clap`             | CLI argument parsing           | `brom-cli`     |
-| `leptos`           | Reactive UI framework (CSR)    | `admin`        |
-| `trunk`            | WASM build tool                | `admin`        |
+| `leptos`           | Reactive UI framework (CSR) (Phase 5 targeted) | `admin`        |
+| `trunk`            | WASM build tool (Phase 5 targeted)             | `admin`        |
 
 ### External Systems
 
