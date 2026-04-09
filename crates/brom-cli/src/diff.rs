@@ -75,6 +75,7 @@ impl DiffEngine {
     ///
     /// # Errors
     /// Returns an error if diffing logic fails for internal reasons.
+    #[tracing::instrument(skip_all)]
     pub fn diff(&self) -> anyhow::Result<Vec<MigrationOp>> {
         let mut ops = Vec::new();
 
@@ -242,6 +243,7 @@ impl DiffEngine {
 ///
 /// A tuple containing `(up_sql, down_sql)` corresponding to the forward
 /// and rollback query batches.
+#[tracing::instrument(skip_all)]
 pub fn generate_migration_sql(ops: &[MigrationOp]) -> (String, String) {
     let mut up_sql = String::new();
     let mut down_sql = String::new();
@@ -326,4 +328,58 @@ fn field_to_sql_definition(field: &FieldInfo) -> String {
     }
 
     def
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use brom_core::entity::{FieldInfo, FieldType};
+    use insta::assert_yaml_snapshot;
+
+    #[test]
+    fn test_generate_migration_sql_snapshots() {
+        let ops = vec![
+            MigrationOp::CreateTable {
+                name: "posts".into(),
+                columns: vec![
+                    FieldInfo {
+                        name: "title".into(),
+                        field_type: FieldType::String,
+                        constraints: vec![],
+                        ui_widget: None,
+                        hidden: false,
+                    },
+                    FieldInfo {
+                        name: "author_id".into(),
+                        field_type: FieldType::Link {
+                            target: "users".into(),
+                        },
+                        constraints: vec![],
+                        ui_widget: None,
+                        hidden: false,
+                    },
+                ],
+            },
+            MigrationOp::AlterTableAddColumn {
+                table_name: "users".into(),
+                column: FieldInfo {
+                    name: "bio".into(),
+                    field_type: FieldType::String,
+                    constraints: vec![],
+                    ui_widget: None,
+                    hidden: false,
+                },
+            },
+            MigrationOp::DropColumn {
+                table_name: "users".into(),
+                column_name: "old_field".into(),
+            },
+            MigrationOp::DropTable {
+                name: "obsolete_table".into(),
+            },
+        ];
+
+        let (up, down) = generate_migration_sql(&ops);
+        assert_yaml_snapshot!(up);
+        assert_yaml_snapshot!(down);
+    }
 }

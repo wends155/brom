@@ -47,6 +47,7 @@ pub struct LoginResponse {
     ),
     tag = "admin"
 )]
+#[tracing::instrument(skip_all)]
 pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
@@ -95,6 +96,7 @@ pub async fn login(
         ("session" = [])
     )
 )]
+#[tracing::instrument(skip_all)]
 pub async fn logout(
     RequireAdmin(session): RequireAdmin,
     State(state): State<AppState>,
@@ -129,6 +131,27 @@ pub fn build_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>)
         .layer(middleware::x_content_type_options_layer())
         .layer(middleware::x_frame_options_layer())
         .layer(middleware::referrer_policy_layer())
-        .layer(TraceLayer::new_for_http())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &axum::http::Request<_>| {
+                    tracing::info_span!(
+                        "http_request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        version = ?request.version(),
+                    )
+                })
+                .on_response(
+                    |response: &axum::http::Response<_>,
+                     latency: std::time::Duration,
+                     _span: &tracing::Span| {
+                        tracing::info!(
+                            latency = ?latency,
+                            status = %response.status(),
+                            "finished processing request"
+                        );
+                    },
+                ),
+        )
         .with_state(state)
 }

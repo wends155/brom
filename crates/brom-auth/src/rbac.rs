@@ -10,6 +10,7 @@ use brom_core::AuthPolicy;
 /// - `AuthError::InvalidSession` if session validation fails.
 /// - `AuthError::InvalidApiKey` if api key validation fails.
 /// - `AuthError::InsufficientPermissions` if the policy requirements (e.g. `read_write`) are not met.
+#[tracing::instrument(skip(token, session_store, api_key_store), fields(policy = ?policy))]
 pub fn evaluate_policy(
     policy: &AuthPolicy,
     token: Option<&str>,

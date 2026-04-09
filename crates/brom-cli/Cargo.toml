@@ -20,3 +20,4 @@ tracing-appender.workspace = true
 
 [dev-dependencies]
 rand.workspace = true
+insta = { version = "1.34", features = ["yaml"] }

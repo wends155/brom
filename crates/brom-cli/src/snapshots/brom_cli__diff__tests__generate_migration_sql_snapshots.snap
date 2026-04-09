@@ -1,0 +1,5 @@
+---
+source: crates/brom-cli/src/diff.rs
+expression: up
+---
+"CREATE TABLE posts (\n    id TEXT PRIMARY KEY,\n    title TEXT,\n    author_id TEXT REFERENCES users(id),\n    created_at TEXT DEFAULT (datetime('now')),\n    updated_at TEXT DEFAULT (datetime('now'))\n);\nALTER TABLE users ADD COLUMN bio TEXT;\nALTER TABLE users DROP COLUMN old_field;\nDROP TABLE obsolete_table;\n"

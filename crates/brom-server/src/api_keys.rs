@@ -73,6 +73,7 @@ pub struct CreateApiKeyResponse {
 ///
 /// # Errors
 /// Returns `ServerError` if a database error occurs.
+#[tracing::instrument(skip_all)]
 pub async fn list_keys(
     RequireAdmin(session): RequireAdmin,
     State(state): State<AppState>,
@@ -97,6 +98,7 @@ pub async fn list_keys(
 ///
 /// # Errors
 /// Returns `ServerError` if a database error occurs or creation fails.
+#[tracing::instrument(skip_all)]
 pub async fn create_key(
     RequireAdmin(session): RequireAdmin,
     State(state): State<AppState>,
@@ -130,6 +132,7 @@ pub async fn create_key(
 ///
 /// # Errors
 /// Returns `ServerError` if a database error occurs.
+#[tracing::instrument(skip_all)]
 pub async fn revoke_key(
     RequireAdmin(_session): RequireAdmin,
     State(state): State<AppState>,

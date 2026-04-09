@@ -41,8 +41,8 @@ gantt
     Phase 1 - Foundation           :done, p1, 2026-04-01, 2d
 
     section Core Data
-    Phase 2A - Derive Macro        :active, p2a, after p1, 3d
-    Phase 2B - CRUD & Migrations   :p2b, after p2a, 3d
+    Phase 2A - Derive Macro        :done, p2a, after p1, 3d
+    Phase 2B - CRUD & Migrations   :done, p2b, after p2a, 3d
 
     section Web Layer
     Phase 3A - Auth Core           :done, p3a, after p2b, 2d
@@ -51,23 +51,23 @@ gantt
     Phase 3D - OpenAPI & Swagger   :done, p3d, after p3c, 1d
 
     section Tooling
-    Phase 4 - Schema Diffing       :p4, after p3d, 3d
+    Phase 4 - Schema Diffing       :done, p4, after p3d, 3d
 
     section UI
-    Phase 5 - Admin SPA            :p5, after p3d, 7d
+    Phase 5 - Admin SPA            :active, p5, after p3d, 7d
 ```
 
 | Phase | Name | Focus | Tier | Status | Crates Touched |
 |-------|------|-------|------|--------|----------------|
 | 1 | Foundation | Workspace, traits, pooling | M | ✅ Done | all (scaffold) |
-| 2A | Derive Macro | Compile-time codegen | M | 🔜 Next | `brom-core`, `brom-macros` |
-| 2B | CRUD & Migrations | Runtime persistence | M | ⏳ Blocked by 2A | `brom-db`, `brom-cli` |
+| 2A | Derive Macro | Compile-time codegen | M | ✅ Done | `brom-core`, `brom-macros` |
+| 2B | CRUD & Migrations | Runtime persistence | M | ✅ Done | `brom-db`, `brom-cli` |
 | 3A | Auth Core | Password, Sessions, RBAC | M | ✅ Done | `brom-auth`, `brom-db` |
 | 3B | API Architecture | Middleware, Extractor, Server | M | ✅ Done | `brom-auth`, `brom-server` |
 | 3C | REST Route Gen | BromEntity handler codegen | M | ✅ Done | `brom-macros` |
 | 3D | OpenAPI & Swagger | Utoipa integration | S | ✅ Done | `brom-server`, `brom-macros` |
-| 4 | Schema Diffing | `brom diff` engine | M | ⏳ Blocked by 3D | `brom-cli`, `brom-db` |
-| 5 | Admin SPA | Leptos embedded UI | L | ⏳ Blocked by 3D | `admin`, `brom-server` |
+| 4 | Schema Diffing | `brom diff` engine | M | ✅ Done | `brom-cli`, `brom-db` |
+| 5 | Admin SPA | Leptos embedded UI | L | 🔜 Next | `admin`, `brom-server` |
 
 ---
 
@@ -76,14 +76,14 @@ gantt
 ```mermaid
 graph LR
     P1["Phase 1<br/>Foundation<br/>✅ Done"]
-    P2A["Phase 2A<br/>Derive Macro"]
-    P2B["Phase 2B<br/>CRUD & Migrations"]
+    P2A["Phase 2A<br/>Derive Macro<br/>✅ Done"]
+    P2B["Phase 2B<br/>CRUD & Migrations<br/>✅ Done"]
     P3A["Phase 3A<br/>Auth Core<br/>✅ Done"]
     P3B["Phase 3B<br/>API Architecture<br/>✅ Done"]
     P3C["Phase 3C<br/>REST Route Gen<br/>✅ Done"]
     P3D["Phase 3D<br/>OpenAPI & Swagger<br/>✅ Done"]
-    P4["Phase 4<br/>Schema Diffing"]
-    P5["Phase 5<br/>Admin SPA"]
+    P4["Phase 4<br/>Schema Diffing<br/>✅ Done"]
+    P5["Phase 5<br/>Admin SPA<br/>🔜 Next"]
 
     P1 --> P2A
     P2A --> P2B
@@ -95,8 +95,10 @@ graph LR
     P3D --> P5
 
     style P1 fill:#2d6a4f,color:#fff
-    style P2A fill:#e9c46a,color:#000
-    style P2B fill:#264653,color:#fff
+    style P2A fill:#2d6a4f,color:#fff
+    style P2B fill:#2d6a4f,color:#fff
+    style P4 fill:#2d6a4f,color:#fff
+    style P5 fill:#e9c46a,color:#000
     style P3A fill:#2d6a4f,color:#fff
     style P3B fill:#2d6a4f,color:#fff
     style P3C fill:#2d6a4f,color:#fff
@@ -650,10 +652,8 @@ Accumulated technical debt tracked across all phases.
 
 | Item | Class | Introduced | Target Phase | Notes |
 |------|-------|-----------|-------------|-------|
-| No `.env` loading | Scheduled | Phase 1 | Phase 3B | Add `dotenvy` when brom-server needs config |
-| CLI hardcodes `"brom.db"` path | Opportunistic | Phase 2B | Phase 3B | Should come from config/env |
 | No benchmarks | Scheduled | Phase 1 | Phase 5 | Add Criterion benchmarks for DB operations |
-| No migration rollback | Scheduled | Phase 2B | Phase 4 | `-- DOWN` section parsing |
+| No migration rollback | Scheduled | Phase 4 | Phase 4 | `-- DOWN` section parsing (Engine implemented, CLI pending) |
 | Admin SPA size optimization | Scheduled | Phase 5 | Post-v1 | `wasm-opt`, code-splitting |
 | No hot-reload for admin | Known constraint | Phase 5 | Post-v1 | `trunk serve --watch` for dev |
 | JSON allocation bottleneck | Performance | Phase 3B | Post-v1 | Optimization: migrate `SqliteRepository` to specialized row-to-struct mapper to avoid `serde_json::Value` intermediary. |
@@ -683,3 +683,4 @@ sg scan
 |------|--------|--------|
 | 2026-04-02 | Initial roadmap from brainstorm session | Architect |
 | 2026-04-07 | Split Phase 3B into 3B, 3C, 3D (bounded phases) | Architect |
+| 2026-04-09 | Closeout Phase 4, establish Phase 5 readiness | Architect |

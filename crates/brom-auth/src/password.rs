@@ -9,6 +9,7 @@ use rand::rngs::OsRng;
 ///
 /// # Errors
 /// Returns `AuthError::HashError` if hashing fails.
+#[tracing::instrument(skip_all)]
 pub fn hash_password(password: &str) -> Result<String, AuthError> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -25,6 +26,7 @@ pub fn hash_password(password: &str) -> Result<String, AuthError> {
 /// # Errors
 /// Returns `AuthError::InvalidCredentials` if verification fails.
 /// Returns `AuthError::HashError` if the hash is malformed.
+#[tracing::instrument(skip_all)]
 pub fn verify_password(password: &str, hash: &str) -> Result<(), AuthError> {
     let parsed_hash = PasswordHash::new(hash).map_err(|e| AuthError::HashError(e.to_string()))?;
 
