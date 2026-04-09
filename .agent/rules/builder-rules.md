@@ -156,19 +156,18 @@ If the re-read reveals a mismatch:
 ## 7. Command Execution Discipline
 
 > [!CAUTION]
-> The IDE terminal wrapper captures **both stdout and stderr** as a single
-> interleaved stream. You will see all compiler errors, warnings, and panics
-> without any shell redirects. Adding `2>&1` is structurally redundant
-> and triggers IDE interception, blocking auto-run.
+> The IDE terminal wrapper captures **both stdout and stderr** natively.
+> You will see all compiler errors, warnings, and panics without any
+> shell redirects. Adding `2>&1` or redirecting to files is structurally
+> redundant and impairs direct agent observability.
 
-**Banned operators** — the IDE blocks auto-run on all of these:
+**Banned operators** — TARS prohibits all of these for execution discipline:
 
 | Pattern | Why banned |
 |---------|-----------|
 | `&&`, `||`, `;` | Chaining — use a separate `run_command` call for each command |
 | `>`, `2>`, `2>&1` | Redirects — stderr is already captured; redirects are unnecessary |
 | `|` | Pipes — use native agent tools instead |
-| `~`, `^` in git refs | Regex specials — use explicit commit hashes from `git log` |
 
 **Rule:** One command per `run_command` call. No exceptions. See `GEMINI.md §6`.
 
