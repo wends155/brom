@@ -285,14 +285,14 @@ pub fn generate_migration_sql(ops: &[MigrationOp]) -> (String, String) {
                 );
                 let _ = writeln!(
                     down_sql,
-                    "-- TODO: Manual rollback needed for DropColumn {column_name} on {table_name}"
+                    "-- ACCEPTED-DEBT: Manual rollback needed for DropColumn {column_name} on {table_name}"
                 );
             }
             MigrationOp::DropTable { name } => {
                 let _ = writeln!(up_sql, "DROP TABLE {name};");
                 let _ = writeln!(
                     down_sql,
-                    "-- TODO: Manual rollback needed for DropTable {name}"
+                    "-- ACCEPTED-DEBT: Manual rollback needed for DropTable {name}"
                 );
             }
         }

@@ -1,6 +1,7 @@
 use crate::error::DbError;
 use crate::pool::DbPool;
 use rusqlite::OptionalExtension;
+use std::io::Read;
 use std::path::Path;
 
 /// Runner for schema migrations.

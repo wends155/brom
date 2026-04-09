@@ -299,3 +299,9 @@
 * **Changes:** Remediated `architecture.md` structural discrepancies identified in the Phase 4 audit. Synchronized the project layout mappings for `brom-cli`, `brom-db`, and `brom-server` by adding missing modules (e.g., `config.rs`, `introspect.rs`, `response.rs`, `state.rs`, `api_keys.rs`) and removing stale, unimplemented references (e.g., `migrate.rs`, `assets.rs`). Removed false `mockall` MockRepository claims from the module boundaries.
 * **New Constraints:** The dependencies table explicitly marks `rust-embed`, `leptos`, and `trunk` as Phase 5 architectural targets.
 * **Pruned:** The `architecture_recommendations_report.md` action items have been fully resolved.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 5 Context Alignment for README.md
+> * **Changes:** Updated `README.md` to accurately flag the compilation of the embedded Admin SPA and JSON schemas as a Phase 5 target. This corrects documentation drift by accurately representing current functional gaps before the Admin UX development cycle.
+> * **New Constraints:** Features slated for Phase 5 (Leptos CSR, endpoints, Admin UI) should not be described as "current functionality" in standard documentation until Phase 5 Act begins.
+> * **Pruned:** Outdated README presentation of unimplemented capabilities.
