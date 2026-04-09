@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Project** | brom |
-| **Version** | 1.0.0 |
+| **Version** | 1.1.0 |
 | **Last Updated** | 2026-04-09 |
 
 > Last verified against: cc2263c
@@ -187,3 +187,91 @@ THEN a `403 Forbidden` response is returned
 - **Problem Details**: Error responses must map to JSON format containing `error`, `message`, and optionally `fields` corresponding to `RFC 7807` shaped problem details.
 - **Defense in Depth**: Every router mutation involving external access must pass through `middleware` to enforce missing HTTP security headers.
 - **Observability**: All endpoints must be tracked via structured `TraceLayer` middleware, emitting `http_request` spans that include HTTP method, URI, status, and latency. Sensitive functions must use `#[tracing::instrument(skip_all)]` or explicit field redaction.
+
+---
+
+## 7. admin (Leptos SPA)
+
+> Client-side reactive UI governing the CMS dashboard, content editing, and authentication flows.
+
+### Behavioral Scenarios
+
+[HAPPY] Schema-Driven Form Rendering
+GIVEN a JSON schema retrieved from `/admin/api/schema`
+WHEN the user navigates to an entity creation page
+THEN the form is dynamically rendered according to the schema's field types and UI overrides
+AND relationships are presented as dropdowns or multi-selects
+
+[ERROR] Session Expiration Redirect
+GIVEN an expired or invalid HTTP-only session cookie
+WHEN the admin SPA attempts a REST API call
+THEN the server returns 401 Unauthorized
+AND the SPA intercepts the response and redirects the user to the `/login` route
+
+[HAPPY] Resource Creation
+GIVEN valid input in an auto-generated entity form
+WHEN the user submits the form
+THEN a POST request is dispatched to the corresponding REST endpoint
+AND upon 201 Created, the SPA navigates to the entity collection view
+
+### Required Test Coverage
+
+- [ ] Browser-based test for login flow
+- [ ] Schema ingestion and dynamic form rendering assertion
+- [ ] 401 interception logic
+
+---
+
+## 8. Data Models (Internal)
+
+> Core data structures persisted in the embedded SQLite database for system operations.
+
+### User (`_brom_user`)
+
+| Field | Type | Constraints | Default | Notes |
+|-------|------|-------------|---------|-------|
+| `id` | `i64` | PK, auto-generated | — | — |
+| `email` | `String` | NOT NULL, UNIQUE | — | Login identifier |
+| `password_hash` | `String` | NOT NULL | — | Argon2id hash |
+| `role` | `String` | NOT NULL | `admin` | Roles: superadmin, admin, editor |
+| `created_at` | `String` | NOT NULL | `now()` | ISO 8601 |
+| `updated_at` | `String` | NOT NULL | `now()` | ISO 8601 |
+
+#### Validation Rules
+
+[ERROR] Duplicate Email Registration
+GIVEN an email address that already exists in `_brom_user`
+WHEN a new user creation is attempted
+THEN `DbError::UniqueViolation` is returned
+
+### Session (`_brom_session`)
+
+| Field | Type | Constraints | Default | Notes |
+|-------|------|-------------|---------|-------|
+| `id` | `i64` | PK, auto-generated | — | — |
+| `user_id` | `i64` | NOT NULL, FK | — | CASCADE delete on User |
+| `token` | `String` | NOT NULL, UNIQUE | — | Secure random session token |
+| `expires_at` | `String` | NOT NULL | — | ISO 8601 |
+| `created_at` | `String` | NOT NULL | `now()` | ISO 8601 |
+
+### ApiKey (`_brom_api_key`)
+
+| Field | Type | Constraints | Default | Notes |
+|-------|------|-------------|---------|-------|
+| `id` | `i64` | PK, auto-generated | — | — |
+| `name` | `String` | NOT NULL | — | Human-readable label |
+| `key_hash` | `String` | NOT NULL | — | SHA-256 hash of raw key |
+| `key_prefix` | `String` | NOT NULL | — | First 8 characters for identification |
+| `permissions` | `String` | NOT NULL | `read` | Scope of key (read, read_write) |
+| `created_at` | `String` | NOT NULL | `now()` | ISO 8601 |
+| `last_used_at`| `Option<String>` | — | `NULL` | ISO 8601 |
+| `user_id` | `i64` | NOT NULL, FK | — | References User |
+
+### Migration (`_brom_migration`)
+
+| Field | Type | Constraints | Default | Notes |
+|-------|------|-------------|---------|-------|
+| `id` | `i64` | PK, auto-generated | — | — |
+| `name` | `String` | NOT NULL, UNIQUE | — | Migration filename |
+| `applied_at` | `String` | NOT NULL | `now()` | ISO 8601 |
+| `checksum` | `String` | NOT NULL | — | SHA-256 of file contents to detect drift |
