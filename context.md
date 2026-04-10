@@ -315,5 +315,17 @@
 > 📝 **Context Update:**
 > * **Feature:** Verification Gate Remediation (Clippy & Snapshots)
 > * **Changes:** Remediated a blocking clippy violation in `brom-db` by removing an unused `std::io::Read` import. Synchronized stale `brom-cli` migration snapshots caused by the `TODO` -> `ACCEPTED-DEBT` terminology change using `INSTA_UPDATE=always`.
+> Zero-Exit gate satisfied.
+
+> 📝 **Context Update:**
+> * **Feature:** Admin SPA Migration Remediation (Audit Findings)
+> * **Changes:** Scoped SPA fallback to `/admin` to resolve 404 hijacking in API and docs. Migrated integration tests in `api_test.rs` to the JSON-based Bearer token authentication contract, removing deprecated `Set-Cookie` assertions. Resolved `clippy::into_iter_on_ref` and `clippy::collapsible_if` violations in the `admin` crate.
+> * **New Constraints:** Any authenticated API requests MUST use the `Authorization: Bearer <token>` header. The SPA fallback is strictly scoped to `/admin/*`; non-admin routes will correctly return 404.
 > * **Verification:** Full `just verify` (fmt, clippy, test, doc-test, sg scan) passed with exit code 0. Zero-Exit gate fully restored.
 > * **Status:** Workspace is clean and verified for Phase 5 development.
+
+> 📝 **Context Update:**
+> * **Feature:** IDOR & Auth Performance Remediation
+> * **Changes:** Enforced `user_id` ownership scoping in `ApiKeyStore::revoke` and its SQLite implementation. Optimized `RequireAdmin` and `RequireApiKey` extractors to eliminate heap allocations by using `eq_ignore_ascii_case` for Bearer token validation.
+> * **New Constraints:** Any API key lifecycle operations MUST be scoped to the authenticated `user_id`. Auth header parsing must prioritize allocation-free comparison.
+> * **Verification:** Clean audit. Zero-exit gate satisfied after switching integration tests to Bearer token contract. Fidelity to Plan: 100%.
