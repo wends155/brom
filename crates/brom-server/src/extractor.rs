@@ -18,19 +18,20 @@ where
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let state = AppState::from_ref(state);
 
-        let cookie_header = parts
+        let auth_header = parts
             .headers
-            .get(header::COOKIE)
+            .get(header::AUTHORIZATION)
             .and_then(|v| v.to_str().ok())
             .ok_or(brom_auth::AuthError::InvalidSession)?;
 
-        // Basic cookie parsing for "brom_session=<token>"
-        let token = cookie_header
-            .split(';')
-            .map(str::trim)
-            .find(|s| s.starts_with("brom_session="))
-            .and_then(|s| s.strip_prefix("brom_session="))
-            .ok_or(brom_auth::AuthError::InvalidSession)?;
+        if !auth_header
+            .get(..7)
+            .is_some_and(|p| p.eq_ignore_ascii_case("bearer "))
+        {
+            return Err(brom_auth::AuthError::InvalidSession.into());
+        }
+
+        let token = &auth_header[7..].trim();
 
         let session = state.session_store.validate(token)?;
         Ok(RequireAdmin(session))
@@ -56,7 +57,10 @@ where
             .and_then(|v| v.to_str().ok())
             .ok_or(brom_auth::AuthError::InvalidApiKey)?;
 
-        if !auth_header.to_lowercase().starts_with("bearer ") {
+        if !auth_header
+            .get(..7)
+            .is_some_and(|p| p.eq_ignore_ascii_case("bearer "))
+        {
             return Err(brom_auth::AuthError::InvalidApiKey.into());
         }
 
@@ -105,7 +109,7 @@ mod tests {
         let state = test_state(Arc::new(mock_sessions), Arc::new(MockApiKeyStore::new()));
 
         let request = Request::builder()
-            .header("Cookie", "brom_session=valid_token")
+            .header("Authorization", "Bearer valid_token")
             .body(())
             .unwrap();
         let (mut parts, ()) = request.into_parts();

@@ -2,7 +2,7 @@ use axum::response::IntoResponse;
 use axum::{
     Json, Router,
     extract::State,
-    http::{StatusCode, header},
+    http::StatusCode,
     routing::{get, post},
 };
 use serde::Deserialize;
@@ -30,6 +30,8 @@ pub struct LoginResponse {
     pub message: String,
     /// Internal ID of the authenticated user.
     pub user_id: i64,
+    /// The session token to be used in the Authorization header for future requests.
+    pub token: String,
 }
 
 /// Handler for `POST /admin/api/login`.
@@ -66,17 +68,13 @@ pub async fn login(
 
     let session = state.session_store.create(user_id)?;
 
-    let cookie = format!(
-        "brom_session={}; HttpOnly; Path=/; SameSite=Lax; Max-Age=86400",
-        session.token
-    );
-
     let body = Json(LoginResponse {
         message: "Login successful".into(),
         user_id,
+        token: session.token,
     });
 
-    Ok((StatusCode::OK, [(header::SET_COOKIE, cookie)], body))
+    Ok((StatusCode::OK, body))
 }
 
 /// Handler for `POST /admin/api/logout`.
@@ -103,29 +101,27 @@ pub async fn logout(
 ) -> Result<impl IntoResponse, ServerError> {
     state.session_store.destroy(&session.token)?;
 
-    let cookie = "brom_session=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0";
-
-    Ok((
-        StatusCode::OK,
-        [(header::SET_COOKIE, cookie)],
-        "Logout successful",
-    ))
+    Ok((StatusCode::OK, "Logout successful"))
 }
 
 /// Builds the complete Axum router for the brom-server.
 pub fn build_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>) -> Router {
-    Router::new()
-        .route("/admin/api/login", post(login))
-        .route("/admin/api/logout", post(logout))
-        .route("/admin/api/schema", get(schema_api::get_schema))
+    let api_routes = Router::new()
+        .route("/login", post(login))
+        .route("/logout", post(logout))
+        .route("/schema", get(schema_api::get_schema))
         .route(
-            "/admin/api/keys",
+            "/keys",
             get(crate::api_keys::list_keys).post(crate::api_keys::create_key),
         )
         .route(
-            "/admin/api/keys/{id}",
+            "/keys/{id}",
             axum::routing::delete(crate::api_keys::revoke_key),
-        )
+        );
+
+    Router::new()
+        .nest("/admin/api", api_routes)
+        .fallback(crate::admin_ui::spa_fallback)
         .merge(openapi::swagger_ui())
         .layer(middleware::cors_layer(cors_origins))
         .layer(middleware::x_content_type_options_layer())

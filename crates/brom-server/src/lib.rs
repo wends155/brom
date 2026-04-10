@@ -1,5 +1,7 @@
 //! Axum REST API and Server components for the brom headless CMS framework.
 
+/// Admin SPA asset serving.
+pub mod admin_ui;
 /// API key lifecycle and management records.
 pub mod api_keys;
 /// Server configuration and settings mapping.

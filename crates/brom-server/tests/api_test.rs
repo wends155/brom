@@ -39,41 +39,25 @@ async fn send_json(
 }
 
 #[tokio::test]
-async fn login_valid_credentials_returns_200_and_cookie() {
+async fn login_valid_credentials_returns_200_and_token() {
     let state = common::test_app_state();
     let (_user_id, password) = common::seed_admin_user(&state);
-    let origins = vec![header::HeaderValue::from_static("http://localhost:3000")];
 
-    let app = build_router(state, origins);
-    let request = Request::builder()
-        .method("POST")
-        .uri("/admin/api/login")
-        .header(header::CONTENT_TYPE, "application/json")
-        .body(Body::from(
-            serde_json::to_vec(&json!({
-                "email": "admin@test.com",
-                "password": password
-            }))
-            .unwrap(),
-        ))
-        .unwrap();
+    let (status, body) = send_json(
+        state,
+        "POST",
+        "/admin/api/login",
+        Some(json!({
+            "email": "admin@test.com",
+            "password": password
+        })),
+    )
+    .await;
 
-    let response = app.oneshot(request).await.unwrap();
-    assert_eq!(response.status(), StatusCode::OK);
-
-    // Verify Set-Cookie header is present
-    let cookie = response
-        .headers()
-        .get(header::SET_COOKIE)
-        .expect("Set-Cookie header missing");
-    let cookie_str = cookie.to_str().unwrap();
-    assert!(cookie_str.starts_with("brom_session="));
-    assert!(cookie_str.contains("HttpOnly"));
-
-    // Verify response body
-    let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
-    let body: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(status, StatusCode::OK);
     assert_eq!(body["message"], "Login successful");
+    assert!(body["token"].is_string(), "Response must contain a token");
+    assert!(body["user_id"].is_number(), "Response must contain user_id");
 }
 
 #[tokio::test]
@@ -128,20 +112,12 @@ async fn logout_with_valid_session_returns_200() {
     let request = Request::builder()
         .method("POST")
         .uri("/admin/api/logout")
-        .header(header::COOKIE, format!("brom_session={token}"))
+        .header(header::AUTHORIZATION, format!("Bearer {token}"))
         .body(Body::empty())
         .unwrap();
 
     let response = app.oneshot(request).await.unwrap();
     assert_eq!(response.status(), StatusCode::OK);
-
-    // Verify cookie is cleared (Max-Age=0)
-    let cookie = response
-        .headers()
-        .get(header::SET_COOKIE)
-        .expect("Set-Cookie header missing");
-    let cookie_str = cookie.to_str().unwrap();
-    assert!(cookie_str.contains("Max-Age=0"));
 }
 
 #[tokio::test]
@@ -243,7 +219,7 @@ async fn api_keys_crud() {
     let request = Request::builder()
         .method("GET")
         .uri("/admin/api/keys")
-        .header(header::COOKIE, format!("brom_session={token}"))
+        .header(header::AUTHORIZATION, format!("Bearer {token}"))
         .body(Body::empty())
         .unwrap();
     let response = app.oneshot(request).await.unwrap();
@@ -258,7 +234,7 @@ async fn api_keys_crud() {
     let request = Request::builder()
         .method("POST")
         .uri("/admin/api/keys")
-        .header(header::COOKIE, format!("brom_session={token}"))
+        .header(header::AUTHORIZATION, format!("Bearer {token}"))
         .header(header::CONTENT_TYPE, "application/json")
         .body(Body::from(
             serde_json::to_vec(&json!({
@@ -281,7 +257,7 @@ async fn api_keys_crud() {
     let request = Request::builder()
         .method("GET")
         .uri("/admin/api/keys")
-        .header(header::COOKIE, format!("brom_session={token}"))
+        .header(header::AUTHORIZATION, format!("Bearer {token}"))
         .body(Body::empty())
         .unwrap();
     let response = app.oneshot(request).await.unwrap();
@@ -295,7 +271,7 @@ async fn api_keys_crud() {
     let request = Request::builder()
         .method("DELETE")
         .uri(format!("/admin/api/keys/{key_id}"))
-        .header(header::COOKIE, format!("brom_session={token}"))
+        .header(header::AUTHORIZATION, format!("Bearer {token}"))
         .body(Body::empty())
         .unwrap();
     let response = app.oneshot(request).await.unwrap();
@@ -306,7 +282,7 @@ async fn api_keys_crud() {
     let request = Request::builder()
         .method("GET")
         .uri("/admin/api/keys")
-        .header(header::COOKIE, format!("brom_session={token}"))
+        .header(header::AUTHORIZATION, format!("Bearer {token}"))
         .body(Body::empty())
         .unwrap();
     let response = app.oneshot(request).await.unwrap();

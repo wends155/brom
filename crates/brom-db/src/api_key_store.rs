@@ -94,13 +94,21 @@ impl ApiKeyStore for DbPool {
         Ok(record)
     }
 
-    fn revoke(&self, id: i64) -> Result<(), AuthError> {
+    fn revoke(&self, id: i64, user_id: i64) -> Result<(), AuthError> {
         let conn = self
             .get()
             .map_err(|e| AuthError::InternalError(e.to_string()))?;
 
-        conn.execute("DELETE FROM _brom_api_key WHERE id = ?1", [id])
+        let rows = conn
+            .execute(
+                "DELETE FROM _brom_api_key WHERE id = ?1 AND user_id = ?2",
+                (id, user_id),
+            )
             .map_err(|e| AuthError::InternalError(e.to_string()))?;
+
+        if rows == 0 {
+            return Err(AuthError::InvalidApiKey);
+        }
 
         Ok(())
     }
@@ -186,7 +194,7 @@ mod tests {
         assert_eq!(keys.len(), 1);
 
         // Revoke key
-        pool.revoke(record.id).expect("Failed to revoke key");
+        pool.revoke(record.id, 1).expect("Failed to revoke key");
 
         // Validate should fail
         let result = pool.validate(&raw);

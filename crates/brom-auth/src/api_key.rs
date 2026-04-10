@@ -36,11 +36,12 @@ pub trait ApiKeyStore: Send + Sync {
     /// Returns `AuthError::InvalidApiKey` if the key is invalid or revoked.
     fn validate(&self, raw_key: &str) -> Result<ApiKeyRecord, AuthError>;
 
-    /// Revokes an API key by ID.
+    /// Revokes an API key by ID, scoped to the owning user.
     ///
     /// # Errors
     /// Returns `AuthError::InternalError` if the operation fails.
-    fn revoke(&self, id: i64) -> Result<(), AuthError>;
+    /// Returns `AuthError::InvalidApiKey` if the key does not belong to the user.
+    fn revoke(&self, id: i64, user_id: i64) -> Result<(), AuthError>;
 
     /// Lists all API keys for a specific user.
     ///

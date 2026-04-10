@@ -68,6 +68,8 @@ tower = { version = "0.5", features = ["util"] }
 http-body-util = "0.1"
 insta = "1"
 prettyplease = "0.2"
+rust-embed = { version = "8.6", features = ["axum"] }
+mime_guess = "2.0"
 
 brom-core = { path = "crates/brom-core" }
 brom-macros = { path = "crates/brom-macros" }

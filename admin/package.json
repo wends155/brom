@@ -1,0 +1,11 @@
+{
+  "name": "brom-admin",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/main.css -o ./dist/tailwind.css --minify",
+    "watch:css": "tailwindcss -i ./src/main.css -o ./dist/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

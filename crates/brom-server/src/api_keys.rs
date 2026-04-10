@@ -134,10 +134,10 @@ pub async fn create_key(
 /// Returns `ServerError` if a database error occurs.
 #[tracing::instrument(skip_all)]
 pub async fn revoke_key(
-    RequireAdmin(_session): RequireAdmin,
+    RequireAdmin(session): RequireAdmin,
     State(state): State<AppState>,
     Path(id): Path<i64>,
 ) -> Result<StatusCode, ServerError> {
-    state.api_key_store.revoke(id)?;
+    state.api_key_store.revoke(id, session.user_id)?;
     Ok(StatusCode::NO_CONTENT)
 }
