@@ -329,3 +329,9 @@
 > * **Changes:** Enforced `user_id` ownership scoping in `ApiKeyStore::revoke` and its SQLite implementation. Optimized `RequireAdmin` and `RequireApiKey` extractors to eliminate heap allocations by using `eq_ignore_ascii_case` for Bearer token validation.
 > * **New Constraints:** Any API key lifecycle operations MUST be scoped to the authenticated `user_id`. Auth header parsing must prioritize allocation-free comparison.
 > * **Verification:** Clean audit. Zero-exit gate satisfied after switching integration tests to Bearer token contract. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 5A (Forge Dark Admin SPA) Implementation
+> * **Changes:** Successfully implemented the "Forge Dark" design system across the `brom` headless CMS Admin SPA. Reskinned core pages (Login, Collection List, Form Editor) and created new ones (Dashboard, Settings for API Keys). Extracted unified dark-themed components (`Breadcrumbs`, `DataTable`, `StatCard`) to enforce design consistency. Solved complex `location` cloning / ownership issues within Leptos functional layouts to ensure stable navigation state. Replaced standard Tailwind with strict `#111827` base and amber accents aligned with the Forge Dark Stitch spec.
+> * **New Constraints:** Shared components MUST be used for standard interface elements (tables, data points) across the Admin SPA.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide. The 13 `wildcard-import` violations in `admin` are documented exceptions for Leptos prelude mechanics. Fidelity to Plan: 100%.

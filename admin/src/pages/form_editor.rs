@@ -35,29 +35,31 @@ pub fn EditorForm() -> impl IntoView {
         <div class="max-w-4xl mx-auto space-y-8">
             <div class="flex justify-between items-center">
                 <div>
-                    <h2 class="text-3xl font-bold tracking-tight">"Edit Record"</h2>
-                    <p class="text-muted-foreground">
+                    <h2 class="text-2xl font-heading font-bold text-foreground">
                         {move || {
                             let p = params.get();
-                            format!("Collection: {} | ID: {}",
-                                p.get("entity").unwrap_or_default(),
-                                p.get("id").unwrap_or_default()
-                            )
+                            format!("Edit {}", p.get("entity").unwrap_or_default())
+                        }}
+                    </h2>
+                    <p class="text-sm text-muted-foreground font-mono mt-1">
+                        {move || {
+                            let p = params.get();
+                            format!("ID: {}", p.get("id").unwrap_or_default())
                         }}
                     </p>
                 </div>
                 <div class="space-x-4">
-                    <button class="px-4 py-2 border rounded-md hover:bg-muted transition-colors">
+                    <button class="px-4 py-2 border border-border text-foreground hover:bg-muted transition-colors duration-100 font-heading font-medium">
                         "Cancel"
                     </button>
-                    <button class="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                    <button class="px-4 py-2 bg-primary text-primary-foreground font-heading font-semibold hover:bg-primary/90 transition-colors duration-100">
                         "Save Changes"
                     </button>
                 </div>
             </div>
 
-            <div class="bg-card border rounded-lg p-8 shadow-sm">
-                <Suspense fallback=move || view! { <div class="text-center text-muted-foreground">"Loading form..."</div> }>
+            <div class="bg-surface border border-border p-8">
+                <Suspense fallback=move || view! { <div class="text-center text-muted-foreground font-mono">"Loading form..."</div> }>
                     {move || {
                         data.get().map(|res| {
                             match &*res {
@@ -75,11 +77,11 @@ pub fn EditorForm() -> impl IntoView {
                                                     let label = f.name.clone();
                                                     view! {
                                                         <div class="space-y-2">
-                                                            <label class="text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                            <label class="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground leading-none">
                                                                 {label}
                                                             </label>
                                                             <input
-                                                                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                class="bg-input border border-border px-3 py-2 text-sm font-mono text-foreground forge-focus w-full disabled:cursor-not-allowed disabled:opacity-50"
                                                                 value=val.to_string().replace("\"", "")
                                                             />
                                                         </div>
@@ -88,12 +90,12 @@ pub fn EditorForm() -> impl IntoView {
                                             </form>
                                         }.into_any()
                                     } else {
-                                        view! { <div class="text-center text-muted-foreground">"Schema not found"</div> }.into_any()
+                                        view! { <div class="text-center text-muted-foreground font-mono">"Schema not found"</div> }.into_any()
                                     }
                                 }
                                 Err(e) => {
                                     let e = e.clone();
-                                    view! { <div class="text-center text-destructive">{e}</div> }.into_any()
+                                    view! { <div class="text-center text-destructive font-mono">{e}</div> }.into_any()
                                 }
                             }
                         })

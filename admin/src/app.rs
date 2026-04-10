@@ -1,8 +1,10 @@
 use crate::components::layout::Layout;
 use crate::context::schema_ctx::provide_schema_context;
 use crate::pages::collection_list::CollectionList;
+use crate::pages::dashboard::Dashboard;
 use crate::pages::form_editor::EditorForm;
 use crate::pages::login::Login;
+use crate::pages::settings::Settings;
 use leptos::prelude::*;
 use leptos_meta::{Title, provide_meta_context};
 use leptos_router::components::{ParentRoute, Route, Router, Routes};
@@ -23,23 +25,10 @@ pub fn App() -> impl IntoView {
                 <Route path=path!("/admin/login") view=Login />
 
                 <ParentRoute path=path!("/admin") view=Layout>
-                    <Route path=path!("") view=|| view! {
-                        <div class="space-y-4">
-                            <h2 class="text-3xl font-bold">"Dashboard"</h2>
-                            <p class="text-muted-foreground">"Select a collection from the sidebar to manage your content."</p>
-                        </div>
-                    } />
+                    <Route path=path!("") view=Dashboard />
                     <Route path=path!("collection/:entity") view=CollectionList />
                     <Route path=path!("collection/:entity/:id") view=EditorForm />
-                    <Route path=path!("api-keys") view=|| view! {
-                        <div class="space-y-4">
-                            <h2 class="text-3xl font-bold">"API Keys"</h2>
-                            <p class="text-muted-foreground">"Manage your API keys for programmatic access."</p>
-                            <div class="bg-card border rounded-lg p-8 text-center text-muted-foreground italic">
-                                "API Key management interface coming soon."
-                            </div>
-                        </div>
-                    } />
+                    <Route path=path!("api-keys") view=Settings />
                 </ParentRoute>
             </Routes>
         </Router>

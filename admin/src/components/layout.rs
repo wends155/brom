@@ -13,6 +13,9 @@ pub fn Layout() -> impl IntoView {
     let nav_for_schemas = navigate.clone();
     let nav_for_system = navigate.clone();
 
+    let location_for_schemas = location.clone();
+    let location_for_system = location.clone();
+
     view! {
         <div class="flex h-screen bg-background text-foreground font-body">
             // Sidebar (w-56)
@@ -34,7 +37,7 @@ pub fn Layout() -> impl IntoView {
                     <Suspense fallback=move || view! { <div class="px-6 py-2 text-sm text-muted-foreground italic font-mono">"Loading..."</div> }>
                         {
                             let navigate = nav_for_schemas.clone();
-                            let location = location.clone();
+                            let location = location_for_schemas.clone();
                             move || {
                                 let navigate = navigate.clone();
                                 let location = location.clone();
@@ -45,8 +48,10 @@ pub fn Layout() -> impl IntoView {
                                                 let navigate = navigate.clone();
                                                 let table_name = s.table_name.clone();
                                                 let url = format!("/admin/collection/{}", table_name);
+                                                let url_for_active = url.clone();
+                                                let location = location.clone();
                                                 let active_class = move || {
-                                                    if location.pathname.get().starts_with(&url) {
+                                                    if location.pathname.get().starts_with(&url_for_active) {
                                                         "flex items-center px-6 py-2 text-sm font-medium font-heading hover:bg-accent hover:text-accent-foreground transition-colors forge-nav-active text-foreground"
                                                     } else {
                                                         "flex items-center px-6 py-2 text-sm font-medium font-heading hover:bg-accent hover:text-accent-foreground transition-colors text-muted-foreground border-l-[3px] border-transparent"
@@ -82,7 +87,7 @@ pub fn Layout() -> impl IntoView {
                         "System"
                     </div>
                     {
-                        let location = location.clone();
+                        let location = location_for_system.clone();
                         let active_class = move || {
                             if location.pathname.get().starts_with("/admin/api-keys") {
                                 "flex items-center px-6 py-2 text-sm font-medium font-heading hover:bg-accent hover:text-accent-foreground transition-colors forge-nav-active text-foreground"

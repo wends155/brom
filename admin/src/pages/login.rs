@@ -25,11 +25,14 @@ pub fn Login() -> impl IntoView {
     let navigate = use_navigate();
 
     view! {
-        <div class="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-            <div class="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border shadow-lg">
-                <div class="text-center space-y-2">
-                    <h1 class="text-3xl font-bold tracking-tight">"Welcome back"</h1>
-                    <p class="text-muted-foreground">"Enter your credentials to access the admin panel"</p>
+        <div class="min-h-screen flex items-center justify-center bg-background p-4 font-body">
+            <div class="bg-surface border border-border p-8 w-full max-w-md">
+                <div class="w-16 h-16 bg-primary flex items-center justify-center mx-auto mb-6">
+                    <span class="text-primary-foreground font-heading font-bold text-3xl">"B"</span>
+                </div>
+                <div class="text-center space-y-2 mb-8">
+                    <h1 class="text-2xl font-heading font-bold tracking-tight text-foreground">"Welcome back"</h1>
+                    <p class="text-sm text-muted-foreground font-mono">"Enter your credentials to access the admin panel"</p>
                 </div>
 
                 <form class="space-y-6" on:submit=move |ev| {
@@ -69,11 +72,11 @@ pub fn Login() -> impl IntoView {
                     });
                 }>
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold leading-none">"Email"</label>
+                        <label class="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground leading-none">"Email"</label>
                         <input
                             type="email"
                             placeholder="admin@example.com"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            class="bg-input border border-border px-3 py-2 text-sm text-foreground font-mono forge-focus w-full"
                             on:input=move |ev| set_email.set(event_target_value(&ev))
                             prop:value=email
                             required
@@ -81,10 +84,10 @@ pub fn Login() -> impl IntoView {
                     </div>
 
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold leading-none">"Password"</label>
+                        <label class="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground leading-none">"Password"</label>
                         <input
                             type="password"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            class="bg-input border border-border px-3 py-2 text-sm text-foreground font-mono forge-focus w-full"
                             on:input=move |ev| set_password.set(event_target_value(&ev))
                             prop:value=password
                             required
@@ -92,7 +95,7 @@ pub fn Login() -> impl IntoView {
                     </div>
 
                     {move || error.get().map(|err| view! {
-                        <div class="p-3 text-sm bg-destructive/10 text-destructive rounded-md border border-destructive/20 font-medium">
+                        <div class="p-3 text-sm bg-destructive/10 text-destructive border border-destructive/20 font-mono">
                             {err}
                         </div>
                     })}
@@ -100,7 +103,7 @@ pub fn Login() -> impl IntoView {
                     <button
                         type="submit"
                         disabled=loading
-                        class="w-full h-10 px-4 py-2 bg-primary text-primary-foreground rounded-md font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        class="w-full py-2 bg-primary text-primary-foreground font-heading font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
                     >
                         {move || if loading.get() {
                             Either::Left("Authenticating...")
@@ -110,7 +113,7 @@ pub fn Login() -> impl IntoView {
                     </button>
                 </form>
 
-                <div class="text-center text-xs text-muted-foreground">
+                <div class="text-center text-xs text-muted-foreground/50 font-mono mt-8">
                     "Secure Authentication powered by Brom"
                 </div>
             </div>
