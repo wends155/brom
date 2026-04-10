@@ -16,10 +16,8 @@ pub fn get_token_from_storage() -> Option<String> {
 
 /// Helper to save the token to localStorage
 pub fn save_token_to_storage(token: &str) {
-    if let Some(window) = web_sys::window() {
-        if let Ok(Some(storage)) = window.local_storage() {
-            let _ = storage.set_item("admin_token", token);
-        }
+    if let Some(storage) = web_sys::window().and_then(|w| w.local_storage().ok().flatten()) {
+        let _ = storage.set_item("admin_token", token);
     }
 }
 

@@ -4,34 +4,30 @@ use leptos::prelude::*;
 use leptos_router::hooks::use_params_map;
 use serde_json::Value;
 
-
-
 #[component]
 pub fn CollectionList() -> impl IntoView {
     let params = use_params_map();
     let schema_ctx = use_schema();
 
     // Resource to fetch the collection data
-    let data = LocalResource::new(
-        move || async move {
-            let entity = params.get().get("entity");
-            if let Some(entity_name) = entity {
-                let url = format!("/admin/api/entities/{}", entity_name);
-                let resp = auth_fetch(&url, "GET", None::<()>).await?;
-                if resp.ok() {
-                    resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())
-                } else {
-                    Err(format!(
-                        "Failed to fetch data for {}: {}",
-                        entity_name,
-                        resp.status()
-                    ))
-                }
+    let data = LocalResource::new(move || async move {
+        let entity = params.get().get("entity");
+        if let Some(entity_name) = entity {
+            let url = format!("/admin/api/entities/{}", entity_name);
+            let resp = auth_fetch(&url, "GET", None::<()>).await?;
+            if resp.ok() {
+                resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())
             } else {
-                Ok(Vec::new())
+                Err(format!(
+                    "Failed to fetch data for {}: {}",
+                    entity_name,
+                    resp.status()
+                ))
             }
-        },
-    );
+        } else {
+            Ok(Vec::new())
+        }
+    });
 
     view! {
         <div class="space-y-6">
@@ -52,7 +48,7 @@ pub fn CollectionList() -> impl IntoView {
                                 Ok(items) => {
                                     let entity_name = params.get().get("entity").unwrap_or_default();
                                     let schema = schema_ctx.schemas.get().and_then(|s| s.as_ref().ok().cloned()).and_then(|ss| {
-                                        ss.into_iter().find(|s| s.table_name == entity_name)
+                                        ss.iter().find(|s| s.table_name == entity_name).cloned()
                                     });
 
                                     if let Some(schema) = schema {
@@ -69,7 +65,7 @@ pub fn CollectionList() -> impl IntoView {
                                                     </tr>
                                                 </thead>
                                                 <tbody class="divide-y">
-                                                    {items.into_iter().map(|item| {
+                                                    {items.iter().map(|item| {
                                                         let item_id = item.get("id").and_then(|id| id.as_i64()).unwrap_or(0);
                                                         let fields_inner = fields.clone();
                                                         let entity_name_inner = entity_name.clone();

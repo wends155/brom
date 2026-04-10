@@ -10,18 +10,16 @@ pub struct SchemaContext {
 /// Provides the global SchemaContext to the application.
 /// It fetches the schema metadata once on boot and makes it available to all components.
 pub fn provide_schema_context() {
-    let schemas = LocalResource::new(
-        move || async move {
-            let resp = auth_fetch("/admin/api/schema", "GET", None::<()>).await?;
-            if resp.ok() {
-                resp.json::<Vec<SchemaInfo>>()
-                    .await
-                    .map_err(|e| e.to_string())
-            } else {
-                Err(format!("Failed to fetch schema: {}", resp.status()))
-            }
-        },
-    );
+    let schemas = LocalResource::new(move || async move {
+        let resp = auth_fetch("/admin/api/schema", "GET", None::<()>).await?;
+        if resp.ok() {
+            resp.json::<Vec<SchemaInfo>>()
+                .await
+                .map_err(|e| e.to_string())
+        } else {
+            Err(format!("Failed to fetch schema: {}", resp.status()))
+        }
+    });
 
     provide_context(SchemaContext { schemas });
 }

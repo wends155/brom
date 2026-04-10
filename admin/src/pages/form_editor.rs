@@ -4,8 +4,6 @@ use leptos::prelude::*;
 use leptos_router::hooks::use_params_map;
 use serde_json::Value;
 
-
-
 #[component]
 pub fn EditorForm() -> impl IntoView {
     let params = use_params_map();
@@ -21,7 +19,12 @@ pub fn EditorForm() -> impl IntoView {
             if resp.ok() {
                 resp.json::<Value>().await.map_err(|e| e.to_string())
             } else {
-                Err(format!("Failed to fetch record {}/{}: {}", entity, id, resp.status()))
+                Err(format!(
+                    "Failed to fetch record {}/{}: {}",
+                    entity,
+                    id,
+                    resp.status()
+                ))
             }
         } else {
             Err("Missing entity or id".to_string())

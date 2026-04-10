@@ -32,7 +32,7 @@ pub fn Layout() -> impl IntoView {
                                 schema_ctx.schemas.get().map(|res| {
                                     match &*res {
                                         Ok(schemas) => {
-                                            schemas.into_iter().map(|s| {
+                                            schemas.iter().map(|s| {
                                                 let navigate = navigate.clone();
                                                 let table_name = s.table_name.clone();
                                                 view! {

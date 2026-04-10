@@ -119,9 +119,11 @@ pub fn build_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>)
             axum::routing::delete(crate::api_keys::revoke_key),
         );
 
+    let admin_ui = Router::new().fallback(crate::admin_ui::spa_fallback);
+
     Router::new()
         .nest("/admin/api", api_routes)
-        .fallback(crate::admin_ui::spa_fallback)
+        .nest("/admin", admin_ui)
         .merge(openapi::swagger_ui())
         .layer(middleware::cors_layer(cors_origins))
         .layer(middleware::x_content_type_options_layer())

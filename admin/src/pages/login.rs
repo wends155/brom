@@ -48,7 +48,7 @@ pub fn Login() -> impl IntoView {
                         };
 
                         let resp = auth_fetch("/admin/api/login", "POST", Some(payload)).await;
-                        
+
                         match resp {
                             Ok(resp) if resp.ok() => {
                                 if let Ok(data) = resp.json::<LoginResponse>().await {
