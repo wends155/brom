@@ -4,56 +4,121 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --ring: 215 20.2% 65.1%;
-    --radius: 0.5rem;
+    /* Forge Dark — Primary Palette */
+    --background: 220 20% 7%;         /* #111827 slate-charcoal */
+    --foreground: 210 17% 95%;        /* #F1F5F9 cool white */
+    --surface: 217 19% 15%;           /* #1F2937 elevated surface */
+    --surface-foreground: 210 17% 95%;
+
+    /* Borders & Inputs */
+    --border: 215 14% 25%;            /* #374151 subtle slate */
+    --input: 220 20% 7%;              /* Same as bg — inset fields */
+    --ring: 38 92% 50%;               /* Amber focus ring */
+
+    /* Accent — Warm Amber/Copper */
+    --primary: 38 92% 50%;            /* #D97706 amber */
+    --primary-foreground: 220 20% 7%; /* Dark text on amber */
+
+    /* Secondary / Muted */
+    --muted: 217 19% 15%;
+    --muted-foreground: 215 14% 55%;  /* #6B7280 */
+
+    /* Semantic */
+    --destructive: 0 63% 31%;         /* Muted red-slate */
+    --destructive-foreground: 210 17% 95%;
+    --success: 142 76% 36%;
+    --success-foreground: 220 20% 7%;
+
+    /* Card / Popover */
+    --card: 217 19% 15%;
+    --card-foreground: 210 17% 95%;
+    --popover: 217 19% 15%;
+    --popover-foreground: 210 17% 95%;
+
+    /* Accent (hover states) */
+    --accent: 217 19% 20%;
+    --accent-foreground: 210 17% 95%;
+
+    /* Shape */
+    --radius: 0px;                    /* Square corners — Forge Dark */
+
+    /* Typography */
+    --font-heading: 'Space Grotesk', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-body: 'Space Grotesk', system-ui, sans-serif;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
-    --ring: 217.2 32.6% 17.5%;
+  * {
+    border-color: hsl(var(--border));
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Noise grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
+/* Page entrance animation */
+@keyframes forge-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  body {
-    @apply bg-background text-foreground;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+.forge-enter {
+  animation: forge-enter 200ms ease-out;
+}
+
+/* Focus transition */
+.forge-focus {
+  transition: border-color 100ms ease;
+}
+
+.forge-focus:focus {
+  border-color: hsl(var(--primary));
+  outline: none;
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3);
+}
+
+/* Table micro-stripes */
+.forge-stripe:nth-child(even) {
+  background-color: hsl(var(--surface) / 0.5);
+}
+
+/* Active nav indicator */
+.forge-nav-active {
+  border-left: 3px solid hsl(var(--primary));
+  background-color: transparent;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
 }
