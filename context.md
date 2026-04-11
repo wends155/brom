@@ -189,6 +189,12 @@
 > * **Status:** Session closed after roadmap restructuring. Phase 3B implementation is planned and pending approval.
 
 > 📝 **Context Update:**
+> * **Feature:** TARS Workflow Hardening (Narsil Call-Graph Integration)
+> * **Changes:** Replaced manual structural investigation with automated Narsil call-graph analysis. (1) Updated `ipr.md` to mandate topological GEO ordering and automated blast-radius calculations. (2) Integrated call-graph verification gates into `plan-making.md`, `build.md`, and `spec.md`. (3) Implemented post-implementation structural drift detection in `audit.md`. (4) Enhanced `issue.md` with callout-based diagnostic tools (`get_callers`, `get_callees`, `get_complexity`).
+> * **New Constraints:** All M-Tier and S-Tier plans MUST include a topological Global Execution Order derived from `get_callers`/`get_callees` analysis. Builders MUST STOP and escalate if `READ` phase calls reveal count drift since plan approval.
+> * **Verification:** Clean `just verify` (fmt, clippy, test, sg scan) passed 100%. All core TARS workflows now utilize structural code analysis as the primary investigation lens. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
 > * **Feature:** Phase 5B (Admin SPA Functional Wiring)
 > * **Changes:** Wired the Admin SPA to the backend REST API core. Transitions internal fetches to `/api/v1/*`. Implemented schema-driven dynamic form logic in `form_editor.rs` using the shared `schema_ctx`. Created standardized Forge Dark inputs in `admin/src/components/inputs.rs`. Enabled functional Create (`POST`) and Update (`PUT`) operations for all registered entities.
 > * **New Constraints:** Any additions to `FieldType` in `brom-core` require corresponding mapping in the `form_editor.rs` match block.
