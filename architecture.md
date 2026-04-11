@@ -151,19 +151,27 @@ brom/
 │   ├── Cargo.toml              # Leptos + TailwindCSS dependencies
 │   ├── tailwind.config.js
 │   ├── src/
-│   │   ├── main.rs             # CSR entry point
+│   │   ├── auth.rs             # Auth context and state providers
 │   │   ├── app.rs              # Root component + router
+│   │   ├── lib.rs              # Library entry point (wasm/macro usage)
+│   │   ├── main.css            # Tailwind directives + custom styles
+│   │   ├── context/            # Shared reactive state
+│   │   │   ├── mod.rs
+│   │   │   └── schema_ctx.rs   # Shared BromEntity schema state
 │   │   ├── pages/
+│   │   │   ├── mod.rs
 │   │   │   ├── login.rs        # Login page
 │   │   │   ├── dashboard.rs    # Overview dashboard
-│   │   │   ├── collection.rs   # Entity list view
-│   │   │   ├── editor.rs       # Entity create/edit form
+│   │   │   ├── collection_list.rs # Entity list view
+│   │   │   ├── form_editor.rs  # Entity create/edit form
 │   │   │   └── settings.rs     # API keys, user management
 │   │   └── components/
-│   │       ├── field.rs        # Dynamic field renderer
-│   │       ├── relation.rs     # Link<T> dropdown, ManyToMany<T> multi-select
-│   │       ├── nav.rs          # Sidebar navigation
-│   │       └── table.rs        # Data table with pagination
+│   │       ├── mod.rs
+│   │       ├── inputs.rs       # Dynamic form inputs
+│   │       ├── layout.rs       # App Shell and Sidebar
+│   │       ├── breadcrumbs.rs  # Navigation pathing
+│   │       ├── table.rs        # Data table with pagination
+│   │       └── stat_card.rs    # Dashboard summary tiles
 │   └── dist/                   # Build output (embedded by brom-server)
 │
 └── migrations/                 # Generated migration .sql files
@@ -227,9 +235,8 @@ brom/
   `rust-embed` static asset serving, `/admin/api/schema` endpoint,
   Swagger UI mount, HTTP error mapping.
 - **Does NOT own**: Business logic, persistence, authentication decisions.
-- **Trait Interfaces**:
-  - `AssetProvider` — abstraction for embedded static file serving.
-- **Mock Availability**: `MockAssetProvider` (returns test HTML/WASM stubs).
+- **Trait Interfaces**: None (uses `rust-embed` directly for static files).
+- **Mock Availability**: None (static assets are validated during the build pipeline).
 
 ### brom-cli
 
@@ -259,7 +266,7 @@ brom/
 | `brom-auth`  | `brom-core` (traits), argon2, rand      | `brom-db` (concrete), `brom-server` |
 | `brom-server`| `brom-core`, `brom-db`, `brom-auth`, axum, utoipa | `brom-macros`, `brom-cli` |
 | `brom-cli`   | `brom-core`, `brom-db`, clap            | `brom-auth`, `brom-server`         |
-| `admin`      | leptos, reqwest/fetch                   | Any `brom-*` Rust crate            |
+| `admin`      | leptos, reqwest/fetch, `brom-core` (shared DTOs) | `brom-db`, `brom-auth`, `brom-server` |
 
 > **Rule**: `brom-db` implements persistence traits defined in `brom-auth`
 > (`SessionStore`, `ApiKeyStore`) and `brom-core` (`Repository<T>`). `brom-auth`
