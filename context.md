@@ -403,3 +403,9 @@
 > * **New Constraints:** Any new findings from `sg scan` must be resolved by refactoring, unless definitively proven safe through logical bounds, in which case a strictly scoped `// narsil-ignore: <RULEID>` boundary is permitted.
 > * **Pruned:** Narsil scanner noise from safe/tested contexts.
 > * **Verification:** Clean audit. Zero-exit gate (`just verify`) passed workspace-wide. `sg scan` outputs zero high-severity findings.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 6 Behavioral Specification Restitution
+> * **Changes:** Formalized API tables and BDD scenarios across `brom-core`, `brom-db`, `brom-auth`, `brom-server`, and `brom-cli` modules in `spec.md`. Aligned behavioral contracts with Phase 3/4 implementations, addressing data model relationships, SQLite DB introspection, API Key generation workflows, Axum REST Extractor behaviors, and differential CLI operations.
+> * **New Constraints:** Any modifications to public API signatures or behaviors in these crates MUST be systematically updated in `spec.md`.
+> * **Verification:** Clean audit. Zero-exit gate (`cargo check`) passed workspace-wide. Fidelity to Plan: 100%.

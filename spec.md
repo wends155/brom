@@ -57,11 +57,15 @@ THEN a compile-time error is emitted (all rows would get the identical unique va
 
 ### Public API
 
-| Data Type / Trait | Responsibilities | 
-|-------------------|------------------|
-| `EntitySchema` | Trait implemented by the macro providing metadata |
-| `Link<T>` | active-record style lazy wrapper for 1:N relations |
-| `ManyToMany<T>` | active-record style lazy wrapper for M:N relations |
+| Structure/Trait/Function | Signature | Returns | Errors |
+|-------------------|------------------|---------|--------|
+| `EntitySchema` | `trait EntitySchema` | - | - |
+| `Repository<T>` | `trait Repository<T>` | Result | `Error::SchemaError` |
+| `SchemaRegistry` | `struct SchemaRegistry` | - | - |
+| `validate_sql_identifier` | `fn validate_sql_identifier(s: &str) -> Result<&str, Error>` | `&str` | `Error::SchemaError` |
+| `Pagination` | `struct Pagination` | - | - |
+| `Link<T>` | lazy wrapper for 1:N relations | - | - |
+| `ManyToMany<T>` | lazy wrapper for M:N relations | - | - |
 
 ### Behavioral Scenarios
 
@@ -88,6 +92,16 @@ WHEN `post.tags.load(&repo).await` is called
 THEN a `JOIN` is performed against the automatically generated `blog_post_tags` junction table
 AND a `Vec<Tag>` is returned without N+1 query execution
 
+[HAPPY] Valid SQL identifier
+GIVEN a string "user_profiles"
+WHEN `validate_sql_identifier` is called
+THEN the identifier is returned without error
+
+[ERROR] Invalid or reserved SQL identifier
+GIVEN a string containing a reserved word like "DROP" or invalid characters
+WHEN `validate_sql_identifier` is called
+THEN `Error::SchemaError` is returned
+
 ---
 
 ## 3. brom-db
@@ -111,6 +125,15 @@ stateDiagram-v2
 | Ready | Pending | `diff()` | `.sql` files are generated in `migrations/` directory |
 | Pending | Ready | `migrate()` | Applies new `.sql` files, updates `_brom_migration` |
 
+### Public API
+
+| Structure/Trait/Function | Signature | Returns | Errors |
+|-------------------|------------------|---------|--------|
+| `SqliteRepository` | `struct SqliteRepository` | - | - |
+| `DbPool` (Session) | `impl SessionStore for DbPool` | - | - |
+| `DbPool` (Api Key) | `impl ApiKeyStore for DbPool` | - | - |
+| `introspect_schema` | `fn introspect_schema(conn: &Connection) -> Result<Vec<IntrospectedTable>, DbError>` | `Vec<IntrospectedTable>` | `DbError` |
+
 ### Behavioral Scenarios
 
 [HAPPY] Database Introspection
@@ -119,11 +142,23 @@ WHEN `introspect_schema` is called
 THEN it returns `IntrospectedTable` representations for all user tables
 AND it systematically excludes `_brom_*` and `sqlite_*` internal tables from the result
 
+[ERROR] Database Introspection Failure
+GIVEN a locked or invalid SQLite database connection
+WHEN `introspect_schema` is called
+THEN `DbError::ExecutionError` or similar db error is returned
+AND no partial representations are generated
+
 ---
 
 ## 4. brom-cli
 
 > Development toolkit executing migrations, introspection, and schema generation.
+### Public API
+
+| Structure/Trait/Function | Signature | Returns | Errors |
+|-------------------|------------------|---------|--------|
+| `DiffEngine` | `pub struct DiffEngine` | - | - |
+| `generate_migration_sql` | `pub fn generate_migration_sql(ops: &[MigrationOp]) -> (String, String)` | `(String, String)` | - |
 
 ### Behavioral Scenarios
 
@@ -148,6 +183,17 @@ AND injects a SQL `-- TODO: Manual rollback needed` comment for developer action
 
 > Security primitives for Admin UI and API execution.
 
+### Public API
+
+| Structure/Trait/Function | Signature | Returns | Errors |
+|-------------------|------------------|---------|--------|
+| `Session` | `pub struct Session { pub token: String, pub user_id: i64, pub expires_at: String }` | - | - |
+| `SessionStore` | `trait SessionStore { fn create(...), fn validate(...), fn destroy(...), fn cleanup_expired(...) }` | Various | `AuthError` |
+| `ApiKeyRecord` | `pub struct ApiKeyRecord { pub id: i64, pub name: String, ... }` | - | - |
+| `ApiKeyStore` | `trait ApiKeyStore { fn create(...), fn validate(...), fn revoke(...), fn list_for_user(...) }` | Various | `AuthError` |
+| `hash_password` | `fn hash_password(password: &str) -> Result<String, AuthError>` | `String` | `AuthError::PasswordHashingFailed` |
+| `verify_password` | `fn verify_password(password: &str, hash: &str) -> Result<bool, AuthError>` | `bool` | `AuthError::PasswordHashingFailed` |
+
 ### Behavioral Scenarios
 
 [HAPPY] Successful Admin Session Login
@@ -155,6 +201,20 @@ GIVEN valid admin credentials
 WHEN a POST to `/admin/api/login` is made
 THEN an Argon2 hash comparison succeeds
 AND an HttpOnly, secure session cookie is returned holding a JWT or Session ID
+
+[HAPPY] API Key Provisioning
+GIVEN an authenticated administrator
+WHEN `ApiKeyStore::create` is called with a name "GitHub Actions" and "read" permissions
+THEN a 32-byte secure random raw key is generated
+AND an `ApiKeyRecord` is persisted containing the SHA-256 hash of the key
+AND the unhashed raw key is returned exactly once for user display
+
+[HAPPY] API Key Usage
+GIVEN a valid raw API key
+WHEN `ApiKeyStore::validate` is called
+THEN the provided raw key is hashed using SHA-256
+AND the hashed key is compared against the database
+AND if a match is found, the `ApiKeyRecord` is returned and `last_used_at` updated
 
 [ERROR] Missing Authentication Header on Protected Route
 GIVEN an endpoint generated by the macro with `#[brom(auth = "api_key")]`
@@ -174,13 +234,14 @@ THEN a `403 Forbidden` response is returned
 
 ### Public API
 
-| Component | Responsibility |
-|-----------|----------------|
-| `router` | Assembles the Axum endpoints, combining schema API routes and admin routes. |
-| `middleware` | Implements security headers (`X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options`) and CORS. |
-| `extractor` | Axum extractors (`RequireAdmin`, `RequireApiKey`) to enforce security boundaries at edge. |
-| `response` | Enforces the Data Envelope JSON standard (`DataEnvelope`, `PaginatedResponse`). |
-| `openapi` | Synthesizes and serves the OpenAPI/Swagger specification mapping all generated endpoints. |
+| Structure/Trait/Function | Signature | Returns | Errors |
+|-------------------|------------------|---------|--------|
+| `RequireAdmin` | `pub struct RequireAdmin(pub Session)` | - | `ServerError` |
+| `RequireApiKey` | `pub struct RequireApiKey(pub ApiKeyRecord)` | - | `ServerError` |
+| `DataEnvelope<T>`| `pub struct DataEnvelope<T: Serialize> { pub data: T }` | - | - |
+| `PaginatedResponse<T>` | `pub struct PaginatedResponse<T: Serialize> { pub data: Vec<T>, pub meta: PaginationMeta }` | - | - |
+| `ServerError` | `enum ServerError` | - | - |
+| `router` | `pub fn router(...) -> Router` | `Router` | - |
 
 ### Contract Constraints
 - **Data Envelope Format**: All successful responses must use `{ "data": ... }` to allow top-level metadata injection without breaking client mapping.
