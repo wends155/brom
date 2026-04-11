@@ -341,3 +341,9 @@
 > * **Changes:** Implemented a mandatory JIT IPR Alignment Checkpoint in `.agent/workflows/plan-making.md`. This requires the Architect to use `sequentialthinking` to map the specific Tier (S/M/L) schema before drafting an implementation plan, ensuring strict structural compliance and suppressing generic template drift.
 > * **New Constraints:** Implementation plans MUST be preceded by a thought block retrieval of the relevant `ipr.md` schema. The `write_to_file` command for `implementation_plan.md` is now conditionally gated behind this internal validation step.
 > * **Pruned:** The "Template Override" phenomenon where generic system prompts interfered with `ipr.md` formatting is remediated.
+
+> 📝 **Context Update:**
+> * **Feature:** Narsil Performance Remediation (Indexing Optimization)
+> * **Changes:** Updated root `.gitignore` to explicitly exclude `node_modules/`, resolving a performance bottleneck where Narsil would hang while indexing thousands of administrative dependency files. Remediated secondary clippy warnings (`collapsible_str_replace` and `unnecessary_first_then_check`) in the `admin` crate discovered during verification.
+> * **New Constraints:** The root `.gitignore` MUST remain configured to ignore build artifacts and dependencies to maintain semantic indexing performance.
+> * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate fully restored. TOOLING STATUS: STABLE.
