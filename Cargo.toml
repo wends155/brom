@@ -77,3 +77,11 @@ brom-db = { path = "crates/brom-db" }
 brom-auth = { path = "crates/brom-auth" }
 brom-server = { path = "crates/brom-server" }
 brom-cli = { path = "crates/brom-cli" }
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = 'z'
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

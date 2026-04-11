@@ -23,7 +23,7 @@ Phase 6 is the final step before a `v1.0.0` release. It focuses on taking the fu
 
 ### 2.4 Toolchain & Quality Gates
 *   **AST-Grep Tuning:** Refine our static analysis rules in `.ast-grep` to reduce noise in test modules.
-*   **Final Documentation Sweep:** Ensure `rustdoc` comments are complete for all public APIs and that the `README.md` accurately reflects the final state of Phase 5.
+*   **Final Documentation Sweep:** Ensure `rustdoc` comments are complete for all public APIs and that the `README.md` and `architecture.md` accurately reflect the final state of Phase 5.
 *   **Testing Polish:** Validate snapshot testing integrity and ensure `mockall` patterns and `:memory:` SQLite test configurations are strictly followed across the workspace.
 
 ## 3. Implementation Checklist
@@ -34,8 +34,8 @@ Phase 6 is the final step before a `v1.0.0` release. It focuses on taking the fu
 
 ### Performance
 - [ ] Refactor `SqliteRepository` to bypass `serde_json::Value` mappings if feasible.
-- [ ] Implement `wasm-opt` and release profile stripping for the `admin` crate.
-  - [ ] Apply `profile.release` optimizations (`lto`, `opt-level`, `panic`, `strip`, `codegen-units`) in `admin/Cargo.toml`.
+- [x] Implement `wasm-opt` and release profile stripping for the `admin` crate.
+  - [x] Apply `profile.release` optimizations (`lto`, `opt-level`, `panic`, `strip`, `codegen-units`) in `admin/Cargo.toml`.
   - [ ] Measure binary size reduction and update dev docs.
 - [ ] Change `EntitySchema::fields()` to return `&'static [FieldInfo]`.
 - [ ] Analyze and resolve `SchemaRegistry` cloning overhead.
@@ -48,3 +48,5 @@ Phase 6 is the final step before a `v1.0.0` release. It focuses on taking the fu
 - [ ] Tune AST-Grep rules to fully ignore test abstractions where appropriate.
 - [ ] Apply `cargo doc --workspace --no-deps` pass and fix all missing/stale documentation.
 - [x] Execute `/update-doc` to finalize `README.md` and `Cargo.toml`.
+- [x] Synchronize `architecture.md` with environment config and project layout.
+- [x] Formalize `spec.md` behavioral contracts across all crates.

@@ -69,7 +69,7 @@ gantt
 | 3D | OpenAPI & Swagger | Utoipa integration | S | ✅ Done | `brom-server`, `brom-macros` |
 | 4 | Schema Diffing | `brom diff` engine | M | ✅ Done | `brom-cli`, `brom-db` |
 | 5 | Admin SPA | Leptos embedded UI | L | ✅ Done | `admin`, `brom-server` |
-| 6 | Final Audit | Polish, Optimization, Docs | M | 🔜 Next | all |
+| 6 | Final Audit | Polish, Optimization, Docs | M | ✅ Active | all |
 
 ---
 
@@ -86,7 +86,7 @@ graph LR
     P3D["Phase 3D<br/>OpenAPI & Swagger<br/>✅ Done"]
     P4["Phase 4<br/>Schema Diffing<br/>✅ Done"]
     P5["Phase 5<br/>Admin SPA<br/>✅ Done"]
-    P6["Phase 6<br/>Final Audit<br/>🔜 Next"]
+    P6["Phase 6<br/>Final Audit<br/>✅ Active"]
 
     P1 --> P2A
     P2A --> P2B
@@ -107,7 +107,7 @@ graph LR
     style P3D fill:#2d6a4f,color:#fff
     style P4 fill:#2d6a4f,color:#fff
     style P5 fill:#2d6a4f,color:#fff
-    style P6 fill:#e9c46a,color:#000
+    style P6 fill:#2d6a4f,color:#fff
 ```
 
 > **Note:** Phases 4 and 5 are independent of each other — both depend only on
