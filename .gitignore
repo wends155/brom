@@ -5,3 +5,4 @@
 *.db
 admin/dist/
 /logs
+node_modules/
