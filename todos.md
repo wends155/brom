@@ -7,7 +7,7 @@ This document captures forward-looking architectural choices and technical tasks
 *   **[ ] SQLite `:memory:` for Data Layers:** Implement tests for `brom-db` concrete implementations (`SqliteRepository`, migrations) exclusively against real, in-memory SQLite instances to verify SQL dialects and bindings perfectly.
 
 ## 2. Pervasive Observability (Tracing)
-*   **[ ] Implement File Sink (Phase 2+):** Integrate `tracing-appender` to support `just logs-*` recipes once actual runtime traffic generation begins.
+*   **[ ] Implement File Sink (Phase 6):** Integrate `tracing-appender` to support `just logs-*` recipes now that Admin SPA traffic generation is possible.
 *   **[ ] Customize Route Tracing (Phase 4):** Refine `tower_http::trace::TraceLayer` to extract unified CMS contexts and trim generic header noise.
 *   **[x] Network Edge Instrumentation:** Implement `tower_http::trace::TraceLayer` on the Axum router to guarantee span creation, method, URI, and latency logging for *every* request.
 *   **[ ] Deep Macro Instrumentation:** Use `#[tracing::instrument(skip_all)]` aggressively on core functions throughout the stack (e.g., `Repository::create`, `evaluate_policy`, `run_pending`).

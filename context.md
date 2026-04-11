@@ -189,6 +189,12 @@
 > * **Status:** Session closed after roadmap restructuring. Phase 3B implementation is planned and pending approval.
 
 > 📝 **Context Update:**
+> * **Feature:** Phase 5B (Admin SPA Functional Wiring)
+> * **Changes:** Wired the Admin SPA to the backend REST API core. Transitions internal fetches to `/api/v1/*`. Implemented schema-driven dynamic form logic in `form_editor.rs` using the shared `schema_ctx`. Created standardized Forge Dark inputs in `admin/src/components/inputs.rs`. Enabled functional Create (`POST`) and Update (`PUT`) operations for all registered entities.
+> * **New Constraints:** Any additions to `FieldType` in `brom-core` require corresponding mapping in the `form_editor.rs` match block.
+> * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
 > * **Feature:** Operations Toolcheck Hardening
 > * **Changes:** Migrated git credential operations out of `.agent/workflows/toolcheck.md` and into `justfile` recipe `disable-git-prompts` to prevent IDE constraint violations.
 > * **Verification:** Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide.
@@ -347,3 +353,9 @@
 > * **Changes:** Updated root `.gitignore` to explicitly exclude `node_modules/`, resolving a performance bottleneck where Narsil would hang while indexing thousands of administrative dependency files. Remediated secondary clippy warnings (`collapsible_str_replace` and `unnecessary_first_then_check`) in the `admin` crate discovered during verification.
 > * **New Constraints:** The root `.gitignore` MUST remain configured to ignore build artifacts and dependencies to maintain semantic indexing performance.
 > * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate fully restored. TOOLING STATUS: STABLE.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 5B (WASM Navigation & Real API Integration)
+> * **Changes:** Completed the high-fidelity implementation of the Admin SPA Phase 5B. (1) Implemented dynamic form widget resolution in `form_editor.rs` (textarea, boolean, and server-side select for links). (2) Wired "Create New" collection navigation via the Leptos `A` component. (3) Replaced mock data in `settings.rs` with real API key management endpoints (List, Create, Revoke) using `LocalResource` and `auth_fetch`. (4) Hardened move/borrow checker safety within async Leptos view closures.
+> * **New Constraints:** Any new `FieldType` variants or `ui_widget` hints MUST be mapped within the `form_editor.rs` resolution logic. Asynchronous data fetching in the SPA must use the `auth_fetch` / `LocalResource` pattern to ensure session stability.
+> * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%. Phase 5 Officially Closed.

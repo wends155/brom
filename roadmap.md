@@ -5,7 +5,7 @@
 | **Project**   | brom                     |
 | **Version**   | 1.0.0                    |
 | **Created**   | 2026-04-02               |
-| **Updated**   | 2026-04-02               |
+| **Updated**   | 2026-04-11               |
 
 > This document is the **phasing source of truth** for the brom project. It
 > defines what ships in each phase, the dependency chain between phases, and
@@ -54,7 +54,8 @@ gantt
     Phase 4 - Schema Diffing       :done, p4, after p3d, 3d
 
     section UI
-    Phase 5 - Admin SPA            :active, p5, after p3d, 7d
+    Phase 5 - Admin SPA            :done, p5, after p3d, 7d
+    Phase 6 - Final Audit          :active, p6, after p5, 2d
 ```
 
 | Phase | Name | Focus | Tier | Status | Crates Touched |
@@ -67,7 +68,8 @@ gantt
 | 3C | REST Route Gen | BromEntity handler codegen | M | ✅ Done | `brom-macros` |
 | 3D | OpenAPI & Swagger | Utoipa integration | S | ✅ Done | `brom-server`, `brom-macros` |
 | 4 | Schema Diffing | `brom diff` engine | M | ✅ Done | `brom-cli`, `brom-db` |
-| 5 | Admin SPA | Leptos embedded UI | L | 🔜 Next | `admin`, `brom-server` |
+| 5 | Admin SPA | Leptos embedded UI | L | ✅ Done | `admin`, `brom-server` |
+| 6 | Final Audit | Polish, Optimization, Docs | M | 🔜 Next | all |
 
 ---
 
@@ -83,7 +85,8 @@ graph LR
     P3C["Phase 3C<br/>REST Route Gen<br/>✅ Done"]
     P3D["Phase 3D<br/>OpenAPI & Swagger<br/>✅ Done"]
     P4["Phase 4<br/>Schema Diffing<br/>✅ Done"]
-    P5["Phase 5<br/>Admin SPA<br/>🔜 Next"]
+    P5["Phase 5<br/>Admin SPA<br/>✅ Done"]
+    P6["Phase 6<br/>Final Audit<br/>🔜 Next"]
 
     P1 --> P2A
     P2A --> P2B
@@ -93,18 +96,18 @@ graph LR
     P3C --> P3D
     P3D --> P4
     P3D --> P5
+    P5 --> P6
 
     style P1 fill:#2d6a4f,color:#fff
     style P2A fill:#2d6a4f,color:#fff
     style P2B fill:#2d6a4f,color:#fff
-    style P4 fill:#2d6a4f,color:#fff
-    style P5 fill:#e9c46a,color:#000
     style P3A fill:#2d6a4f,color:#fff
     style P3B fill:#2d6a4f,color:#fff
     style P3C fill:#2d6a4f,color:#fff
     style P3D fill:#2d6a4f,color:#fff
-    style P4 fill:#264653,color:#fff
-    style P5 fill:#264653,color:#fff
+    style P4 fill:#2d6a4f,color:#fff
+    style P5 fill:#2d6a4f,color:#fff
+    style P6 fill:#e9c46a,color:#000
 ```
 
 > **Note:** Phases 4 and 5 are independent of each other — both depend only on
@@ -527,10 +530,10 @@ The primary architectural challenge is the **Topological Sort**: generated `CREA
 
 ---
 
-## Phase 5: Admin SPA
+## Phase 5: Admin SPA ✅
 
-> **Status:** Blocked by 3D · **Depends on:** Phase 3D
-> **Crates:** `admin` (primary), `brom-server` (embedding)
+> **Status:** Complete · **Commit:** `pending`
+> **Depends on:** Phase 3D · **Crates:** `admin`, `brom-server`
 
 ### Objective
 
@@ -545,9 +548,9 @@ binary via `rust-embed`, and serve from the Axum router.
 | Leptos CSR application structure | Server-side rendering (SSR) |
 | Login page (session auth) | Multi-tenant admin |
 | Dashboard overview | Real-time collaboration |
-| Collection list view (paginated table) | Image/file upload |
+| Collection list view (paginated table with navigation) | Image/file upload |
 | Entity create/edit form (dynamic field rendering) | Drag-and-drop content ordering |
-| Settings page (API key management) | Custom admin plugins |
+| Settings page (Real API key management) | Custom admin plugins |
 | Sidebar navigation | — |
 | `rust-embed` integration in `brom-server` | — |
 | TailwindCSS styling | — |
@@ -565,27 +568,37 @@ on `FieldInfo`:
 | `String` | `"textarea"` | `<textarea>` |
 | `Integer` | `None` | `<input type="number">` |
 | `Float` | `None` | `<input type="number" step="0.01">` |
-| `Boolean` | `None` | Toggle switch |
+| `Boolean` | `None` | Toggle switch / Checkbox |
 | `DateTime` | `None` | Date-time picker |
-| `Link` | `None` | Dropdown (fetches related entity list) |
+| `Link` | `None` | Dropdown (with server-side option fetching) |
 | `ManyToMany` | `None` | Multi-select (fetches related entity list) |
-
-### New Dependencies (Expected)
-
-| Crate | Purpose | Added To |
-|-------|---------|----------|
-| `leptos` | Reactive UI framework (CSR) | `admin` |
-| `leptos_router` | Client-side routing | `admin` |
-| `gloo-net` | HTTP fetch API | `admin` |
-| `trunk` | WASM build tool | Dev tooling |
 
 ### Exit Criteria
 
-- Admin login flow works end-to-end.
-- Dynamic form renders all `FieldType` variants correctly.
-- CRUD operations from admin UI reflect in SQLite database.
-- Binary embeds WASM + static assets, serves at `/admin`.
-- Full verification pipeline exit 0.
+- [x] Admin login flow works end-to-end.
+- [x] Dynamic form renders all `FieldType` variants correctly.
+- [x] CRUD operations from admin UI reflect in SQLite database.
+- [x] Binary embeds WASM + static assets, serves at `/admin`.
+- [x] Verification pipeline (`just verify`) passes with zero warnings.
+
+---
+
+## Phase 6: Final Audit
+
+> **Status:** Next
+> **Crates:** All
+
+### Objective
+
+Perform a comprehensive project audit, clean up tech debt, optimize binary size, and finalize documentation for v1.0.0 release.
+
+### Scope
+
+- [ ] Technical debt audit (registry cloning, field allocations)
+- [ ] Binary size optimization (WASM optimization, stripping symbols)
+- [ ] Documentation refinement (Rustdoc, Spec, Walkthroughs)
+- [ ] Performance profiling (DB query latency, JSON overhead)
+- [ ] Final security review (RBAC edge cases, dependency safety)
 
 ---
 
@@ -684,3 +697,4 @@ sg scan
 | 2026-04-02 | Initial roadmap from brainstorm session | Architect |
 | 2026-04-07 | Split Phase 3B into 3B, 3C, 3D (bounded phases) | Architect |
 | 2026-04-09 | Closeout Phase 4, establish Phase 5 readiness | Architect |
+| 2026-04-11 | Closeout Phase 5, establish Phase 6 readiness | Architect |

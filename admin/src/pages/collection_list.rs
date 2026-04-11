@@ -2,6 +2,7 @@ use crate::auth::auth_fetch;
 use crate::components::table::DataTable;
 use crate::context::schema_ctx::use_schema;
 use leptos::prelude::*;
+use leptos_router::components::A;
 use leptos_router::hooks::use_params_map;
 use serde_json::Value;
 
@@ -14,7 +15,7 @@ pub fn CollectionList() -> impl IntoView {
     let data = LocalResource::new(move || async move {
         let entity = params.get().get("entity");
         if let Some(entity_name) = entity {
-            let url = format!("/admin/api/entities/{}", entity_name);
+            let url = format!("/api/v1/{}", entity_name);
             let resp = auth_fetch(&url, "GET", None::<()>).await?;
             if resp.ok() {
                 resp.json::<Vec<Value>>().await.map_err(|e| e.to_string())
@@ -36,9 +37,12 @@ pub fn CollectionList() -> impl IntoView {
                 <h2 class="text-2xl font-heading font-bold text-foreground">
                     {move || params.get().get("entity").unwrap_or_default()}
                 </h2>
-                <button class="bg-primary text-primary-foreground px-4 py-2 font-heading font-semibold hover:bg-primary/90 transition-colors duration-100">
+                <A
+                    href=move || format!("/admin/{}/new", params.get().get("entity").unwrap_or_default())
+                    attr:class="bg-primary text-primary-foreground px-4 py-2 font-heading font-semibold hover:bg-primary/90 transition-colors duration-100"
+                >
                     "Create New"
-                </button>
+                </A>
             </div>
 
             <Suspense fallback=move || view! { <div class="p-8 text-center text-muted-foreground font-mono">"Loading data..."</div> }>
