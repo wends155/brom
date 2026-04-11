@@ -128,6 +128,15 @@ baked into the plan.
 
 ### 4. Draft the Plan
 
+> [!IMPORTANT]
+> **IPR Alignment Checkpoint (Cognitive Hardening):**
+> Before drafting, the Architect **MUST** use `mcp_sequential-thinking_sequentialthinking` to perform a "Just-In-Time Structure Retrieval".
+> 1. Read `.agent/rules/ipr.md` to identify the required Tier (S, M, or L) for the current task.
+> 2. List the exact mandatory markdown headers and sections for that tier inside your thought block.
+> 3. Verify that your proposed plan structure matches this mapping identically.
+>
+> **Protocol Gate:** Do not invoke `write_to_file` for `implementation_plan.md` until this internal structural mapping confirms 100% semantic alignment against the `ipr.md` requirements. This suppresses generic system templates and ensures protocol compliance.
+
 Write the implementation plan to `<artifacts>/implementation_plan.md` using the `write_to_file` tool (`IsArtifact: true`). Follow the plan format, revision protocol, and handoff rules defined in `.agent/rules/ipr.md`. Include a clickable `[implementation_plan.md](file:///path)` artifact link in your chat response.
 
 > [!NOTE]

@@ -335,3 +335,9 @@
 > * **Changes:** Successfully implemented the "Forge Dark" design system across the `brom` headless CMS Admin SPA. Reskinned core pages (Login, Collection List, Form Editor) and created new ones (Dashboard, Settings for API Keys). Extracted unified dark-themed components (`Breadcrumbs`, `DataTable`, `StatCard`) to enforce design consistency. Solved complex `location` cloning / ownership issues within Leptos functional layouts to ensure stable navigation state. Replaced standard Tailwind with strict `#111827` base and amber accents aligned with the Forge Dark Stitch spec.
 > * **New Constraints:** Shared components MUST be used for standard interface elements (tables, data points) across the Admin SPA.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, sg scan) passed workspace-wide. The `wildcard-import` violations in `admin` were resolved by structurally excluding Leptos framework preludes in `.ast-grep/rules/wildcard-import.yml`. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
+> * **Feature:** IPR Checkpoint Remediation (Cognitive Hardening)
+> * **Changes:** Implemented a mandatory JIT IPR Alignment Checkpoint in `.agent/workflows/plan-making.md`. This requires the Architect to use `sequentialthinking` to map the specific Tier (S/M/L) schema before drafting an implementation plan, ensuring strict structural compliance and suppressing generic template drift.
+> * **New Constraints:** Implementation plans MUST be preceded by a thought block retrieval of the relevant `ipr.md` schema. The `write_to_file` command for `implementation_plan.md` is now conditionally gated behind this internal validation step.
+> * **Pruned:** The "Template Override" phenomenon where generic system prompts interfered with `ipr.md` formatting is remediated.
