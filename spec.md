@@ -4,9 +4,9 @@
 |-------|-------|
 | **Project** | brom |
 | **Version** | 1.1.0 |
-| **Last Updated** | 2026-04-09 |
+| **Last Updated** | 2026-04-11 |
 
-> Last verified against: cc2263c
+> Last verified against: ab9653b
 
 ## 1. brom-macros
 
@@ -213,6 +213,18 @@ GIVEN valid input in an auto-generated entity form
 WHEN the user submits the form
 THEN a POST request is dispatched to the corresponding REST endpoint
 AND upon 201 Created, the SPA navigates to the entity collection view
+
+[HAPPY] API Key Management
+GIVEN an authenticated admin session navigating to Settings
+WHEN the user fills the "Generate New Key" form and submits
+THEN `auth_fetch` invokes `POST /admin/api/keys`
+AND the SPA receives the literal key secret and displays it dynamically without reloading
+
+[HAPPY] Dynamic Link Dropdown Resolution
+GIVEN an entity schema containing a `FieldType::Link`
+WHEN the schema-driven form encounters this field
+THEN a dynamic Fetch request triggers to the linked entity's schema endpoint
+AND populates a `<ForgeSelect>` with the available related entities
 
 ### Required Test Coverage
 
