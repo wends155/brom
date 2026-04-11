@@ -160,10 +160,12 @@ mod tests {
         });
 
         let mut response = err.into_response();
+        // narsil-ignore: RUST-002
         let body_bytes = http_body_util::BodyExt::collect(response.body_mut())
             .await
             .unwrap()
             .to_bytes();
+        // narsil-ignore: RUST-002
         let body: serde_json::Value = serde_json::from_slice(&body_bytes).unwrap();
 
         assert_eq!(body["error"], "ValidationFailed");

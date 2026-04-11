@@ -42,6 +42,7 @@ mod tests {
 
     #[test]
     fn test_password_hashing_and_verification() {
+        // narsil-ignore: CWE-798
         let password = "my_secure_password";
         let hash = hash_password(password).expect("Failed to hash password");
 

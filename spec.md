@@ -6,7 +6,7 @@
 | **Version** | 1.1.0 |
 | **Last Updated** | 2026-04-11 |
 
-> Last verified against: ab9653b
+> Last verified against: baa0a4b
 
 ## 1. brom-macros
 

@@ -12,6 +12,8 @@ Phase 6 is the final step before a `v1.0.0` release. It focuses on taking the fu
 ### 2.2 Performance & Debt Reduction
 *   **The JSON Bottleneck:** `SqliteRepository` currently routes data through a `serde_json::Value` intermediary to map between SQLite rows and generic structs. Removing this heap-allocating step would drastically speed up data access.
 *   **WASM Optimization:** The Admin SPA needs to be shrunk via `wasm-opt` and symbol stripping to ensure the embedded payload via `rust-embed` stays tiny in the final binary.
+    *   **Strategy:** Apply aggressive `[profile.release]` settings to `admin/Cargo.toml` (`lto = true`, `opt-level = 'z'`, `codegen-units = 1`, `panic = "abort"`, `strip = true`).
+    *   **Tooling:** Rely on Trunk's automatic `wasm-opt -Oz` post-processing.
 *   **Memory Allocations:** `EntitySchema::fields()` currently returns a new `Vec` of fields on every invocation. Transitioning this to return a static slice `&[FieldInfo]` will stop unnecessary memory thrashing.
 *   **SchemaRegistry Scaling:** Re-evaluate `SchemaRegistry::all_schemas()` which currently clones the entire registry, looking towards a more performant reference-based implementation if registry size grows.
 
@@ -28,11 +30,13 @@ Phase 6 is the final step before a `v1.0.0` release. It focuses on taking the fu
 
 ### Security
 - [x] Audit and remediate 5 High-Severity Path Traversal findings.
-- [ ] Conduct final review of RBAC and `evaluate_policy` edges.
+- [x] Conduct final review of RBAC and `evaluate_policy` edges.
 
 ### Performance
 - [ ] Refactor `SqliteRepository` to bypass `serde_json::Value` mappings if feasible.
 - [ ] Implement `wasm-opt` and release profile stripping for the `admin` crate.
+  - [ ] Apply `profile.release` optimizations (`lto`, `opt-level`, `panic`, `strip`, `codegen-units`) in `admin/Cargo.toml`.
+  - [ ] Measure binary size reduction and update dev docs.
 - [ ] Change `EntitySchema::fields()` to return `&'static [FieldInfo]`.
 - [ ] Analyze and resolve `SchemaRegistry` cloning overhead.
 

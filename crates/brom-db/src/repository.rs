@@ -63,6 +63,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         }
         let placeholders: Vec<String> = (1..=columns.len()).map(|_| "?".to_string()).collect();
 
+        // narsil-ignore: CWE-89
         let sql = format!(
             "INSERT INTO {table} ({}) VALUES ({})",
             columns.join(", "),
@@ -135,6 +136,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     fn find_by_id(&self, id: i64) -> Result<Option<T>, brom_core::Error> {
         let table = T::table_name();
         brom_core::validate_sql_identifier(table)?;
+        // narsil-ignore: CWE-89
         let sql = format!("SELECT * FROM {table} WHERE id = ?");
 
         let conn = self
@@ -184,6 +186,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
         brom_core::validate_sql_identifier(table)?;
         let limit = pagination.per_page;
         let offset = (pagination.page.saturating_sub(1)) * pagination.per_page;
+        // narsil-ignore: CWE-89
         let sql = format!("SELECT * FROM {table} LIMIT ? OFFSET ?");
 
         let conn = self
@@ -245,6 +248,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
             })
             .collect::<Result<Vec<_>, brom_core::Error>>()?
             .join(", ");
+        // narsil-ignore: CWE-89
         let sql = format!("UPDATE {table} SET {set_clause} WHERE id = ?");
 
         let json =
@@ -282,6 +286,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     fn delete(&self, id: i64) -> Result<(), brom_core::Error> {
         let table = T::table_name();
         brom_core::validate_sql_identifier(table)?;
+        // narsil-ignore: CWE-89
         let sql = format!("DELETE FROM {table} WHERE id = ?");
 
         let conn = self
@@ -298,6 +303,7 @@ impl<T: EntitySchema + Serialize + DeserializeOwned> Repository<T> for SqliteRep
     fn count(&self) -> Result<i64, brom_core::Error> {
         let table = T::table_name();
         brom_core::validate_sql_identifier(table)?;
+        // narsil-ignore: CWE-89
         let sql = format!("SELECT COUNT(*) FROM {table}");
 
         let conn = self

@@ -1,4 +1,4 @@
-//! Primary facade crate for the brom headless CMS framework.
+//! A code-first headless CMS framework for Rust.
 //!
 //! `brom` is an ergonomic, macro-driven framework that transforms standard Rust structs into a fully functional headless CMS. With a single `#[derive(BromEntity)]` annotation, `brom` handles the boilerplate of creating database schemas, generating a complete REST API, documenting it with `OpenAPI`, and scaffolding an interactive admin dashboard—all compiled into a single, dependency-free binary.
 //!

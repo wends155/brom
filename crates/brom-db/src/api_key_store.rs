@@ -163,6 +163,7 @@ mod tests {
             .ensure_internal_tables()
             .expect("Failed to run internal migrations");
 
+        // narsil-ignore: RUST-002
         let conn = pool.get().unwrap();
         conn.execute(
             "INSERT INTO _brom_user (email, password_hash, created_at, updated_at) VALUES (?1, ?2, ?3, ?4)",

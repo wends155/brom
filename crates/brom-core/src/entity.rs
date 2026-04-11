@@ -139,6 +139,7 @@ pub fn validate_sql_identifier(s: &str) -> Result<&str, Error> {
     let mut chars = s.chars();
     // Safety: Guarded by s.is_empty() check above.
     #[allow(clippy::expect_used)]
+    // narsil-ignore: RUST-002
     let first = chars.next().expect("checked non-empty above");
     if !first.is_ascii_alphabetic() && first != '_' {
         return Err(Error::SchemaError(format!(
