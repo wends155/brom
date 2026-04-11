@@ -365,3 +365,9 @@
 > * **Changes:** Completed the high-fidelity implementation of the Admin SPA Phase 5B. (1) Implemented dynamic form widget resolution in `form_editor.rs` (textarea, boolean, and server-side select for links). (2) Wired "Create New" collection navigation via the Leptos `A` component. (3) Replaced mock data in `settings.rs` with real API key management endpoints (List, Create, Revoke) using `LocalResource` and `auth_fetch`. (4) Hardened move/borrow checker safety within async Leptos view closures.
 > * **New Constraints:** Any new `FieldType` variants or `ui_widget` hints MUST be mapped within the `form_editor.rs` resolution logic. Asynchronous data fetching in the SPA must use the `auth_fetch` / `LocalResource` pattern to ensure session stability.
 > * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%. Phase 5 Officially Closed.
+
+> 📝 **Context Update:**
+> * **Feature:** Narsil Call-Graph Integration (Workflow Hardening)
+> * **Changes:** Integrated Narsil's structural analysis tools (`get_callers`, `get_callees`, `get_call_graph`, `get_complexity`, `check_cwe_top25`) across core TARS workflows (`ipr.md`, `plan-making.md`, `build.md`, `audit.md`, `issue.md`, `spec.md`). Enforced **Topological Execution Order** for M/L-Tier plans. Implemented Builder-level caller-count guardrails (Drift Guard) and post-implementation call-graph drift detection to ensure high plan fidelity.
+> * **New Constraints:** All M/L-Tier implementation plans MUST be topologically ordered. The Builder MUST halt and request re-audit if the caller count of a target function diverges from the approved Blast Radius table during execution.
+> * **Pruned:** Legacy, manual, `rg`-based blast-radius guessing is fully deprecated in favor of Narsil's structural MCP analysis.
