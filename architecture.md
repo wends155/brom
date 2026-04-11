@@ -138,6 +138,7 @@ brom/
 │   │       ├── api_keys.rs     # API key management handlers
 │   │       ├── schema_api.rs   # GET /admin/api/schema endpoint
 │   │       ├── openapi.rs      # Swagger UI mount
+│   │       ├── admin_ui.rs     # Admin SPA embedding and serving
 │   │       └── error.rs        # HTTP error mapping (IntoResponse)
 │   │
 │   └── brom-cli/               # Companion CLI tool
@@ -196,7 +197,7 @@ brom/
 - **Trait Interfaces**:
   - `EntitySchema` — implemented by `#[derive(BromEntity)]` for each user struct.
   - `Repository<T: EntitySchema>` — generic CRUD interface for persistence.
-- **Mock Availability**: None defined generically (Repository requires concrete impls).
+- **Mock Availability**: `MockRepository<T>` is automatically generated via `mockall::automock` when the `testing` feature is enabled.
 
 ### brom-macros
 
@@ -609,3 +610,17 @@ Every struct annotated with `#[derive(BromEntity)]` automatically receives:
 - FK columns: `{referenced_table}_id`.
 - Junction tables: `{table_a}_{table_b}` (alphabetical).
 - Internal tables: `_brom_` prefix.
+
+## 16. Environment Configuration
+
+The `brom` ecosystem relies on environment variables for configuration, utilizing `.env` files and `dotenvy` for local development. In production or integration environments, these should be supplied natively by the deployment platform.
+
+### Standard Variables
+
+- `DATABASE_URL`: Required. The SQLite connection URI (e.g., `sqlite://data/brom.db` or `sqlite::memory:`).
+- `BROM_LOG`: Optional. Tracing and logging directives (e.g., `info`, `brom_server=debug`).
+- `BROM_CORS_ORIGINS`: Optional. Comma-separated list of allowed origins for the server's CORS middleware.
+
+### Injection Pattern
+
+Configuration is typically loaded during the bootstrap phase of the respective crate (`brom-server/src/config.rs`, `brom-cli/src/config.rs`) ensuring that environmental dependency is explicitly modeled before application state instantiation.
