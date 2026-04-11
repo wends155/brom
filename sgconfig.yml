@@ -3,3 +3,5 @@
 # See README.md in this directory for adoption instructions.
 ruleDirs:
   - .ast-grep/rules
+ignore:
+  - "admin/node_modules/**"
