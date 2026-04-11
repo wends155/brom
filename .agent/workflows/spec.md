@@ -55,6 +55,8 @@ If **Narsil MCP** is available, supplement architecture.md with actual code anal
 | `get_export_map` | Verify which symbols are actually exported |
 | `get_symbol_definition` | Get signatures for contract writing |
 | `get_control_flow` | Understand state transitions in stateful components |
+| `get_callers` | Determine caller-side invariant requirements (who depends on this contract) |
+| `get_callees` | Determine downstream preconditions (what this module requires) |
 
 ### Step 3N: Draft spec.md
 
@@ -105,7 +107,7 @@ Compare `architecture.md` modules against `spec.md` coverage:
 | Tool | Purpose |
 |------|---------|
 | `find_symbols` | Compare current public API against spec.md contracts |
-| `find_references` | Check if spec'd functions still exist |
+| `get_callers` | Verify spec'd functions still have consumers; detect orphaned contracts |
 | `get_symbol_definition` | Verify spec'd signatures match actual code |
 
 ### Step 3U: Draft New Contracts
@@ -153,6 +155,7 @@ Cross-reference `spec.md` against `architecture.md` and actual code:
 | `get_symbol_definition` | Verify signatures haven't drifted |
 | `get_control_flow` | Verify state machine transitions are accurate |
 | `check_cwe_top25` | Identify security-sensitive code needing `[SECURITY]` scenarios |
+| `get_call_graph` | Verify declared module interactions in spec.md match actual structural dependencies |
 
 ### Step 3A: Generate Coverage Report
 

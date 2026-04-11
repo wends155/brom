@@ -80,6 +80,18 @@ For each Step N:
 comment from the `// STUB(Phase N)` marker. The replacement must pass all existing tests
 that exercised the stub.
 
+#### MCP-Enhanced Implementation *(when available)*
+
+During the Step Execution Loop, the Builder **SHOULD** use Narsil call-graph
+tools for precision verification:
+
+| Phase | Tool | Purpose |
+|-------|------|---------|
+| **READ** | `get_callers` | Verify the plan's stated caller count still holds. If new callers appeared since plan approval, STOP — the blast radius changed. |
+| **CODE** | `get_callees` | When modifying a function, verify downstream contracts aren't violated by the change. |
+| **TEST** (TDD) | `get_callees` | Ensure test cases cover all downstream call paths of the target function. |
+| **VERIFY** | `get_complexity` | Confirm the modified function's complexity hasn't exceeded project thresholds. |
+
 **At 🔒 CHECKPOINT markers:**
 
 1. *(Optional)* Run the **Validate task.md** procedure from Step 1 to confirm alignment.
