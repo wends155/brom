@@ -389,3 +389,10 @@
 > * **Changes:** Hardened the `#[derive(BromEntity)]` macro suite. (1) Implemented robust type mapping in `schema.rs` with `syn::Path` segment inspection. (2) Instrumented all generated Axum handlers with `#[tracing::instrument]`. (3) Refactored list handlers to use optional query parameters, resolving 400 Bad Request errors for clients omitting pagination. (4) Centralized macro dependencies via re-exports in `brom-server`. (5) Synchronized structural snapshots across the macro test surface.
 > * **New Constraints:** Any new macro-generated handlers MUST be instrumented via the centralized `tracing` re-export in `brom-server`. Optional fields in macro-generated structs must use the `Option<T>` pattern to ensure deserialization stability.
 > * **Verification:** Full `just verify` (fmt, clippy, test, doc-test, trybuild, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%.
+
+📝 **Context Update:**
+* **Feature:** Phase 6 Security Hardening (RBAC Remediation)
+* **Changes:** Remediated a critical authentication bypass in `brom-macros` by injecting the `RequireAdmin` extractor into all generated admin route handlers (`list`, `get`, `create`, `update`, `delete`). Fixed the Axum extractor ordering to ensure the `Json` body extractor is always positioned as the final argument. Added a dedicated regression test `test_auth_policy_admin_only_access` to `brom-server`.
+* **New Constraints:** Any additions to the `admin_module` expansion in `brom-macros/src/routes.rs` MUST include the `RequireAdmin` guard. The `RequireAdmin` guard MUST be positioned before any `FromRequest` (body-consuming) extractors in the handler signature.
+* **Pruned:** The insecure publicly-exposed admin CRUD endpoints are now fully protected.
+* **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, trybuild, sg scan) passed workspace-wide. Regression test successfully validates `401 Unauthorized` for anonymous admin access. Fidelity to Plan: 100%.

@@ -62,9 +62,9 @@ pub mod article_admin_api {
     )]
     #[tracing::instrument(skip_all)]
     pub async fn list_handler(
+        _: RequireAdmin,
         state: State<AppState>,
         query: ::brom_server::axum::extract::Query<PaginationParams>,
-        _: RequireAdmin,
     ) -> Result<Json<Vec<Article>>, ::brom_server::ServerError> {
         let pagination = ::brom_core::Pagination::new(
             query.0.page.unwrap_or(1),
@@ -86,6 +86,7 @@ pub mod article_admin_api {
     )]
     #[tracing::instrument(skip_all)]
     pub async fn get_handler(
+        _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
     ) -> Result<Json<Article>, ::brom_server::ServerError> {
@@ -106,6 +107,7 @@ pub mod article_admin_api {
     )]
     #[tracing::instrument(skip_all)]
     pub async fn create_handler(
+        _: RequireAdmin,
         state: State<AppState>,
         payload: Json<Article>,
     ) -> Result<Json<Article>, ::brom_server::ServerError> {
@@ -131,6 +133,7 @@ pub mod article_admin_api {
     )]
     #[tracing::instrument(skip_all)]
     pub async fn update_handler(
+        _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
         payload: Json<Article>,
@@ -158,6 +161,7 @@ pub mod article_admin_api {
     )]
     #[tracing::instrument(skip_all)]
     pub async fn delete_handler(
+        _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
     ) -> Result<StatusCode, ::brom_server::ServerError> {

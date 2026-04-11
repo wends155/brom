@@ -47,9 +47,9 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
             )]
             #[tracing::instrument(skip_all)]
             pub async fn list_handler(
+                _: RequireAdmin,
                 state: State<AppState>,
                 query: ::brom_server::axum::extract::Query<PaginationParams>,
-                _: RequireAdmin,
             ) -> Result<Json<Vec<#struct_name>>, ::brom_server::ServerError> {
                 let pagination = ::brom_core::Pagination::new(
                     query.0.page.unwrap_or(1),
@@ -68,7 +68,7 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
                 tag = #admin_tag_name
             )]
             #[tracing::instrument(skip_all)]
-            pub async fn get_handler(state: State<AppState>, id: Path<i64>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
+            pub async fn get_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
                 let id = id.0;
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
                 let item = ::brom_core::Repository::find_by_id(&repo, id)?.ok_or(::brom_core::Error::NotFound { entity: #lower_name, id })?;
@@ -82,7 +82,7 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
                 tag = #admin_tag_name
             )]
             #[tracing::instrument(skip_all)]
-            pub async fn create_handler(state: State<AppState>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
+            pub async fn create_handler(_: RequireAdmin, state: State<AppState>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
                 let id = repo.create(&payload.0)?;
                 let item = repo.find_by_id(id)?.ok_or(::brom_core::Error::NotFound { entity: #lower_name, id })?;
@@ -97,7 +97,7 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
                 tag = #admin_tag_name
             )]
             #[tracing::instrument(skip_all)]
-            pub async fn update_handler(state: State<AppState>, id: Path<i64>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
+            pub async fn update_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
                 let id = id.0;
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
                 repo.update(id, &payload.0)?;
@@ -113,7 +113,7 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
                 tag = #admin_tag_name
             )]
             #[tracing::instrument(skip_all)]
-            pub async fn delete_handler(state: State<AppState>, id: Path<i64>) -> Result<StatusCode, ::brom_server::ServerError> {
+            pub async fn delete_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>) -> Result<StatusCode, ::brom_server::ServerError> {
                 let id = id.0;
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
                 repo.delete(id)?;
