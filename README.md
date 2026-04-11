@@ -2,13 +2,15 @@
 
 **A Code-First Headless CMS Framework for Rust**
 
+<!-- custom:start -->
 `brom` is an ergonomic, macro-driven framework that transforms standard Rust structs into a fully functional headless CMS. With a single `#[derive(BromEntity)]` annotation, `brom` handles the boilerplate of creating database schemas, generating a complete REST API, documenting it with OpenAPI, and scaffolding an interactive admin dashboard—all compiled into a single, dependency-free binary.
+<!-- custom:end -->
 
 ## Why brom?
 
 Traditional CMS setups require you to navigate layers of frameworks, databases, Docker containers, and external runtime dependencies (like Node.js). `brom` optimizes for simplicity and performance:
 
-*   **Zero External Dependencies**: Ships as a static binary with SQLite compiled in and the admin SPA embedded (targeted for Phase 5).
+*   **Zero External Dependencies**: Ships as a static binary with SQLite compiled in and the admin SPA embedded natively.
 *   **Compile-Time Safety**: Your schema is defined in Rust code, ensuring complete type safety and structurally bounds SQL injections at compile time.
 *   **Built-in Auth**: Argon2 session cookies and Bearer token API keys are standard, meaning you don't need a third-party directory for authentication.
 *   **High Performance**: Designed to deliver sub-millisecond response latency for CMS operations.
@@ -36,7 +38,7 @@ This single definition expands to generate:
 *   A `CREATE TABLE` SQLite schema.
 *   Full CRUD endpoints mounted on `/admin/api/entities`.
 *   A Swagger OpenAPI interface reflecting the route payload logic.
-*   Dynamic JSON schemas instructing the embedded Admin SPA on how to render inputs (Phase 5 target).
+*   Dynamic JSON schemas instructing the embedded Admin SPA on how to render inputs.
 
 ### 2. Manage Migrations
 
@@ -62,7 +64,7 @@ cargo run --bin brom-server
 When you launch the server, it seamlessly mounts:
 *   **API Layer**: The auto-generated REST API (`/admin/api/entities/*`).
 *   **API Docs**: The Swagger OpenAPI documentation endpoints.
-*   **Admin Panel**: The embedded Admin UI accessible at `/admin`. Log in to handle content using built-in session mechanics (Phase 5 target).
+*   **Admin Panel**: The embedded Admin UI accessible at `/admin`. Log in to handle content using built-in session mechanics.
 
 ## Architecture Highlights
 
@@ -73,7 +75,7 @@ When you launch the server, it seamlessly mounts:
 *   `brom-db`: The persistence layer, managing the SQLite connection pool (`r2d2`) and the auto-migration runner.
 *   `brom-server`: Handshakes the Axum HTTP routes to SQLite execution scopes, hosting the web layer natively.
 *   `brom-cli`: Project companion for evaluating database diffs, seeding, and triggering migrations.
-*   `admin`: The self-hosted Leptos frontend SPA, compiled in and served natively (Phase 5 targeted).
+*   `admin`: The self-hosted Leptos frontend SPA, compiled in and served natively.
 
 ## Development & Verification Pipeline
 

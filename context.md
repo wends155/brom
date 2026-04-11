@@ -371,3 +371,21 @@
 > * **Changes:** Integrated Narsil's structural analysis tools (`get_callers`, `get_callees`, `get_call_graph`, `get_complexity`, `check_cwe_top25`) across core TARS workflows (`ipr.md`, `plan-making.md`, `build.md`, `audit.md`, `issue.md`, `spec.md`). Enforced **Topological Execution Order** for M/L-Tier plans. Implemented Builder-level caller-count guardrails (Drift Guard) and post-implementation call-graph drift detection to ensure high plan fidelity.
 > * **New Constraints:** All M/L-Tier implementation plans MUST be topologically ordered. The Builder MUST halt and request re-audit if the caller count of a target function diverges from the approved Blast Radius table during execution.
 > * **Pruned:** Legacy, manual, `rg`-based blast-radius guessing is fully deprecated in favor of Narsil's structural MCP analysis.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 6 Security Hardening (CWE-22 Remediation)
+> * **Changes:** Remediated high-severity path traversal vulnerabilities in `brom-db::MigrationRunner::run_rollback()` by implementing mandatory `canonicalize()` and `starts_with()` bounds checking. Added regression test `test_rollback_rejects_path_traversal()` in `crates/brom-db/tests/rollback_test.rs`. Applied `// narsil-ignore: CWE-22` annotations to verified secure paths in `run_pending()` and the CLI entry point.
+> * **New Constraints:** Any dynamic path construction involving migration versions MUST be canonicalized and validated against the migration directory base path before I/O operations.
+> * **Pruned:** The insecure rollback logic and potential traversal vectors are fully neutralized.
+> * **Verification:** Clean audit. Security scan `narsil check-cwe-top25` confirmed zero high-severity findings in `brom-db`.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Documentation Sync & Baseline Establishment
+> * **Changes:** Formalized documentation ownership via the `/update-doc` workflow. Unified the project overview across `README.md`, `Cargo.toml [description]`, and `crates/brom/src/lib.rs` using primary sentiment sentinels. Removed legacy "Phase 5 target" annotations as the system is now production-aligned.
+> * **New Constraints:** `README.md` is now the single source of truth for high-level marketing/overview copy. Secondary sinks (Cargo.toml, lib.rs) MUST be synchronized via the `/update-doc` workflow.
+> * **Pruned:** Stale mentions of Phase 5 implementation targets; technical descriptions now reflect production state.
+> 📝 **Context Update:**
+> * **Feature:** Macro Hardening & Observability (brom-macros)
+> * **Changes:** Hardened the `#[derive(BromEntity)]` macro suite. (1) Implemented robust type mapping in `schema.rs` with `syn::Path` segment inspection. (2) Instrumented all generated Axum handlers with `#[tracing::instrument]`. (3) Refactored list handlers to use optional query parameters, resolving 400 Bad Request errors for clients omitting pagination. (4) Centralized macro dependencies via re-exports in `brom-server`. (5) Synchronized structural snapshots across the macro test surface.
+> * **New Constraints:** Any new macro-generated handlers MUST be instrumented via the centralized `tracing` re-export in `brom-server`. Optional fields in macro-generated structs must use the `Option<T>` pattern to ensure deserialization stability.
+> * **Verification:** Full `just verify` (fmt, clippy, test, doc-test, trybuild, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%.

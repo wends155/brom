@@ -31,65 +31,88 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
             use ::brom_server::AppState;
             use ::brom_core::{Repository, Pagination};
             use ::brom_db::SqliteRepository;
+            use ::brom_server::{tracing, RequireAdmin};
+
+            #[derive(::brom_server::serde::Deserialize)]
+            pub struct PaginationParams {
+                pub page: Option<u64>,
+                pub per_page: Option<u64>,
+            }
 
             #[::brom_server::utoipa::path(
-                get, path = #admin_base_lit,
+                get,
+                path = #admin_base_lit,
                 responses((status = 200, description = "List all items", body = [#struct_name])),
                 tag = #admin_tag_name
             )]
-            pub async fn list_handler(state: State<AppState>) -> Result<Json<Vec<#struct_name>>, ::brom_server::ServerError> {
+            #[tracing::instrument(skip_all)]
+            pub async fn list_handler(
+                state: State<AppState>,
+                query: ::brom_server::axum::extract::Query<PaginationParams>,
+                _: RequireAdmin,
+            ) -> Result<Json<Vec<#struct_name>>, ::brom_server::ServerError> {
+                let pagination = ::brom_core::Pagination::new(
+                    query.0.page.unwrap_or(1),
+                    query.0.per_page.unwrap_or(25),
+                );
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
-                let items = repo.find_all(&Pagination::default())?;
+                let items = ::brom_core::Repository::find_all(&repo, &pagination)?;
                 Ok(Json(items))
             }
 
             #[::brom_server::utoipa::path(
-                get, path = #admin_id_lit,
+                get,
+                path = #admin_id_lit,
                 params(("id" = i64, Path, description = "ID")),
                 responses((status = 200, description = "Get item by ID", body = #struct_name), (status = 404, description = "Not found")),
                 tag = #admin_tag_name
             )]
+            #[tracing::instrument(skip_all)]
             pub async fn get_handler(state: State<AppState>, id: Path<i64>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
                 let id = id.0;
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
-                let item = repo.find_by_id(id)?.ok_or(::brom_server::ServerError::Core(::brom_core::Error::NotFound { entity: #lower_name, id }))?;
+                let item = ::brom_core::Repository::find_by_id(&repo, id)?.ok_or(::brom_core::Error::NotFound { entity: #lower_name, id })?;
                 Ok(Json(item))
             }
 
             #[::brom_server::utoipa::path(
-                post, path = #admin_base_lit,
-                request_body = #struct_name,
+                post,
+                path = #admin_base_lit,
                 responses((status = 201, description = "Item created", body = #struct_name)),
                 tag = #admin_tag_name
             )]
+            #[tracing::instrument(skip_all)]
             pub async fn create_handler(state: State<AppState>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
                 let id = repo.create(&payload.0)?;
-                let item = repo.find_by_id(id)?.ok_or(::brom_server::ServerError::Core(::brom_core::Error::NotFound { entity: #lower_name, id }))?;
+                let item = repo.find_by_id(id)?.ok_or(::brom_core::Error::NotFound { entity: #lower_name, id })?;
                 Ok(Json(item))
             }
 
             #[::brom_server::utoipa::path(
-                put, path = #admin_id_lit,
+                put,
+                path = #admin_id_lit,
                 params(("id" = i64, Path, description = "ID")),
-                request_body = #struct_name,
                 responses((status = 200, description = "Item updated", body = #struct_name), (status = 404, description = "Not found")),
                 tag = #admin_tag_name
             )]
+            #[tracing::instrument(skip_all)]
             pub async fn update_handler(state: State<AppState>, id: Path<i64>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom_server::ServerError> {
                 let id = id.0;
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
                 repo.update(id, &payload.0)?;
-                let item = repo.find_by_id(id)?.ok_or(::brom_server::ServerError::Core(::brom_core::Error::NotFound { entity: #lower_name, id }))?;
+                let item = repo.find_by_id(id)?.ok_or(::brom_core::Error::NotFound { entity: #lower_name, id })?;
                 Ok(Json(item))
             }
 
             #[::brom_server::utoipa::path(
-                delete, path = #admin_id_lit,
+                delete,
+                path = #admin_id_lit,
                 params(("id" = i64, Path, description = "ID")),
                 responses((status = 204, description = "Item deleted"), (status = 404, description = "Not found")),
                 tag = #admin_tag_name
             )]
+            #[tracing::instrument(skip_all)]
             pub async fn delete_handler(state: State<AppState>, id: Path<i64>) -> Result<StatusCode, ::brom_server::ServerError> {
                 let id = id.0;
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
@@ -102,17 +125,34 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
     #[allow(clippy::single_match_else)]
     let handlers = match policy {
         Some("ApiKey") => quote! {
+            #[derive(::brom_server::serde::Deserialize)]
+            pub struct PaginationParams {
+                pub page: Option<u64>,
+                pub per_page: Option<u64>,
+            }
+
+            use ::brom_server::tracing;
+
             #[::brom_server::utoipa::path(get, path = #public_base_lit, responses((status = 200, description = "List all items", body = PaginatedResponse<#public_struct_name>)), tag = #public_tag_name)]
+            #[tracing::instrument(skip_all)]
             pub async fn list_handler(
                 _: ::brom_server::RequireApiKey,
-                state: ::brom_server::axum::extract::State<::brom_server::AppState>
+                state: ::brom_server::axum::extract::State<::brom_server::AppState>,
+                query: ::brom_server::axum::extract::Query<PaginationParams>,
             ) -> Result<::brom_server::axum::Json<::brom_server::PaginatedResponse<#public_struct_name>>, ::brom_server::ServerError> {
+                let pagination = ::brom_core::Pagination::new(
+                    query.0.page.unwrap_or(1),
+                    query.0.per_page.unwrap_or(25),
+                );
                 let repo = ::brom_db::SqliteRepository::<#struct_name>::new(state.db.clone());
-                let items = ::brom_core::Repository::find_all(&repo, &::brom_core::Pagination::default())?;
+                let total_items = ::brom_core::Repository::count(&repo)?;
+                let total_pages = (total_items + i64::from(pagination.per_page as i32) - 1) / i64::from(pagination.per_page as i32);
+                let items = ::brom_core::Repository::find_all(&repo, &pagination)?;
                 let pub_items = items.into_iter().map(Into::into).collect();
-                Ok(::brom_server::axum::Json(::brom_server::PaginatedResponse::new(pub_items, 0, 0, 1, 50)))
+                Ok(::brom_server::axum::Json(::brom_server::PaginatedResponse::new(pub_items, total_items, total_pages, pagination.page, pagination.per_page)))
             }
             #[::brom_server::utoipa::path(get, path = #public_id_lit, params(("id" = i64, Path, description = "ID")), responses((status = 200, description = "Get item by ID", body = DataEnvelope<#public_struct_name>), (status = 404, description = "Not found")), tag = #public_tag_name)]
+            #[tracing::instrument(skip_all)]
             pub async fn get_handler(
                 _: ::brom_server::RequireApiKey,
                 state: ::brom_server::axum::extract::State<::brom_server::AppState>,
@@ -125,16 +165,33 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
             }
         },
         _ => quote! {
+            #[derive(::brom_server::serde::Deserialize)]
+            pub struct PaginationParams {
+                pub page: Option<u64>,
+                pub per_page: Option<u64>,
+            }
+
+            use ::brom_server::tracing;
+
             #[::brom_server::utoipa::path(get, path = #public_base_lit, responses((status = 200, description = "List all items", body = PaginatedResponse<#public_struct_name>)), tag = #public_tag_name)]
+            #[tracing::instrument(skip_all)]
             pub async fn list_handler(
-                state: ::brom_server::axum::extract::State<::brom_server::AppState>
+                state: ::brom_server::axum::extract::State<::brom_server::AppState>,
+                query: ::brom_server::axum::extract::Query<PaginationParams>,
             ) -> Result<::brom_server::axum::Json<::brom_server::PaginatedResponse<#public_struct_name>>, ::brom_server::ServerError> {
+                let pagination = ::brom_core::Pagination::new(
+                    query.0.page.unwrap_or(1),
+                    query.0.per_page.unwrap_or(25),
+                );
                 let repo = ::brom_db::SqliteRepository::<#struct_name>::new(state.db.clone());
-                let items = ::brom_core::Repository::find_all(&repo, &::brom_core::Pagination::default())?;
+                let total_items = ::brom_core::Repository::count(&repo)?;
+                let total_pages = (total_items + i64::from(pagination.per_page as i32) - 1) / i64::from(pagination.per_page as i32);
+                let items = ::brom_core::Repository::find_all(&repo, &pagination)?;
                 let pub_items = items.into_iter().map(Into::into).collect();
-                Ok(::brom_server::axum::Json(::brom_server::PaginatedResponse::new(pub_items, 0, 0, 1, 50)))
+                Ok(::brom_server::axum::Json(::brom_server::PaginatedResponse::new(pub_items, total_items, total_pages, pagination.page, pagination.per_page)))
             }
             #[::brom_server::utoipa::path(get, path = #public_id_lit, params(("id" = i64, Path, description = "ID")), responses((status = 200, description = "Get item by ID", body = DataEnvelope<#public_struct_name>), (status = 404, description = "Not found")), tag = #public_tag_name)]
+            #[tracing::instrument(skip_all)]
             pub async fn get_handler(
                 state: ::brom_server::axum::extract::State<::brom_server::AppState>,
                 id: ::brom_server::axum::extract::Path<i64>

@@ -30,6 +30,8 @@ pub use state::AppState;
 
 /// Re-export axum for use by generated macro code.
 pub use axum;
+pub use serde;
+pub use tracing;
 pub use utoipa;
 
 /// Re-export `ServerConfig` for use by consumers.

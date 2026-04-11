@@ -3,6 +3,7 @@ name = "brom"
 version = "0.1.0"
 edition = "2024"
 publish = false
+description = "A code-first headless CMS framework for Rust."
 
 [lints]
 workspace = true

@@ -153,19 +153,30 @@ pub fn map_type_to_field_type(ty: &Type, attrs: &BromFieldAttrs) -> proc_macro2:
         return quote::quote!(FieldType::Link { target: #target.to_string() });
     }
 
-    let ty_str = ty.to_token_stream().to_string().replace(' ', "");
+    // Extract the last path segment for robust matching
+    // e.g., `std::string::String` -> "String", `Option<String>` -> "Option"
+    let type_name = extract_last_segment(ty);
 
-    if ty_str.contains("String") {
-        quote::quote!(FieldType::String)
-    } else if ty_str == "i64" || ty_str == "u64" || ty_str == "i32" || ty_str == "u32" {
-        quote::quote!(FieldType::Integer)
-    } else if ty_str == "f64" || ty_str == "f32" {
-        quote::quote!(FieldType::Float)
-    } else if ty_str == "bool" {
-        quote::quote!(FieldType::Boolean)
-    } else if ty_str.contains("DateTime") {
-        quote::quote!(FieldType::DateTime)
-    } else {
-        quote::quote!(FieldType::String)
+    match type_name.as_str() {
+        "i32" | "i64" | "u32" | "u64" => quote::quote!(FieldType::Integer),
+        "f32" | "f64" => quote::quote!(FieldType::Float),
+        "bool" => quote::quote!(FieldType::Boolean),
+        "DateTime" | "NaiveDateTime" | "NaiveDate" => quote::quote!(FieldType::DateTime),
+        _ => quote::quote!(FieldType::String), // Fallback for unrecognized types
     }
+}
+
+/// Extracts the last path segment identifier from a [`syn::Type`].
+///
+/// For `std::string::String` returns `"String"`.
+/// For bare `i64` returns `"i64"`.
+/// For non-path types, falls back to the full token stream representation.
+fn extract_last_segment(ty: &Type) -> String {
+    if let Type::Path(type_path) = ty
+        && let Some(segment) = type_path.path.segments.last()
+    {
+        return segment.ident.to_string();
+    }
+    // Fallback: stringify the full type
+    ty.to_token_stream().to_string().replace(' ', "")
 }
