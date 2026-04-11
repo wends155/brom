@@ -59,17 +59,22 @@ If **Narsil MCP** is available, use it throughout planning:
 
 | Tool | Purpose |
 |------|---------|
-| `get_import_graph`, `get_dependencies` | Visualize what's affected by proposed changes |
+| `get_callers`, `get_callees` | Trace upstream/downstream blast radius from seed functions |
+| `get_call_graph` | Visualize full structural impact of proposed changes |
+| `get_complexity` | Flag overly complex functions that need refactoring before modification |
+| `get_function_hotspots` | Identify high-fan-in/fan-out functions at risk of cascading breakage |
+| `find_call_path` | Verify no indirect call paths are missed between affected modules |
 | `find_circular_imports`, `check_cwe_top25`, `check_owasp_top10` | Catch structural or security risks early |
-| `find_symbols`, `find_references`, `get_symbol_definition` | Understand interfaces before proposing changes |
+| `find_symbols`, `get_symbol_definition` | Understand interfaces before proposing changes |
 | `find_unused_exports`, `find_dead_code` | Identify cleanup opportunities to include in the plan |
 
 **Validation** (Step 4 — use results to support proposed changes):
 
 | Tool | Purpose |
 |------|---------|
+| `get_callers` | Verify blast radius — populate Blast Radius Table with exact caller counts |
+| `get_callees` | Verify downstream contracts aren't violated by proposed changes |
 | `get_symbol_definition` | Verify interfaces/types being modified exist as expected |
-| `find_references` | Check blast radius of proposed signature changes |
 | `check_dependencies` | Check for vulnerable deps before adding new ones |
 | `find_similar_code` | Find existing patterns the plan should follow |
 
@@ -84,10 +89,12 @@ Before drafting the plan, the Architect **MUST** use `sequentialthinking` with
    If fed from `/issue` or `/feature`, verify the diagnosis holds.
 2. **Change ordering** — What's the dependency graph of the changes? What must
    come first?
-3. **Blast radius analysis** — Using Narsil `find_references`,
-   `find_symbol_usages`, and `get_import_graph` (or `rg`/manual analysis when
-   Narsil is unavailable), map every consumer of the interfaces being modified.
-   Populate the Blast Radius Table (see `ipr.md`).
+3. **Blast radius analysis** — Using Narsil Call-Graph Analysis (`get_callers`
+   for upstream blast radius, `get_callees` for downstream impact, and
+   `find_call_path` to verify indirect paths) when available, or `rg`/manual
+   analysis as fallback, map every consumer of the interfaces being modified.
+   Use results to derive the **topological step ordering** for the Global
+   Execution Order (see `ipr.md` GEO section). Populate the Blast Radius Table.
 4. **Interface contract risks** — Will any signature changes break downstream
    callers? Are there trait/interface impls that need updating?
 5. **Confidence check** — After the above, does the plan still make sense or
@@ -173,9 +180,9 @@ Before requesting approval, verify each item. Items marked 🤖 can be verified
 with Narsil MCP or scripts; items marked 🧠 require LLM judgment.
 
 **Scope & Coverage:**
-- [ ] 🤖 All affected files are listed (verify with Narsil `find_references`)
+- [ ] 🤖 All affected files are listed (verify upstream/downstream blast radius with Narsil `get_callers`/`get_callees`)
 - [ ] 🤖 Each change is broken into numbered, independently verifiable steps
-- [ ] 🤖 Blast Radius Table populated (M/L tier) — verify with Narsil `find_references` or `rg`
+- [ ] 🤖 Blast Radius Table populated (M/L tier) — verify with Narsil `get_callers`/`get_callees`; GEO topologically ordered per `ipr.md`
 - [ ] 🧠 Deprecation Protocol followed (if breaking changes detected)
 - [ ] 🧠 Pre-Draft Review lenses applied (Design + API + Security as applicable)
 - [ ] 🧠 Module boundaries defined (Owns / Does NOT own)
