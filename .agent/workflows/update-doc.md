@@ -1,5 +1,5 @@
 ---
-description: Sync rustdoc comments, spec.md, and crate docs to actual code (Documentation Maintenance)
+description: Sync rustdoc comments, spec.md, README.md, Cargo.toml description, and crate docs to actual code (Documentation Maintenance)
 ---
 
 # Update-Doc Workflow
@@ -44,7 +44,12 @@ Gather the current documentation state:
 // turbo
    - `just stats-doc-comments` (doc comment lines)
 4. **Section Audit:** Read `spec.md` with `view_file`. Check for required section headings from `doc-rules.md §4`.
-5. **Drift Detection:** If `spec.md` has `> Last verified against: <hash>`:
+5. **Package Metadata Scan:**
+   - Read `Cargo.toml` with `view_file` — extract `[package.description]`.
+   - Read `README.md` with `view_file` — extract current structure and content.
+   - Compare `Cargo.toml` description ↔ `lib.rs //!` first line ↔ README overview.
+   - Flag any drift between the three.
+6. **Drift Detection:** If `spec.md` has `> Last verified against: <hash>`:
 // turbo
    - `git rev-list --count <hash>..HEAD -- src/` (commits since verification)
 
@@ -62,6 +67,8 @@ If **Narsil MCP** is available, use it to extract code-level data:
 |------|---------|
 | `find_symbols` | All public types, functions, traits, enums |
 | `get_export_map` | Per-module exports — input for spec.md contracts |
+| `get_project_structure` | Generate the "Architecture" or "Project Layout" section of README |
+| `find_symbols (public)` | Generate the "API Surface" section of README for library crates |
 | `get_symbol_definition` | Read signatures of undocumented public items |
 
 If Narsil is **not available**, fall back to manual investigation:
@@ -106,6 +113,27 @@ Update or create sections per `doc-rules.md` §4:
 | State Machines | **LLM reasoning** from type analysis |
 | Command/CLI Contracts | **LLM reasoning** from `main.rs` / CLI parsing |
 | Integration Points | **LLM reasoning** from external deps |
+
+#### 3c. README.md
+
+Generate or update the full README per `doc-rules.md §7`:
+
+1. **Preserve**: Badge lines (`[![`) and `<!-- custom:start/end -->` blocks.
+2. **Generate**: All template sections from code analysis + LLM reasoning.
+3. **Sync**: First paragraph must align with `Cargo.toml` description.
+
+> [!CAUTION]
+> Content inside sentinel blocks (`<!-- custom:start/end -->`) must NEVER 
+> be modified. Copy it verbatim into the regenerated README.
+
+#### 3d. Cargo.toml Description
+
+Update the `[package.description]` (or `[workspace.package.description]`) field
+to match the first-line summary derived from `lib.rs //!` overview.
+
+> [!CAUTION]
+> Only the `description` field may be edited. Do NOT modify dependencies,
+> features, build settings, or any other Cargo.toml content.
 
 ### 4. Record Verification Hash
 
@@ -161,7 +189,7 @@ After committing, compress the interaction per TARS protocol:
 
 ## Rules
 
-1. **Doc-only edits** — source file changes are limited to doc comments (`///`, `//!`).
+1. **Doc-only edits** — source file changes are limited to doc comments (`///`, `//!`). Package metadata edits are limited to `Cargo.toml [package.description]` and `README.md`.
 2. **No logic changes** — function bodies, signatures, and imports must not be modified.
 3. **No architecture.md** — `architecture.md` is owned by `/architecture`, not this workflow.
 4. **Always validate** — run the script in validate mode before presenting to the user.
@@ -170,3 +198,4 @@ After committing, compress the interaction per TARS protocol:
 7. **Always pause** — the user must approve before committing.
 8. **Record hash** — always write the verification hash to spec.md after doc generation.
 9. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+10. **Preserve Sentinels** — README.md sentinel blocks (`<!-- custom:start/end -->`) must be preserved verbatim across regenerations.

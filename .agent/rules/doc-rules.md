@@ -119,5 +119,42 @@ spec.md must contain a metadata line recording the source code commit it was las
 | **Voice** | Use third person ("Parses the input") not imperative ("Parse the input") |
 | **Cross-references** | Use `[`backtick links`]` to reference other items: ``[`Config`]``, ``[`parse_config`]`` |
 | **Line length** | Soft wrap at 100 characters for readability |
-| **Markdown in docs** | Use headers (`#`), lists, code blocks — rustdoc renders full Markdown |
 | **Deprecation** | Use `#[deprecated(since = "x.y.z", note = "Use X instead")]` with doc explanation |
+
+## 7. Package Documentation Ownership
+
+Define the synchronization contract:
+
+| Artifact | Owned By | Scope |
+|----------|----------|-------|
+| `README.md` (full file) | `/update-doc` | All sections: overview, install, usage, features, API surface, contributing, license |
+| `Cargo.toml` `description` | `/update-doc` | Single `description` field only — no other `[package]` fields |
+| `lib.rs` / `main.rs` `//!` | `/update-doc` | Crate-level overview (already in scope via §3) |
+
+**Synchronization Rule:** The first-line summary in `Cargo.toml [package.description]` and the first paragraph of the `//!` crate doc in `lib.rs` must be semantically equivalent. The README overview section expands on this summary with full context.
+
+**README Section Template:**
+
+```markdown
+# Crate Name
+
+> One-line description (synced with Cargo.toml)
+
+## Overview
+## Installation  
+## Usage / Quick Start
+## Features / Feature Flags
+## API Surface (optional — for libraries)
+## Architecture (optional — link to architecture.md)
+## Contributing (optional)
+## License
+
+<!-- custom:start -->
+(user-authored content preserved across regenerations)
+<!-- custom:end -->
+```
+
+**Preservation Rules:**
+- Content inside `<!-- custom:start -->` / `<!-- custom:end -->` sentinel blocks is never overwritten.
+- Badges at the top of the file (lines matching `[![`) are preserved in-place.
+- If no sentinel blocks exist, the workflow generates the full README from scratch.
