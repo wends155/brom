@@ -410,7 +410,7 @@
 > * **New Constraints:** Any modifications to public API signatures or behaviors in these crates MUST be systematically updated in `spec.md`.
 > * **Verification:** Clean audit. Zero-exit gate (`cargo check`) passed workspace-wide. Fidelity to Plan: 100%.
 
-> ?? **Context Update:**
+> 📝 **Context Update:**
 > * **Feature:** Phase 6 Architecture Documentation Sync
 > * **Changes:** Remediated minor discrepancies found during the rchitecture.md audit. Added Section 16 for Environment Configuration, appended dmin_ui.rs to the Project Layout, and updated Mock Availability for Repository<T> to reflect mockall usage.
 > * **New Constraints:** None.
