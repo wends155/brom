@@ -26,9 +26,7 @@ pub fn Breadcrumbs() -> impl IntoView {
                 let mut accumulated = "/admin".to_string();
                 for seg in &segments {
                     accumulated = format!("{}/{}", accumulated, seg);
-                    let label = seg
-                        .replace('-', " ")
-                        .replace('_', " ");
+                    let label = seg.replace(['-', '_'], " ");
                     // Capitalize first letter
                     let label = label
                         .split_whitespace()

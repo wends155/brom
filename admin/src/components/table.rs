@@ -34,7 +34,7 @@ pub fn DataTable(
                 <tbody>
                     {rows.into_iter().enumerate().map(|(i, row)| {
                         let stripe = if i % 2 == 0 { "" } else { "bg-surface/30" };
-                        let edit_href = if row.first().is_some() {
+                        let edit_href = if !row.is_empty() {
                             format!("/admin/collection/{}/{}", entity_name, row[0])
                         } else {
                             "#".to_string()
