@@ -409,3 +409,9 @@
 > * **Changes:** Formalized API tables and BDD scenarios across `brom-core`, `brom-db`, `brom-auth`, `brom-server`, and `brom-cli` modules in `spec.md`. Aligned behavioral contracts with Phase 3/4 implementations, addressing data model relationships, SQLite DB introspection, API Key generation workflows, Axum REST Extractor behaviors, and differential CLI operations.
 > * **New Constraints:** Any modifications to public API signatures or behaviors in these crates MUST be systematically updated in `spec.md`.
 > * **Verification:** Clean audit. Zero-exit gate (`cargo check`) passed workspace-wide. Fidelity to Plan: 100%.
+
+> ?? **Context Update:**
+> * **Feature:** Phase 6 Architecture Documentation Sync
+> * **Changes:** Remediated minor discrepancies found during the rchitecture.md audit. Added Section 16 for Environment Configuration, appended dmin_ui.rs to the Project Layout, and updated Mock Availability for Repository<T> to reflect mockall usage.
+> * **New Constraints:** None.
+> * **Verification:** Checked document formatting. Zero-exit gate satisfied.
