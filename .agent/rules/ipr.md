@@ -102,8 +102,10 @@ the downstream impact:
 | `fn_name()` | `src/mod.rs` | 3 | 1 | 2 | Yes → `package-b` |
 
 > [!TIP]
-> Use Narsil `find_references`, `find_symbol_usages`, and `get_import_graph`
-> to populate this table when available. Otherwise use `rg` or manual analysis.
+> Use Narsil `get_callers` (upstream blast radius), `get_callees` (downstream
+> dependencies), and `get_call_graph` (full structural view) to populate this
+> table when available. Fall back to `find_references` or `rg` when call-graph
+> is unavailable.
 
 If any row has `Cross-Package? = Yes`, the Deprecation Protocol applies (see
 Deprecation Schedule section).
@@ -158,6 +160,17 @@ When a change affects callers/callees across modules:
 > [!IMPORTANT]
 > Number ALL steps globally across ALL files. The Builder follows steps 1, 2, 3... linearly.
 > No per-file numbering. No jumping.
+>
+> **Call-Graph-Driven Ordering (M/L tier):** When Narsil call-graph is available,
+> use `get_callers`/`get_callees` on each seed function being modified to discover
+> the complete modification set. Order steps topologically:
+> - **Signature narrowing** (removing params, tightening types): bottom-up
+>   (callees first, then callers)
+> - **Signature widening** (adding params, new error variants): top-down
+>   (callers first, then callees)
+> - **New functions**: insert at the dependency layer where they'll be consumed.
+>
+> Use `find_call_path(A, B)` to verify no indirect paths are missed.
 >
 > Line ranges in `(L##-##)` are advisory hints for initial orientation. The
 > **Target name** (function, struct, module) is the binding anchor. If prior
