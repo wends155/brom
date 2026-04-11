@@ -88,10 +88,16 @@ Search the codebase to understand the problem area:
 #### MCP-Enhanced Investigation *(when available)*
 
 If **Narsil MCP** is available, use it to improve investigation accuracy:
-- **Code search & navigation**: `search_code`, `semantic_search`, `search_chunks` — find relevant code faster than manual grep.
-- **Dependency analysis**: `get_dependencies`, `find_references`, `find_symbol_usages` — map what calls into or depends on the affected area.
-- **Structure understanding**: `get_project_structure`, `find_symbols` — orient yourself in unfamiliar codebases.
-- **Security scanning**: `scan_security`, `check_owasp_top10`, `check_cwe_top25` — if the issue has security implications.
+
+| Category | Tools | Purpose |
+|----------|-------|---------|
+| **Call-graph tracing** | `get_callers`, `get_callees` | Trace bad inputs upstream; verify failing downstream layers |
+| **Structural diagnosis** | `get_control_flow`, `get_data_flow` | Analyze exact code paths and variable flows for complex behavioral bugs |
+| **Hotspot detection** | `get_function_hotspots`, `get_complexity` | Identify brittle, high-coupling locations where bugs congregate |
+| **Code navigation** | `search_code`, `semantic_search`, `search_chunks` | Find relevant code faster than manual grep |
+| **Dependency analysis** | `get_dependencies`, `get_import_graph` | Map module-level import structure |
+| **Structure** | `get_project_structure`, `find_symbols` | Orient in unfamiliar codebases |
+| **Security** | `scan_security`, `check_owasp_top10`, `check_cwe_top25` | If the issue has security implications |
 
 For **critical/high** severity issues, the Architect **SHOULD** use `sequentialthinking` to:
 - Structure complex, multi-factor investigations step by step.

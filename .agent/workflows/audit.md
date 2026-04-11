@@ -134,6 +134,16 @@ If **Narsil MCP** is available, use it to automate specific checklist items:
 | Dependency structure | `get_import_graph`, `find_circular_imports` | 2d |
 | Type errors | `check_type_errors` | 2e |
 | `.unwrap()` usage | `search_code` excluding test files | 2f |
+| Coupling hotspots | `get_function_hotspots` | 2d, 2e |
+| Cyclomatic complexity | `get_complexity` | 2e |
+| Call-graph drift (post-impl) | `get_callers`/`get_callees` vs plan's Blast Radius Table | 2a |
+| Taint source tracing | `get_taint_sources`, `get_callers` | 2b, 2f |
+
+**Post-Implementation Call-Graph Verification** *(post-implementation only)*:
+Re-run `get_callers`/`get_callees` on every modified function and compare caller
+counts against the plan's Blast Radius Table. Divergence indicates the
+implementation changed the call graph in ways the plan didn't predict —
+classify as a **Plan Fidelity** finding (§2a).
 
 For **multi-file audits** (>5 changed files), the Architect **SHOULD** use `sequentialthinking` to:
 - Structure the audit across many files systematically.
