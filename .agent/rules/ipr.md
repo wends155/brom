@@ -435,17 +435,17 @@ Before the Architect can request "Proceed", the plan must satisfy:
 | Test cases pre-specified (TDD: Red → Green → Refactor) | Test Plan section exists |
 | Verification commands sourced from `architecture.md § Toolchain` | Cross-reference check |
 | Plan Summary filled in | Manual review |
-| `task.md` aligned per §6 | `Sync-TaskList.ps1 -Mode validate` exits 0 |
+| `task.md` aligned per §6 | Agent Procedure validation passes |
 
 ## 6. The task.md Contract
 
 `task.md` is the bridge between the Architect's plan and the Builder's execution:
 
-1. **Generated** by `Sync-TaskList.ps1 -Mode generate` — writes `task.md` to the plan directory automatically.
+1. **Updated** via native Agent Procedures — writes `task.md` to the plan directory automatically.
 2. **1:1 Mapping**: Each checklist item maps to exactly one plan item.
 3. **Progress Tracking**: Builder marks `[ ]` → `[/]` (in-progress) → `[x]` (done).
-4. **Validation Gate**: Before each commit, `Sync-TaskList.ps1 -Mode validate` must exit 0.
-5. **Pre-flight**: Before plan approval, `Sync-TaskList.ps1 -Mode preflight` must exit 0.
+4. **Validation Gate**: Before each commit, native validation must pass.
+5. **Pre-flight**: Before plan approval, native preflight check must pass.
 
 ## 7. Builder Obligations & STOP Conditions
 
@@ -457,7 +457,7 @@ Before the Architect can request "Proceed", the plan must satisfy:
    - Mark `[/]` → `[x]` when the step passes verification.
    - Antigravity reads this file for UI progress — stale markers hide progress from the user.
 4. Run `ALL` at each 🔒 CHECKPOINT.
-5. Use `Git-Checkpoint.ps1` for atomic commits tied to task.md progress.
+5. Use standard git add/git commit commands for atomic commits tied to task.md progress.
 6. 🛑 **Wait for user instruction** before pushing to remote repositories.
 
 **STOP Conditions** — Builder must immediately halt and return to the Architect when:
