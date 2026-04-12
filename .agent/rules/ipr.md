@@ -180,7 +180,7 @@ When a change affects callers/callees across modules:
 Each step is verification-oriented:
 
 ```markdown
-Step N: [NEW/MODIFY/DELETE/TEST] file_path — function_name() (L##-##)
+Step N: [NEW/MODIFY/DELETE/TEST] file_path — [+/~/−] function_name() (L##-##)
 - Pre: CHECK
 - Target: function/struct name + line range
 - Action: what to change (code snippet or description)
@@ -194,6 +194,38 @@ Step N: [NEW/MODIFY/DELETE/TEST] file_path — function_name() (L##-##)
 - `[DELETE]` — remove a file or code block
 - `[TEST]` — write or update a test (TDD Red step)
 
+**Function sub-tags** *(optional modifier after the `—` separator)*:
+- `[+]` — **create** a new symbol (function, struct, trait, enum, impl block)
+- `[~]` — **modify** an existing symbol (edit body, signature, or attributes)
+- `[-]` — **remove** a symbol from the file
+
+**Applicability:**
+
+| Tier | Sub-Tags | Rationale |
+|------|----------|-----------|
+| **S** | Optional | 1–3 files, context is obvious from reading the Action body |
+| **M** | Recommended | 4–10 files, scanability matters for Builder orientation |
+| **L** | Required | 10+ files, function-level intent must be unambiguous |
+
+> [!NOTE]
+> When sub-tags are omitted, the step behaves exactly as today — no breaking change.
+
+**Valid combinations:**
+
+| File Tag | Sub-Tag | Meaning |
+|----------|---------|---------|
+| `[NEW]` | `[+]` | New file, new function (redundant but explicit) |
+| `[MODIFY]` | `[+]` | Existing file, **new** function being added |
+| `[MODIFY]` | `[~]` | Existing file, **existing** function being changed |
+| `[MODIFY]` | `[-]` | Existing file, function being **removed** |
+| `[DELETE]` | *(none)* | Entire file removal — no function sub-tag needed |
+| `[TEST]` | `[+]` | New test function |
+| `[TEST]` | `[~]` | Modifying an existing test |
+
+> [!NOTE]
+> Renames use `[~]` with the Action field clarifying the rename mapping
+> (e.g., `Action: Rename old_fn() → new_fn(). Update all callers.`).
+
 **Action specificity rules:**
 
 | Step Type | Size | Architect Must Provide |
@@ -205,6 +237,18 @@ Step N: [NEW/MODIFY/DELETE/TEST] file_path — function_name() (L##-##)
 | `[MODIFY]` | ≤ 20 changed lines | Code snippet showing the replacement |
 | `[MODIFY]` | > 20 changed lines | Prose + **all new/changed function signatures** (see Control Flow Override below) |
 | `[DELETE]` | Any | Prose — name the target to remove |
+
+**Sub-tag specificity override** *(when function sub-tags are present)*:
+
+The function sub-tag **overrides** the file-level tag for determining action specificity:
+
+| Step Pattern | Effective Specificity | What Architect Provides |
+|-------------|----------------------|------------------------|
+| `[MODIFY] — [+] new_fn()` | Follows **`[NEW]`** rules | Full code body (≤30 lines) or signatures + core logic (31–80) |
+| `[MODIFY] — [~] old_fn()` | Follows **`[MODIFY]`** rules | Code snippet (≤20 lines) or prose + signatures (>20) |
+| `[MODIFY] — [-] dead_fn()` | Follows **`[DELETE]`** rules | Prose — name the target to remove |
+| `[TEST] — [+] test_fn()` | Follows **`[TEST]`** rules | Full test body (always) |
+| `[TEST] — [~] test_fn()` | Follows **`[TEST]`** rules | Full test body (always) |
 
 **Placeholder convention:** Skeleton code uses `// STUB(Phase N): description`
 markers per `phase-rules.md`. Do NOT use `todo!()` or `unimplemented!()`.
@@ -467,3 +511,11 @@ Step 2: [MODIFY] src/config.rs — parse_config() (L12-30)
 | Checkpoints | 1 |
 | Estimated effort | Low |
 ```
+
+> [!TIP]
+> For S-tier plans, function sub-tags are **optional**. The example above omits
+> them for brevity. An enhanced version would read:
+> ```markdown
+> Step 1: [TEST] src/config.rs — [+] test_empty_input()
+> Step 2: [MODIFY] src/config.rs — [~] parse_config() (L12-30)
+> ```

@@ -71,6 +71,7 @@ Systematically verify the code against project standards.
 #### 2a. Plan Fidelity *(post-implementation only; see GEMINI.md §7)*
 - [ ] Every plan item maps to a `[x]` in `task.md` and a corresponding `git diff`
 - [ ] No unapproved changes were introduced (check for Additions per Fidelity Matrix)
+- [ ] Function sub-tag fidelity: `[+]` symbols are net-new in the diff, `[~]` symbols modified existing code, `[-]` symbols were removed *(M/L tier plans with sub-tags only)*
 - [ ] If deviations occurred, they are documented with justification
 - [ ] Builder Notes section of `task.md` reviewed and processed (see §2a-bis)
 - [ ] No stale stubs remain: `STUB(Phase N)` where N ≤ current phase are all addressed *(multi-phase only — verify with `just scan-stubs`)*

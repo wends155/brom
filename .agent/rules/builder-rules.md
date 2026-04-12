@@ -28,8 +28,9 @@ For each plan step `Step N: [TAG] file — function() (L##-##)`:
 ### 2.1 Parse
 
 Extract from the step header:
-- **Tag**: `[NEW]`, `[MODIFY]`, `[DELETE]`, or `[TEST]`
+- **File tag**: `[NEW]`, `[MODIFY]`, `[DELETE]`, or `[TEST]`
 - **File path**: The exact file to touch
+- **Function sub-tag** *(if present)*: `[+]` (create), `[~]` (modify), or `[-]` (remove)
 - **Function/struct name**: The specific target within the file
 - **Line range**: Advisory — locate the actual target, don't blindly edit by line number
 
@@ -48,6 +49,11 @@ Apply the change described in the step's Action field:
 - For `[NEW]` steps: create the file with the specified content
 - For `[MODIFY]` steps: edit only the targeted function/struct/lines
 - For `[DELETE]` steps: remove the specified code or file
+
+**Sub-tag-aware dispatch** *(when function sub-tags are present)*:
+- For `[+]` sub-tag: the target symbol MUST NOT already exist in the file. Create it from scratch.
+- For `[~]` sub-tag: the target symbol MUST already exist. Edit it in place.
+- For `[-]` sub-tag: the target symbol MUST already exist. Remove it entirely.
 
 ### 2.4 Post-Verify
 
@@ -129,6 +135,8 @@ The Builder MUST **immediately halt** and escalate when:
 - Changing a return type or function signature
 - Adding public APIs (functions, structs, traits) not in the plan
 - Modifying module structure (new files, moved code between modules)
+- A `[+]` sub-tagged function already exists in the target file (plan is stale or duplicate)
+- A `[~]` or `[-]` sub-tagged function does NOT exist in the target file (plan is stale or target was already removed)
 - Discovering the plan contradicts `architecture.md`
 - A step is ambiguous — the Builder cannot determine the intended action
 

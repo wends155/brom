@@ -433,3 +433,9 @@
 > * **Changes:** Implemented the `BromApp` fluent builder API to streamline app initialization. Encapsulated tracing setup, config parsing (DB URL, CORS), migration execution, routing compilation, and server binding into a single builder chain. Resolved macro paths by re-exporting framework components (`brom_core`, `brom_server`, `utoipa`) in `crates/brom/src/lib.rs`. Created `examples/simple_blog` as integration reference.
 > * **New Constraints:** (None - adheres to existing dependency rules and error propagation).
 > * **Pruned:** Deeply nested initialization templates are superseded by the `BromApp::new()` builder.
+
+> 📝 **Context Update:**
+> * **Feature:** GEO Function-Level Sub-Tags
+> * **Changes:** Enhanced the Global Execution Order (GEO) step format in `ipr.md` with function-level sub-tags (`[+]`, `[~]`, `[-]`) to improve plan scanability and action specificity. Updated parsing logic and introduced strict lifecycle guards in `builder-rules.md` to prevent duplicate creations or missed deletions. Enforced sub-tag usage in `plan-making.md` and fidelity checks in `audit.md`.
+> * **New Constraints:** M/L-tier plans are required to use function sub-tags. `[+]` targets must not already exist, and `[~]`/`[-]` targets must exist. Sub-tags override file-level tags for Action Specificity calculation.
+> * **Pruned:** Ambiguity regarding new function creation inside a `[MODIFY]` step is resolved.

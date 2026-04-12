@@ -189,6 +189,7 @@ with Narsil MCP or scripts; items marked 🧠 require LLM judgment.
 - [ ] 🧠 Interface contracts specified (signatures, invariants, error conditions)
 - [ ] 🧠 Cross-module handshakes documented (caller/callee, data format, error propagation)
 - [ ] 🧠 Code snippets included for non-trivial changes
+- [ ] 🧠 Function sub-tags (`[+]`, `[~]`, `[-]`) used for M/L tier plans per `ipr.md` (Optional for S-tier)
 
 **Compliance** (cross-reference each proposed change against these rules):
 

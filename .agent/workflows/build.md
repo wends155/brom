@@ -68,7 +68,7 @@ from `builder-rules.md §2`:
 
 ```
 For each Step N:
-  1. PARSE  — Extract tag, file, function, line range from step header
+  1. PARSE  — Extract file tag, file, function sub-tag (if present), function, line range from step header
   2. READ   — Read the target file/function. Verify Pre-condition holds.
   3. CODE   — Execute the Action. For [TEST] steps, write test first (TDD Red).
   4. VERIFY — Re-read changed code. Run Post check. Confirm match to plan.
