@@ -148,6 +148,18 @@ WHEN `introspect_schema` is called
 THEN `DbError::ExecutionError` or similar db error is returned
 AND no partial representations are generated
 
+[HAPPY] Migration Rollback
+GIVEN a valid migration version stored in the check state
+WHEN `run_rollback` is invoked
+THEN the version-named SQL file is located, canonicalized, and verified to exist within the base migrations directory
+AND the SQL content is read and executed against the database
+
+[SECURITY] Rollback Path Traversal Defense
+GIVEN a malicious or malformed version string in the database (e.g., "../../etc/passwd")
+WHEN `run_rollback` attempts to construct the file path
+THEN the path is canonicalized and compared against the base migrations directory
+AND the operation returns `DbError::PoolError("path traversal detected")` if the result is out-of-bounds
+
 ---
 
 ## 4. brom-cli

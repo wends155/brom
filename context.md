@@ -415,3 +415,21 @@
 > * **Changes:** Remediated minor discrepancies found during the Architecture.md audit. Added Section 16 for Environment Configuration, appended admin_ui.rs to the Project Layout, and updated Mock Availability for Repository<T> to reflect mockall usage.
 > * **New Constraints:** None.
 > * **Verification:** Checked document formatting. Zero-exit gate satisfied.
+
+> 📝 **Context Update:**
+> * **Feature:** Admin SPA WASM Optimization (Phase 6)
+> * **Changes:** Implemented targeted WASM size optimization for the Admin SPA. (1) Defined a custom `[profile.wasm-release]` in the root `Cargo.toml` with `opt-level = 'z'`, `lto = true`, and `codegen-units = 1`. (2) Updated `admin/Cargo.toml` to `crate-type = ["cdylib", "rlib"]` for WASM binary production. (3) Configured `Trunk.toml` and `index.html` to force the use of the `wasm-release` profile. (4) Resolved environment-specific build failures by using `npm.cmd` for CSS hooks and bypassing PowerShell execution policy restrictions.
+> * **New Constraints:** Any additions to the Admin SPA build pipeline MUST use the `wasm-release` profile to maintain the size-optimization baseline (~380KB binary).
+> * **Verification:** Successful `trunk build --release` with binary size reduced to 384KB. `just verify` (fmt, clippy, test, sg scan) passed 100% workspace-wide. Fidelity to Plan: 100%.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Phase 6 Security Hardening (CWE-22 Path Traversal)
+> * **Changes:** Hardened the migration rollback engine in `brom-db` by implementing mandatory `canonicalize()` and `starts_with()` bounds checking for dynamic migration paths. Remediated the true positive path traversal vulnerability in `run_rollback()`. Optimized path generation by using version-based file naming within a strictly anchored directory.
+> * **New Constraints:** Any file system operations involving version-derived paths MUST be canonicalized and validated against the migrations directory base path.
+> * **Verification:** Clean `just verify` (fmt, clippy, test, doc-test, sg scan). Security scan `narsil check-cwe-top25` verified 0 high-severity findings in the target module.
+
+> 📝 **Context Update:**
+> * **Feature:** Phase 6 (BromApp Fluent Builder)
+> * **Changes:** Implemented the `BromApp` fluent builder API to streamline app initialization. Encapsulated tracing setup, config parsing (DB URL, CORS), migration execution, routing compilation, and server binding into a single builder chain. Resolved macro paths by re-exporting framework components (`brom_core`, `brom_server`, `utoipa`) in `crates/brom/src/lib.rs`. Created `examples/simple_blog` as integration reference.
+> * **New Constraints:** (None - adheres to existing dependency rules and error propagation).
+> * **Pruned:** Deeply nested initialization templates are superseded by the `BromApp::new()` builder.

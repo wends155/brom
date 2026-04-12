@@ -266,6 +266,10 @@ impl<'a> MigrationRunner<'a> {
             .map_err(|e| DbError::PoolError(e.to_string()))?;
 
         if let Some(version) = version {
+            let canonical_dir = migrations_dir.canonicalize().map_err(|e| {
+                DbError::PoolError(format!("failed to canonicalize migrations dir: {e}"))
+            })?;
+
             let file_name = format!("{version}.sql");
             let file_path = migrations_dir.join(&file_name);
 
@@ -275,7 +279,16 @@ impl<'a> MigrationRunner<'a> {
                 )));
             }
 
-            let sql = std::fs::read_to_string(&file_path).map_err(|e| {
+            let canonical_file_path = file_path.canonicalize().map_err(|e| {
+                DbError::PoolError(format!("failed to canonicalize migration path: {e}"))
+            })?;
+
+            if !canonical_file_path.starts_with(&canonical_dir) {
+                return Err(DbError::PoolError("path traversal detected".into()));
+            }
+
+            // narsil-ignore: CWE-22 - Path originates from version fetch, is canonicalized, and explicitly bounds-checked against the base migrations directory.
+            let sql = std::fs::read_to_string(&canonical_file_path).map_err(|e| {
                 DbError::PoolError(format!("failed to read migration {version}: {e}"))
             })?;
 

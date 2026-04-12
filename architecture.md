@@ -183,10 +183,10 @@ brom/
 
 ### brom (facade)
 
-- **Owns**: Public API surface. Re-exports from `brom-core`, `brom-macros`,
-  `brom-server`, `brom-db`, `brom-auth`.
-- **Does NOT own**: Any implementation logic.
-- **Trait Interfaces**: None (pure re-export).
+- **Owns**: Public API surface, re-exports from `brom-core`, `brom-macros`,
+  `brom-server`, `brom-db`, `brom-auth`. High-level startup convenience API (`BromApp` builder).
+- **Does NOT own**: Business logic, persistence, authentication.
+- **Trait Interfaces**: None (composition root).
 - **Mock Availability**: N/A.
 
 ### brom-core
@@ -285,7 +285,7 @@ brom/
 | AST Lint   | `sg scan`                     | Custom AST-grep rules            |
 | Build      | `cargo build --release`       | Dev build (MSVC)                 |
 | Release    | `cross build --release --target x86_64-unknown-linux-musl` | Static binary |
-| Admin SPA  | `trunk build --release` (in `admin/`) | WASM compilation        |
+| Admin SPA  | `trunk build --release` (in `admin/`) | WASM compilation (uses `wasm-release` profile) |
 | Migrations | `cargo run -p brom-cli -- diff` | Schema diff                    |
 | Migrations | `cargo run -p brom-cli -- migrate` | Apply migrations            |
 | Coverage   | `cargo llvm-cov`              | Code coverage (baseline)       |
@@ -520,7 +520,7 @@ erDiagram
 | Constraint                     | Impact                                 | Mitigation                       |
 | ------------------------------ | -------------------------------------- | -------------------------------- |
 | SQLite single-writer lock      | Write contention under high concurrency | WAL mode + connection pooling   |
-| WASM binary size               | Admin SPA may be 2–5 MB compressed     | `wasm-opt`, code-splitting (future) |
+| WASM binary size               | Admin SPA may be 2–5 MB compressed     | `wasm-opt`, custom `wasm-release` profile, code-splitting (future) |
 | Proc-macro compile times       | Increased build times for user projects | Minimize generated code, cache  |
 | No hot-reload for admin SPA    | Dev cycle requires full rebuild        | `trunk serve --watch` for admin dev |
 | `ALTER TABLE` limitations in SQLite | Limited column/constraint modifications | Migration tool uses native `DROP COLUMN` (v3.35.0+) and recreation patterns for other changes |

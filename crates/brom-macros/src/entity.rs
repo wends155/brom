@@ -69,30 +69,34 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
 
     let policy_str = struct_attrs.as_ref().and_then(|a| a.auth_policy.as_deref());
     let policy_token = match policy_str {
-        Some("AdminOnly") => quote!(::brom_core::AuthPolicy::AdminOnly),
-        Some("ApiKey") => quote!(::brom_core::AuthPolicy::ApiKey),
-        _ => quote!(::brom_core::AuthPolicy::Public), // Default
+        Some("AdminOnly") => quote!(::brom::__private::brom_core::AuthPolicy::AdminOnly),
+        Some("ApiKey") => quote!(::brom::__private::brom_core::AuthPolicy::ApiKey),
+        _ => quote!(::brom::__private::brom_core::AuthPolicy::Public), // Default
     };
 
     let routes = crate::routes::expand_routes(struct_name, policy_str);
     let openapi = crate::openapi::expand_openapi(struct_name);
 
+    let auto_mod_name = syn::Ident::new(
+        &format!("__brom_hygiene_{}", struct_name.to_string().to_lowercase()),
+        struct_name.span(),
+    );
+
     let expanded = quote! {
         #[automatically_derived]
-        impl ::brom_core::EntitySchema for #struct_name {
+        impl ::brom::__private::brom_core::EntitySchema for #struct_name {
             fn table_name() -> &'static str {
                 #table_name
             }
 
-            fn fields() -> Vec<::brom_core::FieldInfo> {
-                use ::brom_core::{FieldInfo, FieldType, Constraint};
+            fn fields() -> Vec<::brom::__private::brom_core::FieldInfo> {
                 vec![
                     #(#field_infos),*
                 ]
             }
 
-            fn schema_info() -> ::brom_core::SchemaInfo {
-                ::brom_core::SchemaInfo {
+            fn schema_info() -> ::brom::__private::brom_core::SchemaInfo {
+                ::brom::__private::brom_core::SchemaInfo {
                     table_name: Self::table_name().to_string(),
                     fields: Self::fields(),
                     auth_policy: #policy_token,
@@ -100,10 +104,17 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
             }
         }
 
-        #[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
-        pub struct #public_struct_name {
-            #(#public_fields),*
+        mod #auto_mod_name {
+            use super::*;
+            use ::brom::__private::utoipa as utoipa;
+            use ::brom::__private::serde as serde;
+
+            #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+            pub struct #public_struct_name {
+                #(#public_fields),*
+            }
         }
+        pub use #auto_mod_name::#public_struct_name;
 
         impl From<#struct_name> for #public_struct_name {
             fn from(item: #struct_name) -> Self {
@@ -152,13 +163,13 @@ fn expand_field(
 
     let mut constraints = Vec::new();
     if attrs.unique {
-        constraints.push(quote!(Constraint::Unique));
+        constraints.push(quote!(::brom::__private::brom_core::Constraint::Unique));
     }
     if attrs.not_null {
-        constraints.push(quote!(Constraint::NotNull));
+        constraints.push(quote!(::brom::__private::brom_core::Constraint::NotNull));
     }
     if let Some(default) = &attrs.default {
-        constraints.push(quote!(Constraint::Default(#default.to_string())));
+        constraints.push(quote!(::brom::__private::brom_core::Constraint::Default(#default.to_string())));
     }
 
     let hidden = attrs.hidden;
@@ -170,7 +181,7 @@ fn expand_field(
 
     Some((
         quote! {
-            FieldInfo {
+            ::brom::__private::brom_core::FieldInfo {
                 name: #name.to_string(),
                 field_type: #field_type,
                 constraints: vec![#(#constraints),*],

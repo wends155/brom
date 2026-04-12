@@ -10,6 +10,20 @@
 //! *   **`OpenAPI` Documentation**: Automatically generated API documentation with `OpenAPI`.
 //! *   **Admin Dashboard**: A beautiful, built-in dashboard for managing your content.
 
+#[doc(hidden)]
+pub mod __private {
+    pub use brom_core;
+    pub use brom_server;
+    pub use brom_db;
+    pub use utoipa;
+    pub use tracing;
+    pub use serde;
+    pub use tokio;
+}
+
+mod app;
+
+pub use app::BromApp;
 pub use brom_auth::{ApiKeyStore, AuthError, SessionStore};
 pub use brom_core::*;
 pub use brom_db::{DbError, DbPool};

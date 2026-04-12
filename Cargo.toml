@@ -8,7 +8,8 @@ members = [
     "crates/brom-server",
     "crates/brom-cli",
     "crates/brom",
-    "admin"
+    "admin",
+    "examples/simple_blog"
 ]
 default-members = [
     "crates/brom-core",
@@ -84,4 +85,3 @@ opt-level = 'z'
 lto = true
 codegen-units = 1
 panic = "abort"
-strip = true

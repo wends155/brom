@@ -1,35 +1,43 @@
 ---
 source: crates/brom-macros/src/entity.rs
+assertion_line: 271
 expression: expand_and_format(&input)
 ---
 #[automatically_derived]
-impl ::brom_core::EntitySchema for Article {
+impl ::brom::__private::brom_core::EntitySchema for Article {
     fn table_name() -> &'static str {
         "article"
     }
-    fn fields() -> Vec<::brom_core::FieldInfo> {
-        use ::brom_core::{FieldInfo, FieldType, Constraint};
+    fn fields() -> Vec<::brom::__private::brom_core::FieldInfo> {
         vec![
-            FieldInfo { name : "title".to_string(), field_type : FieldType::String,
-            constraints : vec![], ui_widget : None, hidden : false, }, FieldInfo { name :
-            "tags".to_string(), field_type : FieldType::ManyToMany { target : "tag"
-            .to_string(), junction_table : "article_tag".to_string() }, constraints :
-            vec![], ui_widget : None, hidden : false, }
+            ::brom::__private::brom_core::FieldInfo { name : "title".to_string(),
+            field_type : ::brom::__private::brom_core::FieldType::String, constraints :
+            vec![], ui_widget : None, hidden : false, },
+            ::brom::__private::brom_core::FieldInfo { name : "tags".to_string(),
+            field_type : ::brom::__private::brom_core::FieldType::ManyToMany { target :
+            "tag".to_string(), junction_table : "article_tag".to_string() }, constraints
+            : vec![], ui_widget : None, hidden : false, }
         ]
     }
-    fn schema_info() -> ::brom_core::SchemaInfo {
-        ::brom_core::SchemaInfo {
+    fn schema_info() -> ::brom::__private::brom_core::SchemaInfo {
+        ::brom::__private::brom_core::SchemaInfo {
             table_name: Self::table_name().to_string(),
             fields: Self::fields(),
-            auth_policy: ::brom_core::AuthPolicy::Public,
+            auth_policy: ::brom::__private::brom_core::AuthPolicy::Public,
         }
     }
 }
-#[derive(Debug, Clone, ::serde::Serialize, ::serde::Deserialize, ::utoipa::ToSchema)]
-pub struct ArticlePublic {
-    pub title: String,
-    pub tags: String,
+mod __brom_hygiene_article {
+    use super::*;
+    use ::brom::__private::utoipa;
+    use ::brom::__private::serde;
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+    pub struct ArticlePublic {
+        pub title: String,
+        pub tags: String,
+    }
 }
+pub use __brom_hygiene_article::ArticlePublic;
 impl From<Article> for ArticlePublic {
     fn from(item: Article) -> Self {
         Self {
@@ -41,20 +49,20 @@ impl From<Article> for ArticlePublic {
 #[automatically_derived]
 pub mod article_admin_api {
     use super::*;
-    use ::brom_server::axum::{
+    use ::brom::__private::brom_server::axum::{
         extract::{State, Path},
         Json, http::StatusCode,
     };
-    use ::brom_server::AppState;
-    use ::brom_core::{Repository, Pagination};
-    use ::brom_db::SqliteRepository;
-    use ::brom_server::{tracing, RequireAdmin};
-    #[derive(::brom_server::serde::Deserialize)]
+    use ::brom::__private::brom_server::AppState;
+    use ::brom::__private::brom_core::{Repository, Pagination};
+    use ::brom::__private::brom_db::SqliteRepository;
+    use ::brom::__private::brom_server::{tracing, RequireAdmin};
+    #[derive(::brom::__private::serde::Deserialize)]
     pub struct PaginationParams {
         pub page: Option<u64>,
         pub per_page: Option<u64>,
     }
-    #[::brom_server::utoipa::path(
+    #[::brom::__private::utoipa::path(
         get,
         path = "/admin/api/entities/article",
         responses((status = 200, description = "List all items", body = [Article])),
@@ -64,17 +72,20 @@ pub mod article_admin_api {
     pub async fn list_handler(
         _: RequireAdmin,
         state: State<AppState>,
-        query: ::brom_server::axum::extract::Query<PaginationParams>,
-    ) -> Result<Json<Vec<Article>>, ::brom_server::ServerError> {
-        let pagination = ::brom_core::Pagination::new(
+        query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
+    ) -> Result<Json<Vec<Article>>, ::brom::__private::brom_server::ServerError> {
+        let pagination = ::brom::__private::brom_core::Pagination::new(
             query.0.page.unwrap_or(1),
             query.0.per_page.unwrap_or(25),
         );
         let repo = SqliteRepository::<Article>::new(state.db.clone());
-        let items = ::brom_core::Repository::find_all(&repo, &pagination)?;
+        let items = ::brom::__private::brom_core::Repository::find_all(
+            &repo,
+            &pagination,
+        )?;
         Ok(Json(items))
     }
-    #[::brom_server::utoipa::path(
+    #[::brom::__private::utoipa::path(
         get,
         path = "/admin/api/entities/article/{id}",
         params(("id" = i64, Path, description = "ID")),
@@ -89,17 +100,17 @@ pub mod article_admin_api {
         _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
-    ) -> Result<Json<Article>, ::brom_server::ServerError> {
+    ) -> Result<Json<Article>, ::brom::__private::brom_server::ServerError> {
         let id = id.0;
         let repo = SqliteRepository::<Article>::new(state.db.clone());
-        let item = ::brom_core::Repository::find_by_id(&repo, id)?
-            .ok_or(::brom_core::Error::NotFound {
+        let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?
+            .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "article",
                 id,
             })?;
         Ok(Json(item))
     }
-    #[::brom_server::utoipa::path(
+    #[::brom::__private::utoipa::path(
         post,
         path = "/admin/api/entities/article",
         responses((status = 201, description = "Item created", body = Article)),
@@ -110,18 +121,18 @@ pub mod article_admin_api {
         _: RequireAdmin,
         state: State<AppState>,
         payload: Json<Article>,
-    ) -> Result<Json<Article>, ::brom_server::ServerError> {
+    ) -> Result<Json<Article>, ::brom::__private::brom_server::ServerError> {
         let repo = SqliteRepository::<Article>::new(state.db.clone());
         let id = repo.create(&payload.0)?;
         let item = repo
             .find_by_id(id)?
-            .ok_or(::brom_core::Error::NotFound {
+            .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "article",
                 id,
             })?;
         Ok(Json(item))
     }
-    #[::brom_server::utoipa::path(
+    #[::brom::__private::utoipa::path(
         put,
         path = "/admin/api/entities/article/{id}",
         params(("id" = i64, Path, description = "ID")),
@@ -137,19 +148,19 @@ pub mod article_admin_api {
         state: State<AppState>,
         id: Path<i64>,
         payload: Json<Article>,
-    ) -> Result<Json<Article>, ::brom_server::ServerError> {
+    ) -> Result<Json<Article>, ::brom::__private::brom_server::ServerError> {
         let id = id.0;
         let repo = SqliteRepository::<Article>::new(state.db.clone());
         repo.update(id, &payload.0)?;
         let item = repo
             .find_by_id(id)?
-            .ok_or(::brom_core::Error::NotFound {
+            .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "article",
                 id,
             })?;
         Ok(Json(item))
     }
-    #[::brom_server::utoipa::path(
+    #[::brom::__private::utoipa::path(
         delete,
         path = "/admin/api/entities/article/{id}",
         params(("id" = i64, Path, description = "ID")),
@@ -164,7 +175,7 @@ pub mod article_admin_api {
         _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
-    ) -> Result<StatusCode, ::brom_server::ServerError> {
+    ) -> Result<StatusCode, ::brom::__private::brom_server::ServerError> {
         let id = id.0;
         let repo = SqliteRepository::<Article>::new(state.db.clone());
         repo.delete(id)?;
@@ -174,21 +185,21 @@ pub mod article_admin_api {
 #[automatically_derived]
 pub mod article_public_api {
     use super::*;
-    use ::brom_server::axum::{
+    use ::brom::__private::brom_server::axum::{
         extract::{State, Path},
         Json,
     };
-    use ::brom_server::AppState;
-    use ::brom_core::{Repository, Pagination};
-    use ::brom_db::SqliteRepository;
-    use ::brom_server::{DataEnvelope, PaginatedResponse};
-    #[derive(::brom_server::serde::Deserialize)]
+    use ::brom::__private::brom_server::AppState;
+    use ::brom::__private::brom_core::{Repository, Pagination};
+    use ::brom::__private::brom_db::SqliteRepository;
+    use ::brom::__private::brom_server::{DataEnvelope, PaginatedResponse};
+    #[derive(::brom::__private::serde::Deserialize)]
     pub struct PaginationParams {
         pub page: Option<u64>,
         pub per_page: Option<u64>,
     }
-    use ::brom_server::tracing;
-    #[::brom_server::utoipa::path(
+    use ::brom::__private::brom_server::tracing;
+    #[::brom::__private::utoipa::path(
         get,
         path = "/api/v1/entities/article",
         responses(
@@ -202,25 +213,34 @@ pub mod article_public_api {
     )]
     #[tracing::instrument(skip_all)]
     pub async fn list_handler(
-        state: ::brom_server::axum::extract::State<::brom_server::AppState>,
-        query: ::brom_server::axum::extract::Query<PaginationParams>,
+        state: ::brom::__private::brom_server::axum::extract::State<
+            ::brom::__private::brom_server::AppState,
+        >,
+        query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
     ) -> Result<
-        ::brom_server::axum::Json<::brom_server::PaginatedResponse<ArticlePublic>>,
-        ::brom_server::ServerError,
+        ::brom::__private::brom_server::axum::Json<
+            ::brom::__private::brom_server::PaginatedResponse<ArticlePublic>,
+        >,
+        ::brom::__private::brom_server::ServerError,
     > {
-        let pagination = ::brom_core::Pagination::new(
+        let pagination = ::brom::__private::brom_core::Pagination::new(
             query.0.page.unwrap_or(1),
             query.0.per_page.unwrap_or(25),
         );
-        let repo = ::brom_db::SqliteRepository::<Article>::new(state.db.clone());
-        let total_items = ::brom_core::Repository::count(&repo)?;
+        let repo = ::brom::__private::brom_db::SqliteRepository::<
+            Article,
+        >::new(state.db.clone());
+        let total_items = ::brom::__private::brom_core::Repository::count(&repo)?;
         let total_pages = (total_items + i64::from(pagination.per_page as i32) - 1)
             / i64::from(pagination.per_page as i32);
-        let items = ::brom_core::Repository::find_all(&repo, &pagination)?;
+        let items = ::brom::__private::brom_core::Repository::find_all(
+            &repo,
+            &pagination,
+        )?;
         let pub_items = items.into_iter().map(Into::into).collect();
         Ok(
-            ::brom_server::axum::Json(
-                ::brom_server::PaginatedResponse::new(
+            ::brom::__private::brom_server::axum::Json(
+                ::brom::__private::brom_server::PaginatedResponse::new(
                     pub_items,
                     total_items,
                     total_pages,
@@ -230,7 +250,7 @@ pub mod article_public_api {
             ),
         )
     }
-    #[::brom_server::utoipa::path(
+    #[::brom::__private::utoipa::path(
         get,
         path = "/api/v1/entities/article/{id}",
         params(("id" = i64, Path, description = "ID")),
@@ -246,29 +266,43 @@ pub mod article_public_api {
     )]
     #[tracing::instrument(skip_all)]
     pub async fn get_handler(
-        state: ::brom_server::axum::extract::State<::brom_server::AppState>,
-        id: ::brom_server::axum::extract::Path<i64>,
+        state: ::brom::__private::brom_server::axum::extract::State<
+            ::brom::__private::brom_server::AppState,
+        >,
+        id: ::brom::__private::brom_server::axum::extract::Path<i64>,
     ) -> Result<
-        ::brom_server::axum::Json<::brom_server::DataEnvelope<ArticlePublic>>,
-        ::brom_server::ServerError,
+        ::brom::__private::brom_server::axum::Json<
+            ::brom::__private::brom_server::DataEnvelope<ArticlePublic>,
+        >,
+        ::brom::__private::brom_server::ServerError,
     > {
         let id = id.0;
-        let repo = ::brom_db::SqliteRepository::<Article>::new(state.db.clone());
-        let item = ::brom_core::Repository::find_by_id(&repo, id)?
+        let repo = ::brom::__private::brom_db::SqliteRepository::<
+            Article,
+        >::new(state.db.clone());
+        let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?
             .ok_or(
-                ::brom_server::ServerError::Core(::brom_core::Error::NotFound {
+                ::brom::__private::brom_server::ServerError::Core(::brom::__private::brom_core::Error::NotFound {
                     entity: "article",
                     id,
                 }),
             )?;
-        Ok(::brom_server::axum::Json(::brom_server::DataEnvelope::new(item.into())))
+        Ok(
+            ::brom::__private::brom_server::axum::Json(
+                ::brom::__private::brom_server::DataEnvelope::new(item.into()),
+            ),
+        )
     }
 }
 #[automatically_derived]
 impl Article {
-    pub fn admin_router() -> ::brom_server::axum::Router<::brom_server::AppState> {
-        use ::brom_server::axum::routing::get;
-        ::brom_server::axum::Router::<::brom_server::AppState>::new()
+    pub fn admin_router() -> ::brom::__private::brom_server::axum::Router<
+        ::brom::__private::brom_server::AppState,
+    > {
+        use ::brom::__private::brom_server::axum::routing::get;
+        ::brom::__private::brom_server::axum::Router::<
+            ::brom::__private::brom_server::AppState,
+        >::new()
             .route(
                 "/admin/api/entities/article",
                 get(article_admin_api::list_handler)
@@ -281,9 +315,13 @@ impl Article {
                     .delete(article_admin_api::delete_handler),
             )
     }
-    pub fn public_router() -> ::brom_server::axum::Router<::brom_server::AppState> {
-        use ::brom_server::axum::routing::get;
-        ::brom_server::axum::Router::<::brom_server::AppState>::new()
+    pub fn public_router() -> ::brom::__private::brom_server::axum::Router<
+        ::brom::__private::brom_server::AppState,
+    > {
+        use ::brom::__private::brom_server::axum::routing::get;
+        ::brom::__private::brom_server::axum::Router::<
+            ::brom::__private::brom_server::AppState,
+        >::new()
             .route("/api/v1/entities/article", get(article_public_api::list_handler))
             .route("/api/v1/entities/article/{id}", get(article_public_api::get_handler))
     }

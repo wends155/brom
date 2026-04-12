@@ -5,5 +5,5 @@ cargo_profile = "wasm-release"
 
 [[hooks]]
 stage = "build"
-command = "npm"
+command = "npm.cmd"
 command_arguments = ["run", "build:css"]

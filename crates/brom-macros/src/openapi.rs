@@ -13,9 +13,7 @@ pub fn expand_openapi(struct_name: &Ident) -> TokenStream {
         #[automatically_derived]
         #[allow(clippy::needless_for_each)]
         mod #openapi_mod_name {
-            use super::*;
-            // Alias brom_server::utoipa as utoipa so the derive macro can find it.
-            use ::brom_server::utoipa;
+            use ::brom::__private::utoipa as utoipa;
 
             #[derive(utoipa::OpenApi)]
             #[openapi(

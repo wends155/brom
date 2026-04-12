@@ -146,11 +146,11 @@ impl BromFieldAttrs {
 pub fn map_type_to_field_type(ty: &Type, attrs: &BromFieldAttrs) -> proc_macro2::TokenStream {
     if let Some(target) = &attrs.many_many_target {
         let junction = attrs.many_many_junction.as_deref().unwrap_or("");
-        return quote::quote!(FieldType::ManyToMany { target: #target.to_string(), junction_table: #junction.to_string() });
+        return quote::quote!(::brom::__private::brom_core::FieldType::ManyToMany { target: #target.to_string(), junction_table: #junction.to_string() });
     }
 
     if let Some(target) = &attrs.link_target {
-        return quote::quote!(FieldType::Link { target: #target.to_string() });
+        return quote::quote!(::brom::__private::brom_core::FieldType::Link { target: #target.to_string() });
     }
 
     // Extract the last path segment for robust matching
@@ -158,11 +158,15 @@ pub fn map_type_to_field_type(ty: &Type, attrs: &BromFieldAttrs) -> proc_macro2:
     let type_name = extract_last_segment(ty);
 
     match type_name.as_str() {
-        "i32" | "i64" | "u32" | "u64" => quote::quote!(FieldType::Integer),
-        "f32" | "f64" => quote::quote!(FieldType::Float),
-        "bool" => quote::quote!(FieldType::Boolean),
-        "DateTime" | "NaiveDateTime" | "NaiveDate" => quote::quote!(FieldType::DateTime),
-        _ => quote::quote!(FieldType::String), // Fallback for unrecognized types
+        "i32" | "i64" | "u32" | "u64" => {
+            quote::quote!(::brom::__private::brom_core::FieldType::Integer)
+        }
+        "f32" | "f64" => quote::quote!(::brom::__private::brom_core::FieldType::Float),
+        "bool" => quote::quote!(::brom::__private::brom_core::FieldType::Boolean),
+        "DateTime" | "NaiveDateTime" | "NaiveDate" => {
+            quote::quote!(::brom::__private::brom_core::FieldType::DateTime)
+        }
+        _ => quote::quote!(::brom::__private::brom_core::FieldType::String), // Fallback for unrecognized types
     }
 }
 
