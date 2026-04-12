@@ -446,3 +446,9 @@
 > * **New Constraints:** The `BromEntity` macro now completely handles OpenAPI schema constraints without requiring users to derive `ToSchema` manually. Generated code rigidly forces fully qualified `::brom::__private` paths for dependencies.
 > * **Pruned:** Trait-bound compilation failures and hygiene errors inside the macro expansion are definitively resolved.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, trybuild, sg scan) passed workspace-wide. Fidelity to Plan: 100%. All tests successfully restored and executed without bypasses.
+
+> 📝 **Context Update:**
+> * **Feature:** Test Regression Guard (TARS Protocol)
+> * **Changes:** Implemented mechanical test count monotonicity checks. Pre-flight now captures baseline test count. Final verification mandates `final_count >= baseline_count`. Added 'Test Removal Justification' requirement for planned test deletions in `ipr.md`. Hardened `audit.md` to mechanically enforce compliance using structural scanner regex for test deletion.
+> * **New Constraints:** Any removal or disabling of test files, macros (`#[test]`, `it(`, `describe(`) MUST be explicitly authorized in the Implementation Plan. The Builder will halt execution if tests diverge negatively without a justification.
+> * **Pruned:** The "passing by removing evidence" testing loophole is closed.

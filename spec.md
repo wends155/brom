@@ -359,4 +359,31 @@ THEN `DbError::UniqueViolation` is returned
 | `id` | `i64` | PK, auto-generated | — | — |
 | `name` | `String` | NOT NULL, UNIQUE | — | Migration filename |
 | `applied_at` | `String` | NOT NULL | `now()` | ISO 8601 |
-| `checksum` | `String` | NOT NULL | — | SHA-256 of file contents to detect drift |
+
+---
+
+## 9. Quality Gates (TARS Protocol)
+
+> Systemic guardrails ensuring codebase integrity, structural non-regression, and adherence to zero-exit quality standards.
+
+### Test Regression Guard
+
+| Trigger | Condition | Action |
+|---------|-----------|--------|
+| `Pre-Flight` | Start of Act Phase | Capture `baseline_test_count` via `cargo test --workspace` |
+| `Final Verification` | End of Act Phase | Ensure `current_test_count >= baseline_test_count` |
+| `Audit` | Reflect Phase | Verify fidelity matrix and scan for unauthorized test deletions (`#\[test\]`, `it\(`, `describe\(`) |
+
+### Behavioral Scenarios
+
+[RESTRICTION] Unauthorized Test Deletion
+GIVEN a development session where tests are deleted or disabled without an approved "Test Removal Justification"
+WHEN the verification pipeline executes
+THEN the build process halts with a non-zero exit code
+AND the `audit.md` workflow flags a compliance failure
+
+[HAPPY] Authorized Test Refactoring
+GIVEN a plan that explicitly documents and justifies the removal of obsolete tests
+WHEN the verification pipeline executes
+THEN the regression check passes despite a lower count IF overrides are applied
+AND the fidelity matrix reflects "Pass with Justification"

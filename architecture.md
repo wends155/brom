@@ -296,8 +296,11 @@ brom/
 just verify
 ```
 
-This recipe executes the complete 4-step pipeline (`fmt`, `clippy`, `test`, `sg scan`).
+This recipe executes the complete 5-step pipeline (`fmt`, `clippy`, `test`, `sg scan`, `regression-check`).
 All commands must exit `0` before any commit.
+
+> [!IMPORTANT]
+> **Test Regression Guard**: The verification pipeline now mandates test count monotonicity. The global test count must be monotonically non-decreasing. Any removal of tests requires explicit authorization and justification in the implementation plan.
 
 ## 8. Error Handling Strategy
 
@@ -364,6 +367,13 @@ errors become HTTP responses.
 - `brom-auth`: ≥85% (security-critical paths)
 - `brom-server`: ≥70% (HTTP integration)
 - `brom-macros`: Compile-test coverage of all attribute combinations
+
+### Test Count Monotonicity (Regression Guard)
+
+To prevent "passing by removing evidence," the project enforces a structural guard:
+- **Baseline Capture**: The total test count is captured before any code changes.
+- **Verification**: The final test count must be ≥ the baseline.
+- **Exceptions**: Authorized test removals must be documented in the implementation plan's "Test Removal Justification" section.
 
 ## 11. Documentation Conventions
 
