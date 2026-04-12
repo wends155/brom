@@ -458,3 +458,10 @@
 > * **Changes:** Implemented a structured `.narsil-baseline.json` suppression system to eliminate recurring CWE-22 false positives from the `/toolcheck` workflow. Updated `.agent/workflows/toolcheck.md` (Step 4) with 3 verified findings suppressed by default. This ensures the Session Readiness Report highlights only *new*, unverified vulnerabilities.
 > * **New Constraints:** Any security findings flagged by Narsil that are verified as safe MUST be added to `.narsil-baseline.json` with a technical justification rather than exclusively using `// narsil-ignore` markers.
 > * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, trybuild, sg scan) passed workspace-wide. Fidelity to Plan: 100%. Baseline logic verified via manual review of toolcheck step sequence.
+
+> 📝 **Context Update:**
+> * **Feature:** Toolcheck Workflow Hardening
+> * **Changes:** Stabilized the verification pipeline by adding exit code suppression (`-`) to `just scan-todos`, preventing pipeline aborts on matching-failure. Hardened `.agent/workflows/toolcheck.md` with explicit instructions to exclude baselined findings from the `⚠️ Warnings` section of the Session Readiness Report.
+> * **New Constraints:** (None)
+> * **Pruned:** Narsil security scanner noise for baselined findings in Session Readiness Reports.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, doc-test, trybuild, sg scan) passed workspace-wide. Baseline test count (42) maintained. Fidelity to Plan: 100%.
