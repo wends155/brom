@@ -56,7 +56,7 @@ If the description is too vague to understand the user's intent,
 
 ### 2. Load Context
 
-Gather background information (or use the output from `Load-Context.ps1` above):
+Gather background information using native tools:
 
 - **`architecture.md`**: Identify relevant modules, patterns, frameworks, and constraints.
 - **`context.md`**: Check for related prior discussions, rejected ideas, or relevant decisions.

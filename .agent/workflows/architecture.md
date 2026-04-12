@@ -135,7 +135,7 @@ For multi-module projects, the Architect **SHOULD** use `sequentialthinking` to 
 
 ### Step 2A: Scan the Project
 
-Same as Discover path — full Narsil scan + `Scan-ProjectDocs.ps1 -Mode scan`.
+Same as Discover path — full Narsil scan and manual verification.
 
 ### Step 3A: Compare Declared vs Actual
 
@@ -196,7 +196,6 @@ Output an **Architecture Recommendations Report** — do NOT edit architecture.m
 // turbo
 1. Re-read `architecture.md` with `view_file` and verify all 15 required section headings from `architecture-rules.md §1` are present.
 // turbo
-2. `just audit-sections` (section heading audit).
 3. Cross-reference the draft/report against `architecture-rules.md §1` checklist.
 4. Verify all 15 required sections are present (New/Discover) or assessed (Audit).
 

@@ -35,7 +35,7 @@ Run the following checks. All are auto-runnable:
 - `rustup show`
 
 **Workflow & Script Files:**
-Use the native `list_dir` tool to list the contents of `.agent/workflows/` and `.agent/scripts/` to verify all expected `.md` and `.ps1` files exist.
+Use the native `list_dir` tool to list the contents of `.agent/workflows/` and `.agent/scripts/` to verify all expected files exist.
 
 **Project Detection:**
 Use `view_file` on `Cargo.toml`, `package.json`, or `go.mod` (whichever exists in repo root).

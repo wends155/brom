@@ -107,8 +107,8 @@ spec.md must contain a metadata line recording the source code commit it was las
 ```
 
 - The hash is the **source code** commit (`git rev-parse --short HEAD`) at the time of verification.
-- `Scan-ProjectDocs.ps1` compares this hash against HEAD to detect drift.
-- If source files changed since the recorded hash, the script emits an advisory warning.
+- Drift detection is performed by verifying the recorded commit hash against the current HEAD.
+- If source files changed since the recorded hash, an advisory warning is emitted.
 - The hash does NOT refer to the spec.md commit (avoids chicken-and-egg).
 
 ## 6. Style
