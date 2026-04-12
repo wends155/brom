@@ -307,11 +307,16 @@ dependencies = [
  "brom-macros",
  "brom-server",
  "dotenvy",
+ "http-body-util",
+ "mockall",
  "serde",
+ "serde_json",
  "tokio",
+ "tower",
  "tower-http",
  "tracing",
  "tracing-subscriber",
+ "trybuild",
  "utoipa",
 ]
 
