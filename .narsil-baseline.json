@@ -1,0 +1,17 @@
+[
+  {
+    "file": "crates/brom-cli/src/main.rs",
+    "ruleId": "CWE-22",
+    "reason": "Hardcoded schema file path .brom_schema.json is safe from traversal."
+  },
+  {
+    "file": "crates/brom-db/src/migration.rs",
+    "ruleId": "CWE-22",
+    "reason": "run_migrations uses canonicalized paths with starts_with bounds checking."
+  },
+  {
+    "file": "crates/brom-db/src/migration.rs",
+    "ruleId": "CWE-22",
+    "reason": "run_rollback uses canonicalized paths with starts_with bounds checking."
+  }
+]

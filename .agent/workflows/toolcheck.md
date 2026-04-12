@@ -109,6 +109,18 @@ If **Narsil MCP** is connected and indexed, perform a project-level scan:
 
 Report any critical vulnerabilities or structural issues found.
 
+#### Security Baseline Diffing
+If security findings are present, the agent **MUST** perform baseline comparison BEFORE reporting warnings:
+
+1. **Read Baseline**: Use `view_file` on `.narsil-baseline.json` (if it exists).
+2. **Diff Results**: Compare `get_security_summary` findings against the baseline.
+   - Match on `file` path and `ruleId`.
+   - If a finding's hash (file + ruleId) exists in the baseline, it is **Suppressed**.
+   - If a finding is not in the baseline, it is **New**.
+3. **Report**: In the Session Readiness Report (§6), summarize findings as:
+   - `✅ 0 new findings, N baselined` (if all findings are suppressed)
+   - `🟠 M new findings, N baselined` (if unverified findings exist)
+
 ### 5. Automation Opportunities
 
 If **Sequential Thinking MCP** is available, use `sequentialthinking` to analyze:

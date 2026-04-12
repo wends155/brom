@@ -452,3 +452,9 @@
 > * **Changes:** Implemented mechanical test count monotonicity checks. Pre-flight now captures baseline test count. Final verification mandates `final_count >= baseline_count`. Added 'Test Removal Justification' requirement for planned test deletions in `ipr.md`. Hardened `audit.md` to mechanically enforce compliance using structural scanner regex for test deletion.
 > * **New Constraints:** Any removal or disabling of test files, macros (`#[test]`, `it(`, `describe(`) MUST be explicitly authorized in the Implementation Plan. The Builder will halt execution if tests diverge negatively without a justification.
 > * **Pruned:** The "passing by removing evidence" testing loophole is closed.
+
+> 📝 **Context Update:**
+> * **Feature:** Narsil Security Suppression Baseline
+> * **Changes:** Implemented a structured `.narsil-baseline.json` suppression system to eliminate recurring CWE-22 false positives from the `/toolcheck` workflow. Updated `.agent/workflows/toolcheck.md` (Step 4) with 3 verified findings suppressed by default. This ensures the Session Readiness Report highlights only *new*, unverified vulnerabilities.
+> * **New Constraints:** Any security findings flagged by Narsil that are verified as safe MUST be added to `.narsil-baseline.json` with a technical justification rather than exclusively using `// narsil-ignore` markers.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, trybuild, sg scan) passed workspace-wide. Fidelity to Plan: 100%. Baseline logic verified via manual review of toolcheck step sequence.
