@@ -468,6 +468,6 @@
 
 > ?? **Context Update:**
 > * **Feature:** Legacy Tooling Remediation (Interactive Bug Fix)
-> * **Changes:** Remediated interactive suspension bugs caused by legacy PowerShell scripts. Quarantined all .ps1 scripts from .agent/scripts/ to .agent/scripts/archive/. Scrubbed ipr.md of legacy script references (Sync-TaskList.ps1, Git-Checkpoint.ps1), replacing them with native Agent Procedure mandates and standard git commands. Updated TARS protocol to enforce inline, non-interactive execution standards.
+> * **Changes:** Remediated interactive suspension bugs caused by legacy PowerShell scripts. Quarantined all .ps1 scripts from .agent/scripts/ to .agent/scripts/archive/. Scrubbed `ipr.md` and `builder-rules.md` of legacy script references (Sync-TaskList.ps1, Git-Checkpoint.ps1), replacing them with native Agent Procedure mandates and standard git commands. Updated TARS protocol to enforce inline, non-interactive execution standards.
 > * **New Constraints:** All automation task syncing and git operations MUST use native tools (list_dir, grep_search, git add/commit) or safe inline pwsh -Command calls. Use of legacy helper scripts is strictly prohibited.
 > * **Pruned:** The legacy script-based task synchronization and git checkpoint logic is fully deprecated and archived.
