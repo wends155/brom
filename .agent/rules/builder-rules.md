@@ -66,7 +66,7 @@ After executing, run the step's Post checks:
 
 After each step completes:
 - Mark `task.md`: `[ ]` → `[/]` when starting, `[/]` → `[x]` when Post passes
-- At 🔒 CHECKPOINT markers: run `ALL`, commit via `Git-Checkpoint.ps1`
+- At 🔒 CHECKPOINT markers: run `ALL`, commit via standard `git` commands
 
 ## 3. TDD Mandate
 
