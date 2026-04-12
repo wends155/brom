@@ -1,6 +1,5 @@
 ---
 source: crates/brom-macros/src/entity.rs
-assertion_line: 221
 expression: expand_and_format(&input)
 ---
 #[automatically_derived]
@@ -31,18 +30,42 @@ impl ::brom::__private::brom_core::EntitySchema for Post {
 }
 mod __brom_hygiene_post {
     use super::*;
-    use ::brom::__private::utoipa;
-    use ::brom::__private::serde;
+    use ::brom::__private::utoipa as utoipa;
+    use ::brom::__private::serde as serde;
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
     pub struct PostPublic {
         pub title: String,
         pub body: String,
         pub published: bool,
     }
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+    pub struct PostAdmin {
+        pub title: String,
+        pub body: String,
+        pub published: bool,
+    }
 }
-pub use __brom_hygiene_post::PostPublic;
+pub use __brom_hygiene_post::{PostPublic, PostAdmin};
 impl From<Post> for PostPublic {
     fn from(item: Post) -> Self {
+        Self {
+            title: item.title,
+            body: item.body,
+            published: item.published,
+        }
+    }
+}
+impl From<Post> for PostAdmin {
+    fn from(item: Post) -> Self {
+        Self {
+            title: item.title,
+            body: item.body,
+            published: item.published,
+        }
+    }
+}
+impl From<PostAdmin> for Post {
+    fn from(item: PostAdmin) -> Self {
         Self {
             title: item.title,
             body: item.body,
@@ -60,7 +83,9 @@ pub mod post_admin_api {
     use ::brom::__private::brom_server::AppState;
     use ::brom::__private::brom_core::{Repository, Pagination};
     use ::brom::__private::brom_db::SqliteRepository;
-    use ::brom::__private::brom_server::{tracing, RequireAdmin};
+    use ::brom::__private::brom_server::RequireAdmin;
+    use ::brom::__private::utoipa as utoipa;
+    use ::brom::__private::brom_server::tracing as tracing;
     #[derive(::brom::__private::serde::Deserialize)]
     pub struct PaginationParams {
         pub page: Option<u64>,
@@ -69,100 +94,102 @@ pub mod post_admin_api {
     #[::brom::__private::utoipa::path(
         get,
         path = "/admin/api/entities/post",
-        responses((status = 200, description = "List all items", body = [Post])),
+        responses(
+            (status = 200, description = "List all items", body = [super::PostAdmin])
+        ),
         tag = "Admin Post"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn list_handler(
         _: RequireAdmin,
         state: State<AppState>,
         query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
-    ) -> Result<Json<Vec<Post>>, ::brom::__private::brom_server::ServerError> {
+    ) -> Result<
+        Json<Vec<super::PostAdmin>>,
+        ::brom::__private::brom_server::ServerError,
+    > {
         let pagination = ::brom::__private::brom_core::Pagination::new(
             query.0.page.unwrap_or(1),
             query.0.per_page.unwrap_or(25),
         );
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let repo = SqliteRepository::<super::Post>::new(state.db.clone());
         let items = ::brom::__private::brom_core::Repository::find_all(
             &repo,
             &pagination,
         )?;
-        Ok(Json(items))
+        let out_items = items.into_iter().map(Into::into).collect();
+        Ok(Json(out_items))
     }
     #[::brom::__private::utoipa::path(
         get,
         path = "/admin/api/entities/post/{id}",
         params(("id" = i64, Path, description = "ID")),
         responses(
-            (status = 200, description = "Get item by ID", body = Post),
+            (status = 200, description = "Get item by ID", body = super::PostAdmin),
             (status = 404, description = "Not found")
         ),
         tag = "Admin Post"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn get_handler(
         _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
-    ) -> Result<Json<Post>, ::brom::__private::brom_server::ServerError> {
+    ) -> Result<Json<super::PostAdmin>, ::brom::__private::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
+        let repo = SqliteRepository::<super::Post>::new(state.db.clone());
         let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?
             .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "post",
                 id,
             })?;
-        Ok(Json(item))
+        Ok(Json(item.into()))
     }
     #[::brom::__private::utoipa::path(
         post,
         path = "/admin/api/entities/post",
-        responses((status = 201, description = "Item created", body = Post)),
+        responses((status = 201, description = "Item created", body = super::PostAdmin)),
         tag = "Admin Post"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn create_handler(
         _: RequireAdmin,
         state: State<AppState>,
-        payload: Json<Post>,
-    ) -> Result<Json<Post>, ::brom::__private::brom_server::ServerError> {
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
-        let id = repo.create(&payload.0)?;
+        payload: Json<super::PostAdmin>,
+    ) -> Result<Json<super::PostAdmin>, ::brom::__private::brom_server::ServerError> {
+        let repo = SqliteRepository::<super::Post>::new(state.db.clone());
+        let id = repo.create(&payload.0.into())?;
         let item = repo
             .find_by_id(id)?
             .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "post",
                 id,
             })?;
-        Ok(Json(item))
+        Ok(Json(item.into()))
     }
     #[::brom::__private::utoipa::path(
         put,
         path = "/admin/api/entities/post/{id}",
         params(("id" = i64, Path, description = "ID")),
         responses(
-            (status = 200, description = "Item updated", body = Post),
+            (status = 200, description = "Item updated", body = super::PostAdmin),
             (status = 404, description = "Not found")
         ),
         tag = "Admin Post"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn update_handler(
         _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
-        payload: Json<Post>,
-    ) -> Result<Json<Post>, ::brom::__private::brom_server::ServerError> {
+        payload: Json<super::PostAdmin>,
+    ) -> Result<Json<super::PostAdmin>, ::brom::__private::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Post>::new(state.db.clone());
-        repo.update(id, &payload.0)?;
+        let repo = SqliteRepository::<super::Post>::new(state.db.clone());
+        repo.update(id, &payload.0.into())?;
         let item = repo
             .find_by_id(id)?
             .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "post",
                 id,
             })?;
-        Ok(Json(item))
+        Ok(Json(item.into()))
     }
     #[::brom::__private::utoipa::path(
         delete,
@@ -174,7 +201,6 @@ pub mod post_admin_api {
         ),
         tag = "Admin Post"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn delete_handler(
         _: RequireAdmin,
         state: State<AppState>,
@@ -202,20 +228,20 @@ pub mod post_public_api {
         pub page: Option<u64>,
         pub per_page: Option<u64>,
     }
-    use ::brom::__private::brom_server::tracing;
-    #[::brom::__private::utoipa::path(
+    use ::brom::__private::utoipa as utoipa;
+    use ::brom::__private::brom_server::tracing as tracing;
+    #[utoipa::path(
         get,
         path = "/api/v1/entities/post",
         responses(
             (
                 status = 200,
                 description = "List all items",
-                body = PaginatedResponse<PostPublic>
+                body = PaginatedResponse<super::PostPublic>
             )
         ),
         tag = "Public Post"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn list_handler(
         state: ::brom::__private::brom_server::axum::extract::State<
             ::brom::__private::brom_server::AppState,
@@ -223,7 +249,7 @@ pub mod post_public_api {
         query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
     ) -> Result<
         ::brom::__private::brom_server::axum::Json<
-            ::brom::__private::brom_server::PaginatedResponse<PostPublic>,
+            ::brom::__private::brom_server::PaginatedResponse<super::PostPublic>,
         >,
         ::brom::__private::brom_server::ServerError,
     > {
@@ -232,7 +258,7 @@ pub mod post_public_api {
             query.0.per_page.unwrap_or(25),
         );
         let repo = ::brom::__private::brom_db::SqliteRepository::<
-            Post,
+            super::Post,
         >::new(state.db.clone());
         let total_items = ::brom::__private::brom_core::Repository::count(&repo)?;
         let total_pages = (total_items + i64::from(pagination.per_page as i32) - 1)
@@ -262,13 +288,12 @@ pub mod post_public_api {
             (
                 status = 200,
                 description = "Get item by ID",
-                body = DataEnvelope<PostPublic>
+                body = DataEnvelope<super::PostPublic>
             ),
             (status = 404, description = "Not found")
         ),
         tag = "Public Post"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn get_handler(
         state: ::brom::__private::brom_server::axum::extract::State<
             ::brom::__private::brom_server::AppState,
@@ -276,13 +301,13 @@ pub mod post_public_api {
         id: ::brom::__private::brom_server::axum::extract::Path<i64>,
     ) -> Result<
         ::brom::__private::brom_server::axum::Json<
-            ::brom::__private::brom_server::DataEnvelope<PostPublic>,
+            ::brom::__private::brom_server::DataEnvelope<super::PostPublic>,
         >,
         ::brom::__private::brom_server::ServerError,
     > {
         let id = id.0;
         let repo = ::brom::__private::brom_db::SqliteRepository::<
-            Post,
+            super::Post,
         >::new(state.db.clone());
         let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?
             .ok_or(
@@ -332,20 +357,19 @@ impl Post {
 #[automatically_derived]
 #[allow(clippy::needless_for_each)]
 mod post_openapi_inner {
-    use super::*;
-    use ::brom_server::utoipa;
+    use ::brom::__private::utoipa as utoipa;
     #[derive(utoipa::OpenApi)]
     #[openapi(
         paths(
-            post_admin_api::list_handler,
-            post_admin_api::get_handler,
-            post_admin_api::create_handler,
-            post_admin_api::update_handler,
-            post_admin_api::delete_handler,
-            post_public_api::list_handler,
-            post_public_api::get_handler,
+            super::post_admin_api::list_handler,
+            super::post_admin_api::get_handler,
+            super::post_admin_api::create_handler,
+            super::post_admin_api::update_handler,
+            super::post_admin_api::delete_handler,
+            super::post_public_api::list_handler,
+            super::post_public_api::get_handler,
         ),
-        components(schemas(Post))
+        components(schemas(super::PostAdmin, super::PostPublic))
     )]
     pub struct PostApi;
 }

@@ -6,6 +6,7 @@ use syn::{Ident, LitStr};
 pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
     let lower_name = struct_name.to_string().to_lowercase();
     let public_struct_name = format_ident!("{}Public", struct_name);
+    let admin_struct_name = format_ident!("{}Admin", struct_name);
 
     let admin_api_mod_name = format_ident!("{}_admin_api", lower_name);
     let public_api_mod_name = format_ident!("{}_public_api", lower_name);
@@ -44,67 +45,64 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
             #[::brom::__private::utoipa::path(
                 get,
                 path = #admin_base_lit,
-                responses((status = 200, description = "List all items", body = [#struct_name])),
+                responses((status = 200, description = "List all items", body = [super::#admin_struct_name])),
                 tag = #admin_tag_name
             )]
-            #[tracing::instrument(skip_all)]
             pub async fn list_handler(
                 _: RequireAdmin,
                 state: State<AppState>,
                 query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
-            ) -> Result<Json<Vec<#struct_name>>, ::brom::__private::brom_server::ServerError> {
+            ) -> Result<Json<Vec<super::#admin_struct_name>>, ::brom::__private::brom_server::ServerError> {
                 let pagination = ::brom::__private::brom_core::Pagination::new(
                     query.0.page.unwrap_or(1),
                     query.0.per_page.unwrap_or(25),
                 );
-                let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
+                let repo = SqliteRepository::<super::#struct_name>::new(state.db.clone());
                 let items = ::brom::__private::brom_core::Repository::find_all(&repo, &pagination)?;
-                Ok(Json(items))
+                let out_items = items.into_iter().map(Into::into).collect();
+                Ok(Json(out_items))
             }
 
             #[::brom::__private::utoipa::path(
                 get,
                 path = #admin_id_lit,
                 params(("id" = i64, Path, description = "ID")),
-                responses((status = 200, description = "Get item by ID", body = #struct_name), (status = 404, description = "Not found")),
+                responses((status = 200, description = "Get item by ID", body = super::#admin_struct_name), (status = 404, description = "Not found")),
                 tag = #admin_tag_name
             )]
-            #[tracing::instrument(skip_all)]
-            pub async fn get_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>) -> Result<Json<#struct_name>, ::brom::__private::brom_server::ServerError> {
+            pub async fn get_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>) -> Result<Json<super::#admin_struct_name>, ::brom::__private::brom_server::ServerError> {
                 let id = id.0;
-                let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
+                let repo = SqliteRepository::<super::#struct_name>::new(state.db.clone());
                 let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?.ok_or(::brom::__private::brom_core::Error::NotFound { entity: #lower_name, id })?;
-                Ok(Json(item))
+                Ok(Json(item.into()))
             }
 
             #[::brom::__private::utoipa::path(
                 post,
                 path = #admin_base_lit,
-                responses((status = 201, description = "Item created", body = #struct_name)),
+                responses((status = 201, description = "Item created", body = super::#admin_struct_name)),
                 tag = #admin_tag_name
             )]
-            #[tracing::instrument(skip_all)]
-            pub async fn create_handler(_: RequireAdmin, state: State<AppState>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom::__private::brom_server::ServerError> {
-                let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
-                let id = repo.create(&payload.0)?;
+            pub async fn create_handler(_: RequireAdmin, state: State<AppState>, payload: Json<super::#admin_struct_name>) -> Result<Json<super::#admin_struct_name>, ::brom::__private::brom_server::ServerError> {
+                let repo = SqliteRepository::<super::#struct_name>::new(state.db.clone());
+                let id = repo.create(&payload.0.into())?;
                 let item = repo.find_by_id(id)?.ok_or(::brom::__private::brom_core::Error::NotFound { entity: #lower_name, id })?;
-                Ok(Json(item))
+                Ok(Json(item.into()))
             }
 
             #[::brom::__private::utoipa::path(
                 put,
                 path = #admin_id_lit,
                 params(("id" = i64, Path, description = "ID")),
-                responses((status = 200, description = "Item updated", body = #struct_name), (status = 404, description = "Not found")),
+                responses((status = 200, description = "Item updated", body = super::#admin_struct_name), (status = 404, description = "Not found")),
                 tag = #admin_tag_name
             )]
-            #[tracing::instrument(skip_all)]
-            pub async fn update_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>, payload: Json<#struct_name>) -> Result<Json<#struct_name>, ::brom::__private::brom_server::ServerError> {
+            pub async fn update_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>, payload: Json<super::#admin_struct_name>) -> Result<Json<super::#admin_struct_name>, ::brom::__private::brom_server::ServerError> {
                 let id = id.0;
-                let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
-                repo.update(id, &payload.0)?;
+                let repo = SqliteRepository::<super::#struct_name>::new(state.db.clone());
+                repo.update(id, &payload.0.into())?;
                 let item = repo.find_by_id(id)?.ok_or(::brom::__private::brom_core::Error::NotFound { entity: #lower_name, id })?;
-                Ok(Json(item))
+                Ok(Json(item.into()))
             }
 
             #[::brom::__private::utoipa::path(
@@ -114,7 +112,6 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
                 responses((status = 204, description = "Item deleted"), (status = 404, description = "Not found")),
                 tag = #admin_tag_name
             )]
-            #[tracing::instrument(skip_all)]
             pub async fn delete_handler(_: RequireAdmin, state: State<AppState>, id: Path<i64>) -> Result<StatusCode, ::brom::__private::brom_server::ServerError> {
                 let id = id.0;
                 let repo = SqliteRepository::<#struct_name>::new(state.db.clone());
@@ -136,33 +133,31 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
             use ::brom::__private::utoipa as utoipa;
             use ::brom::__private::brom_server::tracing as tracing;
 
-            #[utoipa::path(get, path = #public_base_lit, responses((status = 200, description = "List all items", body = PaginatedResponse<#public_struct_name>)), tag = #public_tag_name)]
-            #[tracing::instrument(skip_all)]
+            #[utoipa::path(get, path = #public_base_lit, responses((status = 200, description = "List all items", body = PaginatedResponse<super::#public_struct_name>)), tag = #public_tag_name)]
             pub async fn list_handler(
                 _: ::brom::__private::brom_server::RequireApiKey,
                 state: ::brom::__private::brom_server::axum::extract::State<::brom::__private::brom_server::AppState>,
                 query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
-            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::PaginatedResponse<#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
+            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::PaginatedResponse<super::#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
                 let pagination = ::brom::__private::brom_core::Pagination::new(
                     query.0.page.unwrap_or(1),
                     query.0.per_page.unwrap_or(25),
                 );
-                let repo = ::brom::__private::brom_db::SqliteRepository::<#struct_name>::new(state.db.clone());
+                let repo = ::brom::__private::brom_db::SqliteRepository::<super::#struct_name>::new(state.db.clone());
                 let total_items = ::brom::__private::brom_core::Repository::count(&repo)?;
                 let total_pages = (total_items + i64::from(pagination.per_page as i32) - 1) / i64::from(pagination.per_page as i32);
                 let items = ::brom::__private::brom_core::Repository::find_all(&repo, &pagination)?;
                 let pub_items = items.into_iter().map(Into::into).collect();
                 Ok(::brom::__private::brom_server::axum::Json(::brom::__private::brom_server::PaginatedResponse::new(pub_items, total_items, total_pages, pagination.page, pagination.per_page)))
             }
-            #[::brom::__private::utoipa::path(get, path = #public_id_lit, params(("id" = i64, Path, description = "ID")), responses((status = 200, description = "Get item by ID", body = DataEnvelope<#public_struct_name>), (status = 404, description = "Not found")), tag = #public_tag_name)]
-            #[tracing::instrument(skip_all)]
+            #[::brom::__private::utoipa::path(get, path = #public_id_lit, params(("id" = i64, Path, description = "ID")), responses((status = 200, description = "Get item by ID", body = DataEnvelope<super::#public_struct_name>), (status = 404, description = "Not found")), tag = #public_tag_name)]
             pub async fn get_handler(
                 _: ::brom::__private::brom_server::RequireApiKey,
                 state: ::brom::__private::brom_server::axum::extract::State<::brom::__private::brom_server::AppState>,
                 id: ::brom::__private::brom_server::axum::extract::Path<i64>
-            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::DataEnvelope<#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
+            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::DataEnvelope<super::#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
                 let id = id.0;
-                let repo = ::brom::__private::brom_db::SqliteRepository::<#struct_name>::new(state.db.clone());
+                let repo = ::brom::__private::brom_db::SqliteRepository::<super::#struct_name>::new(state.db.clone());
                 let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?.ok_or(::brom::__private::brom_server::ServerError::Core(::brom::__private::brom_core::Error::NotFound { entity: #lower_name, id }))?;
                 Ok(::brom::__private::brom_server::axum::Json(::brom::__private::brom_server::DataEnvelope::new(item.into())))
             }
@@ -177,31 +172,29 @@ pub fn expand_routes(struct_name: &Ident, policy: Option<&str>) -> TokenStream {
             use ::brom::__private::utoipa as utoipa;
             use ::brom::__private::brom_server::tracing as tracing;
 
-            #[utoipa::path(get, path = #public_base_lit, responses((status = 200, description = "List all items", body = PaginatedResponse<#public_struct_name>)), tag = #public_tag_name)]
-            #[tracing::instrument(skip_all)]
+            #[utoipa::path(get, path = #public_base_lit, responses((status = 200, description = "List all items", body = PaginatedResponse<super::#public_struct_name>)), tag = #public_tag_name)]
             pub async fn list_handler(
                 state: ::brom::__private::brom_server::axum::extract::State<::brom::__private::brom_server::AppState>,
                 query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
-            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::PaginatedResponse<#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
+            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::PaginatedResponse<super::#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
                 let pagination = ::brom::__private::brom_core::Pagination::new(
                     query.0.page.unwrap_or(1),
                     query.0.per_page.unwrap_or(25),
                 );
-                let repo = ::brom::__private::brom_db::SqliteRepository::<#struct_name>::new(state.db.clone());
+                let repo = ::brom::__private::brom_db::SqliteRepository::<super::#struct_name>::new(state.db.clone());
                 let total_items = ::brom::__private::brom_core::Repository::count(&repo)?;
                 let total_pages = (total_items + i64::from(pagination.per_page as i32) - 1) / i64::from(pagination.per_page as i32);
                 let items = ::brom::__private::brom_core::Repository::find_all(&repo, &pagination)?;
                 let pub_items = items.into_iter().map(Into::into).collect();
                 Ok(::brom::__private::brom_server::axum::Json(::brom::__private::brom_server::PaginatedResponse::new(pub_items, total_items, total_pages, pagination.page, pagination.per_page)))
             }
-            #[::brom::__private::utoipa::path(get, path = #public_id_lit, params(("id" = i64, Path, description = "ID")), responses((status = 200, description = "Get item by ID", body = DataEnvelope<#public_struct_name>), (status = 404, description = "Not found")), tag = #public_tag_name)]
-            #[tracing::instrument(skip_all)]
+            #[::brom::__private::utoipa::path(get, path = #public_id_lit, params(("id" = i64, Path, description = "ID")), responses((status = 200, description = "Get item by ID", body = DataEnvelope<super::#public_struct_name>), (status = 404, description = "Not found")), tag = #public_tag_name)]
             pub async fn get_handler(
                 state: ::brom::__private::brom_server::axum::extract::State<::brom::__private::brom_server::AppState>,
                 id: ::brom::__private::brom_server::axum::extract::Path<i64>
-            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::DataEnvelope<#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
+            ) -> Result<::brom::__private::brom_server::axum::Json<::brom::__private::brom_server::DataEnvelope<super::#public_struct_name>>, ::brom::__private::brom_server::ServerError> {
                 let id = id.0;
-                let repo = ::brom::__private::brom_db::SqliteRepository::<#struct_name>::new(state.db.clone());
+                let repo = ::brom::__private::brom_db::SqliteRepository::<super::#struct_name>::new(state.db.clone());
                 let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?.ok_or(::brom::__private::brom_server::ServerError::Core(::brom::__private::brom_core::Error::NotFound { entity: #lower_name, id }))?;
                 Ok(::brom::__private::brom_server::axum::Json(::brom::__private::brom_server::DataEnvelope::new(item.into())))
             }

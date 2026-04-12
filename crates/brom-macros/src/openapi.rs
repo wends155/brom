@@ -9,6 +9,9 @@ pub fn expand_openapi(struct_name: &Ident) -> TokenStream {
     let public_api_mod_name = format_ident!("{}_public_api", lower_name);
     let openapi_mod_name = format_ident!("{}_openapi_inner", lower_name);
 
+    let admin_struct_name = format_ident!("{}Admin", struct_name);
+    let public_struct_name = format_ident!("{}Public", struct_name);
+
     quote! {
         #[automatically_derived]
         #[allow(clippy::needless_for_each)]
@@ -18,15 +21,15 @@ pub fn expand_openapi(struct_name: &Ident) -> TokenStream {
             #[derive(utoipa::OpenApi)]
             #[openapi(
                 paths(
-                    #admin_api_mod_name::list_handler,
-                    #admin_api_mod_name::get_handler,
-                    #admin_api_mod_name::create_handler,
-                    #admin_api_mod_name::update_handler,
-                    #admin_api_mod_name::delete_handler,
-                    #public_api_mod_name::list_handler,
-                    #public_api_mod_name::get_handler,
+                    super::#admin_api_mod_name::list_handler,
+                    super::#admin_api_mod_name::get_handler,
+                    super::#admin_api_mod_name::create_handler,
+                    super::#admin_api_mod_name::update_handler,
+                    super::#admin_api_mod_name::delete_handler,
+                    super::#public_api_mod_name::list_handler,
+                    super::#public_api_mod_name::get_handler,
                 ),
-                components(schemas(#struct_name))
+                components(schemas(super::#admin_struct_name, super::#public_struct_name))
             )]
             pub struct #api_doc_name;
         }

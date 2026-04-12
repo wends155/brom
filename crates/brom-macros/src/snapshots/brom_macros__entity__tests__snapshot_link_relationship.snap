@@ -1,6 +1,5 @@
 ---
 source: crates/brom-macros/src/entity.rs
-assertion_line: 259
 expression: expand_and_format(&input)
 ---
 #[automatically_derived]
@@ -28,17 +27,38 @@ impl ::brom::__private::brom_core::EntitySchema for Comment {
 }
 mod __brom_hygiene_comment {
     use super::*;
-    use ::brom::__private::utoipa;
-    use ::brom::__private::serde;
+    use ::brom::__private::utoipa as utoipa;
+    use ::brom::__private::serde as serde;
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
     pub struct CommentPublic {
         pub body: String,
         pub post_id: i64,
     }
+    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+    pub struct CommentAdmin {
+        pub body: String,
+        pub post_id: i64,
+    }
 }
-pub use __brom_hygiene_comment::CommentPublic;
+pub use __brom_hygiene_comment::{CommentPublic, CommentAdmin};
 impl From<Comment> for CommentPublic {
     fn from(item: Comment) -> Self {
+        Self {
+            body: item.body,
+            post_id: item.post_id,
+        }
+    }
+}
+impl From<Comment> for CommentAdmin {
+    fn from(item: Comment) -> Self {
+        Self {
+            body: item.body,
+            post_id: item.post_id,
+        }
+    }
+}
+impl From<CommentAdmin> for Comment {
+    fn from(item: CommentAdmin) -> Self {
         Self {
             body: item.body,
             post_id: item.post_id,
@@ -55,7 +75,9 @@ pub mod comment_admin_api {
     use ::brom::__private::brom_server::AppState;
     use ::brom::__private::brom_core::{Repository, Pagination};
     use ::brom::__private::brom_db::SqliteRepository;
-    use ::brom::__private::brom_server::{tracing, RequireAdmin};
+    use ::brom::__private::brom_server::RequireAdmin;
+    use ::brom::__private::utoipa as utoipa;
+    use ::brom::__private::brom_server::tracing as tracing;
     #[derive(::brom::__private::serde::Deserialize)]
     pub struct PaginationParams {
         pub page: Option<u64>,
@@ -64,100 +86,104 @@ pub mod comment_admin_api {
     #[::brom::__private::utoipa::path(
         get,
         path = "/admin/api/entities/comment",
-        responses((status = 200, description = "List all items", body = [Comment])),
+        responses(
+            (status = 200, description = "List all items", body = [super::CommentAdmin])
+        ),
         tag = "Admin Comment"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn list_handler(
         _: RequireAdmin,
         state: State<AppState>,
         query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
-    ) -> Result<Json<Vec<Comment>>, ::brom::__private::brom_server::ServerError> {
+    ) -> Result<
+        Json<Vec<super::CommentAdmin>>,
+        ::brom::__private::brom_server::ServerError,
+    > {
         let pagination = ::brom::__private::brom_core::Pagination::new(
             query.0.page.unwrap_or(1),
             query.0.per_page.unwrap_or(25),
         );
-        let repo = SqliteRepository::<Comment>::new(state.db.clone());
+        let repo = SqliteRepository::<super::Comment>::new(state.db.clone());
         let items = ::brom::__private::brom_core::Repository::find_all(
             &repo,
             &pagination,
         )?;
-        Ok(Json(items))
+        let out_items = items.into_iter().map(Into::into).collect();
+        Ok(Json(out_items))
     }
     #[::brom::__private::utoipa::path(
         get,
         path = "/admin/api/entities/comment/{id}",
         params(("id" = i64, Path, description = "ID")),
         responses(
-            (status = 200, description = "Get item by ID", body = Comment),
+            (status = 200, description = "Get item by ID", body = super::CommentAdmin),
             (status = 404, description = "Not found")
         ),
         tag = "Admin Comment"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn get_handler(
         _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
-    ) -> Result<Json<Comment>, ::brom::__private::brom_server::ServerError> {
+    ) -> Result<Json<super::CommentAdmin>, ::brom::__private::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Comment>::new(state.db.clone());
+        let repo = SqliteRepository::<super::Comment>::new(state.db.clone());
         let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?
             .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "comment",
                 id,
             })?;
-        Ok(Json(item))
+        Ok(Json(item.into()))
     }
     #[::brom::__private::utoipa::path(
         post,
         path = "/admin/api/entities/comment",
-        responses((status = 201, description = "Item created", body = Comment)),
+        responses(
+            (status = 201, description = "Item created", body = super::CommentAdmin)
+        ),
         tag = "Admin Comment"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn create_handler(
         _: RequireAdmin,
         state: State<AppState>,
-        payload: Json<Comment>,
-    ) -> Result<Json<Comment>, ::brom::__private::brom_server::ServerError> {
-        let repo = SqliteRepository::<Comment>::new(state.db.clone());
-        let id = repo.create(&payload.0)?;
+        payload: Json<super::CommentAdmin>,
+    ) -> Result<Json<super::CommentAdmin>, ::brom::__private::brom_server::ServerError> {
+        let repo = SqliteRepository::<super::Comment>::new(state.db.clone());
+        let id = repo.create(&payload.0.into())?;
         let item = repo
             .find_by_id(id)?
             .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "comment",
                 id,
             })?;
-        Ok(Json(item))
+        Ok(Json(item.into()))
     }
     #[::brom::__private::utoipa::path(
         put,
         path = "/admin/api/entities/comment/{id}",
         params(("id" = i64, Path, description = "ID")),
         responses(
-            (status = 200, description = "Item updated", body = Comment),
+            (status = 200, description = "Item updated", body = super::CommentAdmin),
             (status = 404, description = "Not found")
         ),
         tag = "Admin Comment"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn update_handler(
         _: RequireAdmin,
         state: State<AppState>,
         id: Path<i64>,
-        payload: Json<Comment>,
-    ) -> Result<Json<Comment>, ::brom::__private::brom_server::ServerError> {
+        payload: Json<super::CommentAdmin>,
+    ) -> Result<Json<super::CommentAdmin>, ::brom::__private::brom_server::ServerError> {
         let id = id.0;
-        let repo = SqliteRepository::<Comment>::new(state.db.clone());
-        repo.update(id, &payload.0)?;
+        let repo = SqliteRepository::<super::Comment>::new(state.db.clone());
+        repo.update(id, &payload.0.into())?;
         let item = repo
             .find_by_id(id)?
             .ok_or(::brom::__private::brom_core::Error::NotFound {
                 entity: "comment",
                 id,
             })?;
-        Ok(Json(item))
+        Ok(Json(item.into()))
     }
     #[::brom::__private::utoipa::path(
         delete,
@@ -169,7 +195,6 @@ pub mod comment_admin_api {
         ),
         tag = "Admin Comment"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn delete_handler(
         _: RequireAdmin,
         state: State<AppState>,
@@ -197,20 +222,20 @@ pub mod comment_public_api {
         pub page: Option<u64>,
         pub per_page: Option<u64>,
     }
-    use ::brom::__private::brom_server::tracing;
-    #[::brom::__private::utoipa::path(
+    use ::brom::__private::utoipa as utoipa;
+    use ::brom::__private::brom_server::tracing as tracing;
+    #[utoipa::path(
         get,
         path = "/api/v1/entities/comment",
         responses(
             (
                 status = 200,
                 description = "List all items",
-                body = PaginatedResponse<CommentPublic>
+                body = PaginatedResponse<super::CommentPublic>
             )
         ),
         tag = "Public Comment"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn list_handler(
         state: ::brom::__private::brom_server::axum::extract::State<
             ::brom::__private::brom_server::AppState,
@@ -218,7 +243,7 @@ pub mod comment_public_api {
         query: ::brom::__private::brom_server::axum::extract::Query<PaginationParams>,
     ) -> Result<
         ::brom::__private::brom_server::axum::Json<
-            ::brom::__private::brom_server::PaginatedResponse<CommentPublic>,
+            ::brom::__private::brom_server::PaginatedResponse<super::CommentPublic>,
         >,
         ::brom::__private::brom_server::ServerError,
     > {
@@ -227,7 +252,7 @@ pub mod comment_public_api {
             query.0.per_page.unwrap_or(25),
         );
         let repo = ::brom::__private::brom_db::SqliteRepository::<
-            Comment,
+            super::Comment,
         >::new(state.db.clone());
         let total_items = ::brom::__private::brom_core::Repository::count(&repo)?;
         let total_pages = (total_items + i64::from(pagination.per_page as i32) - 1)
@@ -257,13 +282,12 @@ pub mod comment_public_api {
             (
                 status = 200,
                 description = "Get item by ID",
-                body = DataEnvelope<CommentPublic>
+                body = DataEnvelope<super::CommentPublic>
             ),
             (status = 404, description = "Not found")
         ),
         tag = "Public Comment"
     )]
-    #[tracing::instrument(skip_all)]
     pub async fn get_handler(
         state: ::brom::__private::brom_server::axum::extract::State<
             ::brom::__private::brom_server::AppState,
@@ -271,13 +295,13 @@ pub mod comment_public_api {
         id: ::brom::__private::brom_server::axum::extract::Path<i64>,
     ) -> Result<
         ::brom::__private::brom_server::axum::Json<
-            ::brom::__private::brom_server::DataEnvelope<CommentPublic>,
+            ::brom::__private::brom_server::DataEnvelope<super::CommentPublic>,
         >,
         ::brom::__private::brom_server::ServerError,
     > {
         let id = id.0;
         let repo = ::brom::__private::brom_db::SqliteRepository::<
-            Comment,
+            super::Comment,
         >::new(state.db.clone());
         let item = ::brom::__private::brom_core::Repository::find_by_id(&repo, id)?
             .ok_or(
@@ -328,20 +352,19 @@ impl Comment {
 #[automatically_derived]
 #[allow(clippy::needless_for_each)]
 mod comment_openapi_inner {
-    use super::*;
-    use ::brom_server::utoipa;
+    use ::brom::__private::utoipa as utoipa;
     #[derive(utoipa::OpenApi)]
     #[openapi(
         paths(
-            comment_admin_api::list_handler,
-            comment_admin_api::get_handler,
-            comment_admin_api::create_handler,
-            comment_admin_api::update_handler,
-            comment_admin_api::delete_handler,
-            comment_public_api::list_handler,
-            comment_public_api::get_handler,
+            super::comment_admin_api::list_handler,
+            super::comment_admin_api::get_handler,
+            super::comment_admin_api::create_handler,
+            super::comment_admin_api::update_handler,
+            super::comment_admin_api::delete_handler,
+            super::comment_public_api::list_handler,
+            super::comment_public_api::get_handler,
         ),
-        components(schemas(Comment))
+        components(schemas(super::CommentAdmin, super::CommentPublic))
     )]
     pub struct CommentApi;
 }

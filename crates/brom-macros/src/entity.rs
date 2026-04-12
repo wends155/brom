@@ -42,7 +42,9 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
 
     let mut field_infos = Vec::new();
     let mut public_fields = Vec::new();
+    let mut admin_fields = Vec::new();
     let mut public_field_idents = Vec::new();
+    let mut admin_field_idents = Vec::new();
     for f in &fields.named {
         let Some((info, attrs)) = expand_field(f, &mut errors) else {
             continue;
@@ -59,6 +61,12 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
             #[allow(clippy::expect_used)] // Infallible: BromEntity only derives on named structs
             public_field_idents.push(f.ident.clone().expect("Struct fields must be named"));
         }
+
+        let mut admin_f = f.clone();
+        admin_f.attrs.retain(|attr| !attr.path().is_ident("brom"));
+        admin_fields.push(admin_f);
+        #[allow(clippy::expect_used)]
+        admin_field_idents.push(f.ident.clone().expect("Struct fields must be named"));
     }
 
     if let Some(errs) = errors {
@@ -66,6 +74,7 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
     }
 
     let public_struct_name = syn::Ident::new(&format!("{struct_name}Public"), struct_name.span());
+    let admin_struct_name = syn::Ident::new(&format!("{struct_name}Admin"), struct_name.span());
 
     let policy_str = struct_attrs.as_ref().and_then(|a| a.auth_policy.as_deref());
     let policy_token = match policy_str {
@@ -113,13 +122,34 @@ pub fn expand_brom_entity(input: &DeriveInput) -> syn::Result<TokenStream> {
             pub struct #public_struct_name {
                 #(#public_fields),*
             }
+
+            #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
+            pub struct #admin_struct_name {
+                #(#admin_fields),*
+            }
         }
-        pub use #auto_mod_name::#public_struct_name;
+        pub use #auto_mod_name::{#public_struct_name, #admin_struct_name};
 
         impl From<#struct_name> for #public_struct_name {
             fn from(item: #struct_name) -> Self {
                 Self {
                     #(#public_field_idents: item.#public_field_idents),*
+                }
+            }
+        }
+
+        impl From<#struct_name> for #admin_struct_name {
+            fn from(item: #struct_name) -> Self {
+                Self {
+                    #(#admin_field_idents: item.#admin_field_idents),*
+                }
+            }
+        }
+
+        impl From<#admin_struct_name> for #struct_name {
+            fn from(item: #admin_struct_name) -> Self {
+                Self {
+                    #(#admin_field_idents: item.#admin_field_idents),*
                 }
             }
         }
