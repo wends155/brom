@@ -46,8 +46,11 @@ Verify task.md is aligned with the plan (Agent Procedure):
 4. If mismatches → report them and STOP. Fix alignment before starting.
 
 > [!WARNING]
-> If validation fails, fix alignment issues before starting. Do NOT proceed
 > with a misaligned task.md.
+
+**Capture Test Baseline (Regression Guard):**
+Before writing any code, run the project's test suite to capture the baseline test count (e.g., `cargo test` and note the total).
+Record this baseline in `task.md` or a local scratchpad.
 
 ### 2. Git Checkpoint
 
@@ -118,6 +121,12 @@ FMT + LINT + TEST
 ```
 
 Use the exact commands from `architecture.md § Toolchain`. Confirm zero-exit on all gates.
+
+**Test Regression Guard Verification:**
+Compare the final test count from the verification logs against the baseline test count captured in Pre-Flight.
+- The final count MUST be ≥ the baseline count.
+- If the count decreased, verify the plan explicitly authorized the removal in a **Test Removal Justification** section.
+- If tests were removed without authorization, **STOP**, revert the removal, and escalate to the Architect. Do not complete the Act Phase.
 
 > [!CAUTION]
 > **BANNED OPERATORS:** Do NOT chain these checks together with `&&` or `;`. You MUST run `fmt`, `clippy`, and `test` sequentially as *separate* `run_command` tool calls.

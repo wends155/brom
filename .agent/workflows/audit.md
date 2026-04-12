@@ -75,6 +75,8 @@ Systematically verify the code against project standards.
 - [ ] If deviations occurred, they are documented with justification
 - [ ] Builder Notes section of `task.md` reviewed and processed (see §2a-bis)
 - [ ] No stale stubs remain: `STUB(Phase N)` where N ≤ current phase are all addressed *(multi-phase only — verify with `just scan-stubs`)*
+- [ ] **Test Regression Guard**: Test count is ≥ the pre-implementation baseline, OR test removal was explicitly authorized in the plan's Test Plan section.
+- [ ] No unauthorized removal of test files (`*_test.*`, `*_spec.*`, etc.) or test macros (`#[test]`, `it(`, `describe(`) observed in the diff.
 
 #### 2a-bis. Builder Notes Processing *(if Builder Notes exist in task.md)*
 
@@ -165,6 +167,8 @@ For **single-file audits**, skip sequential thinking — the overhead isn't wort
 > - `rg "\.unwrap\(\)" <changed-files>` — find potential panic points (cross-ref with `sg scan`)
 // turbo
 > - `rg "#\[derive\(.*Serialize" <changed-files>` — check serialization coverage
+// turbo
+> - `git diff HEAD~1 HEAD | rg "^\-\s.*(#\[test\]|test_|it\(|describe\()"` — detect deleted or disabled tests
 
 ### 3. Verification Gate
 

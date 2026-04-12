@@ -372,6 +372,12 @@ For each proposed change, define:
 **Code snippets as executable tests:** Instead of describing expected output in prose,
 express verification as a test assertion. The plan's code should be testable, not illustrative.
 
+**Test Regression Guard:**
+The total test count must be monotonically non-decreasing. If a plan requires deleting or disabling tests (e.g., removing a deprecated feature), it MUST include an explicit **Test Removal Justification** section within the Test Plan.
+- List the exact tests to be removed.
+- Provide the rationale for why they are no longer valid.
+Without this explicit authorization, the Builder is forbidden from removing any tests.
+
 ### Verification Plan *(all tiers)*
 
 | Type | Required? | Details |
