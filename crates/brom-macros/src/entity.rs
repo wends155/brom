@@ -169,7 +169,8 @@ fn expand_field(
         constraints.push(quote!(::brom::__private::brom_core::Constraint::NotNull));
     }
     if let Some(default) = &attrs.default {
-        constraints.push(quote!(::brom::__private::brom_core::Constraint::Default(#default.to_string())));
+        constraints
+            .push(quote!(::brom::__private::brom_core::Constraint::Default(#default.to_string())));
     }
 
     let hidden = attrs.hidden;
