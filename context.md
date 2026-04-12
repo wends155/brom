@@ -439,3 +439,10 @@
 > * **Changes:** Enhanced the Global Execution Order (GEO) step format in `ipr.md` with function-level sub-tags (`[+]`, `[~]`, `[-]`) to improve plan scanability and action specificity. Updated parsing logic and introduced strict lifecycle guards in `builder-rules.md` to prevent duplicate creations or missed deletions. Enforced sub-tag usage in `plan-making.md` and fidelity checks in `audit.md`.
 > * **New Constraints:** M/L-tier plans are required to use function sub-tags. `[+]` targets must not already exist, and `[~]`/`[-]` targets must exist. Sub-tags override file-level tags for Action Specificity calculation.
 > * **Pruned:** Ambiguity regarding new function creation inside a `[MODIFY]` step is resolved.
+
+> 📝 **Context Update:**
+> * **Feature:** BromEntity Macro Remediation & Test Restoration
+> * **Changes:** Implemented the DTO Proxy Pattern inside `BromEntity` by generating `Admin` and `Public` mirror structs within a hidden `__brom_hygiene_<name>` namespace. These proxies automatically derive `utoipa::ToSchema` and provide direct `.into()` conversion from the core domain entities. Restored `api_test.rs`, `public_api_test.rs`, and test helpers back to `crates/brom/tests/`. Migrated `trybuild` tests for macro verification into `crates/brom/tests/compile_test.rs`.
+> * **New Constraints:** The `BromEntity` macro now completely handles OpenAPI schema constraints without requiring users to derive `ToSchema` manually. Generated code rigidly forces fully qualified `::brom::__private` paths for dependencies.
+> * **Pruned:** Trait-bound compilation failures and hygiene errors inside the macro expansion are definitively resolved.
+> * **Verification:** Clean audit. Zero-exit gate (fmt, clippy, test, trybuild, sg scan) passed workspace-wide. Fidelity to Plan: 100%. All tests successfully restored and executed without bypasses.
