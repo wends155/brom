@@ -121,6 +121,10 @@ If security findings are present, the agent **MUST** perform baseline comparison
    - `✅ 0 new findings, N baselined` (if all findings are suppressed)
    - `🟠 M new findings, N baselined` (if unverified findings exist)
 
+> [!CAUTION]
+> **Strict Suppression:** Baselined findings MUST NOT appear in the `⚠️ Warnings` section of the report. They are considered "handled" technical debt and should only be mentioned in the summary line above.
+
+
 ### 5. Automation Opportunities
 
 If **Sequential Thinking MCP** is available, use `sequentialthinking` to analyze:
@@ -173,6 +177,7 @@ Produce the final structured report:
 
 ### ⚠️ Warnings
 - [unfixable issues + recommended user actions]
+- Note: DO NOT include baselined security findings here.
 
 ### 🤖 Automation Opportunities
 - [identified by Sequential Thinking analysis]

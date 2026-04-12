@@ -2,7 +2,7 @@
 
 # Scan for TODOs, FIXMEs, and HACKs across the codebase
 scan-todos:
-    rg -n -e "TODO" -e "FIXME" -e "HACK" --type-add "code:*.{rs,go,ts,js,svelte,py}" --type code .
+    -rg -n -e "TODO" -e "FIXME" -e "HACK" --type-add "code:*.{rs,go,ts,js,svelte,py}" --type code .
 
 # Run coverage analysis (requires cargo-llvm-cov)
 coverage:
