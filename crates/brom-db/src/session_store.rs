@@ -3,6 +3,7 @@ use brom_auth::{AuthError, Session, SessionStore};
 use chrono::{DateTime, Duration, Utc};
 use rand::RngCore;
 use rand::rngs::OsRng;
+use sha2::{Digest, Sha256};
 
 impl SessionStore for DbPool {
     fn create(&self, user_id: i64) -> Result<Session, AuthError> {
@@ -13,7 +14,12 @@ impl SessionStore for DbPool {
         // Generate a 32-byte secure random token (hex encoded)
         let mut token_bytes = [0u8; 32];
         OsRng.fill_bytes(&mut token_bytes);
-        let token = hex::encode(token_bytes);
+        let raw_token = hex::encode(token_bytes);
+
+        // Hash for storage (SHA-256)
+        let mut hasher = Sha256::new();
+        hasher.update(raw_token.as_bytes());
+        let hashed_token = hex::encode(hasher.finalize());
 
         // Default expiry: 24 hours
         let expires_at = Utc::now() + Duration::hours(24);
@@ -21,12 +27,12 @@ impl SessionStore for DbPool {
 
         conn.execute(
             "INSERT INTO _brom_session (user_id, token, expires_at) VALUES (?1, ?2, ?3)",
-            (user_id, &token, &expires_at_str),
+            (user_id, &hashed_token, &expires_at_str),
         )
         .map_err(|e| AuthError::InternalError(e.to_string()))?;
 
         Ok(Session {
-            token,
+            token: raw_token,
             user_id,
             expires_at: expires_at_str,
         })
@@ -37,10 +43,15 @@ impl SessionStore for DbPool {
             .get()
             .map_err(|e| AuthError::InternalError(e.to_string()))?;
 
+        // Compute hash of provided token
+        let mut hasher = Sha256::new();
+        hasher.update(token.as_bytes());
+        let hashed_token = hex::encode(hasher.finalize());
+
         let session = conn
             .query_row(
                 "SELECT user_id, expires_at FROM _brom_session WHERE token = ?1",
-                [token],
+                [hashed_token],
                 |row| {
                     Ok(Session {
                         token: token.to_string(),
@@ -68,7 +79,12 @@ impl SessionStore for DbPool {
             .get()
             .map_err(|e| AuthError::InternalError(e.to_string()))?;
 
-        conn.execute("DELETE FROM _brom_session WHERE token = ?1", [token])
+        // Compute hash of provided token
+        let mut hasher = Sha256::new();
+        hasher.update(token.as_bytes());
+        let hashed_token = hex::encode(hasher.finalize());
+
+        conn.execute("DELETE FROM _brom_session WHERE token = ?1", [hashed_token])
             .map_err(|e| AuthError::InternalError(e.to_string()))?;
 
         Ok(())
@@ -85,6 +101,17 @@ impl SessionStore for DbPool {
             .map_err(|e| AuthError::InternalError(e.to_string()))?;
 
         Ok(deleted as u64)
+    }
+
+    fn destroy_all_for_user(&self, user_id: i64) -> Result<(), AuthError> {
+        let conn = self
+            .get()
+            .map_err(|e| AuthError::InternalError(e.to_string()))?;
+
+        conn.execute("DELETE FROM _brom_session WHERE user_id = ?1", [user_id])
+            .map_err(|e| AuthError::InternalError(e.to_string()))?;
+
+        Ok(())
     }
 }
 
@@ -163,5 +190,45 @@ mod tests {
         // Cleanup should remove it
         let cleaned = pool.cleanup_expired().expect("Failed cleanup");
         assert_eq!(cleaned, 1);
+    }
+
+    #[test]
+    fn test_session_token_is_hashed_in_db() {
+        let pool = setup_test_db();
+        let session = pool.create(1).expect("Failed to create session");
+        let raw_token = session.token;
+
+        let conn = pool.get().unwrap();
+        let stored_token: String = conn
+            .query_row(
+                "SELECT token FROM _brom_session WHERE user_id = 1",
+                [],
+                |row| row.get(0),
+            )
+            .expect("Failed to query token from DB");
+
+        assert_ne!(stored_token, raw_token, "Stored token must be hashed, not plaintext");
+        assert_eq!(stored_token.len(), 64, "Stored hash should be 64 chars (SHA-256)");
+    }
+
+    #[test]
+    fn test_destroy_all_for_user() {
+        let pool = setup_test_db();
+        pool.create(1).unwrap();
+        pool.create(1).unwrap();
+
+        // Need another user and session to verify isolation
+        let conn = pool.get().unwrap();
+        conn.execute(
+            "INSERT INTO _brom_user (email, password_hash, created_at, updated_at) VALUES ('user2@test.com', 'hash', '2026-01-01', '2026-01-01')",
+            ()
+        ).unwrap();
+        let user2_id = conn.last_insert_rowid();
+        pool.create(user2_id).unwrap();
+
+        pool.destroy_all_for_user(1).expect("Failed logout all");
+
+        let count: i64 = conn.query_row("SELECT COUNT(*) FROM _brom_session", [], |r| r.get(0)).unwrap();
+        assert_eq!(count, 1, "Only user2's session should remain");
     }
 }

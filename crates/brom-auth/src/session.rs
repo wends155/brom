@@ -39,4 +39,10 @@ pub trait SessionStore: Send + Sync {
     /// # Errors
     /// Returns `AuthError::InternalError` if cleanup fails.
     fn cleanup_expired(&self) -> Result<u64, AuthError>;
+
+    /// Destroys all sessions for a specific user (Mass Invalidation).
+    ///
+    /// # Errors
+    /// Returns `AuthError::InternalError` if the operation fails.
+    fn destroy_all_for_user(&self, user_id: i64) -> Result<(), AuthError>;
 }

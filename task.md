@@ -9,18 +9,18 @@ Execute the approved implementation plan to remediate 6 security findings.
 ## Global Execution Order
 
 ### Component A: Permission Type Safety (F5)
-- [/] Step 1: [TEST] `crates/brom-auth/src/api_key.rs` — [+] `test_permission_display_and_parse()`
-- [ ] Step 2: [MODIFY] `crates/brom-auth/src/api_key.rs` — [+] `Permission` enum + [~] `ApiKeyRecord`
-- [ ] Step 3: [MODIFY] `crates/brom-db/src/api_key_store.rs` — [~] `create()`, [~] `validate()`
-- [ ] Step 4: [MODIFY] `crates/brom-server/src/api_keys.rs` — [~] `CreateApiKeyRequest`, [~] `ApiKeyRecordDto`, [~] `create_key()`
-- [ ] Step 5: [TEST] `crates/brom-db/src/api_key_store.rs` — [~] `test_api_key_lifecycle()`
-- [ ] Step 6: [MODIFY] `crates/brom-server/src/extractor.rs` — [~] `test_require_api_key_valid()`
-- [ ] 🔒 **CHECKPOINT A** (Commit: "auth: implementation of type-safe permissions")
+- [x] Step 1: [TEST] `crates/brom-auth/src/api_key.rs` — [+] `test_permission_display_and_parse()`
+- [x] Step 2: [MODIFY] `crates/brom-auth/src/api_key.rs` — [+] `Permission` enum + [~] `ApiKeyRecord`
+- [x] Step 3: [MODIFY] `crates/brom-db/src/api_key_store.rs` — [~] `create()`, [~] `validate()`
+- [x] Step 4: [MODIFY] `crates/brom-server/src/api_keys.rs` — [~] `CreateApiKeyRequest`, [~] `ApiKeyRecordDto`, [~] `create_key()`
+- [x] Step 5: [TEST] `crates/brom-db/src/api_key_store.rs` — [~] `test_api_key_lifecycle()`
+- [x] Step 6: [MODIFY] `crates/brom-server/src/extractor.rs` — [~] `test_require_api_key_valid()`
+- [x] 🔒 **CHECKPOINT A** (Commit: "auth: implementation of type-safe permissions")
 
 ### Component B: Session Token Hashing (F2) + Mass Invalidation (F4)
-- [ ] Step 7: [TEST] `crates/brom-db/src/session_store.rs` — [+] `test_session_token_is_hashed_in_db()`
-- [ ] Step 8: [MODIFY] `crates/brom-auth/src/session.rs` — [+] `destroy_all_for_user()`
-- [ ] Step 9: [MODIFY] `crates/brom-db/src/session_store.rs` — [~] `create()`, [~] `validate()`, [~] `destroy()`, [+] `destroy_all_for_user()`
+- [x] Step 7: [TEST] `crates/brom-db/src/session_store.rs` — [+] `test_session_token_is_hashed_in_db()`
+- [x] Step 8: [MODIFY] `crates/brom-auth/src/session.rs` — [+] `destroy_all_for_user()`
+- [x] Step 9: [MODIFY] `crates/brom-db/src/session_store.rs` — [~] `create()`, [~] `validate()`, [~] `destroy()`, [+] `destroy_all_for_user()`
 - [ ] 🔒 **CHECKPOINT B** (Commit: "auth: secure session hashing and mass invalidation")
 
 ### Component C: Cookie-Based Admin Auth (F1 + F6)
