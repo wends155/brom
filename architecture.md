@@ -302,6 +302,9 @@ All commands must exit `0` before any commit.
 > [!IMPORTANT]
 > **Test Regression Guard**: The verification pipeline now mandates test count monotonicity. The global test count must be monotonically non-decreasing. Any removal of tests requires explicit authorization and justification in the implementation plan.
 
+> [!WARNING]
+> **Tooling Constraints**: In non-interactive environments (such as TARS agent shells), the `rg` (ripgrep) command defaults to waiting for `stdin` if a directory path is omitted, which causes indefinite hanging. **All `rg` usages in scripts or operations must provide an explicit path argument** (e.g., `rg "test" .`).
+
 ## 8. Error Handling Strategy
 
 | Crate        | Error Type            | Crate      | Pattern                                |
