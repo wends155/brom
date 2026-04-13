@@ -23,6 +23,7 @@ serde.workspace = true
 tokio.workspace = true
 rust-embed.workspace = true
 mime_guess.workspace = true
+axum-extra.workspace = true
 
 [dev-dependencies]
 brom-macros = { workspace = true }

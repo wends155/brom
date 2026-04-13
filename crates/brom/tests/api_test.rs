@@ -39,7 +39,7 @@ async fn send_json(
 }
 
 #[tokio::test]
-async fn login_valid_credentials_returns_200_and_token() {
+async fn login_valid_credentials_success() {
     let state = common::test_app_state();
     let (_user_id, password) = common::seed_admin_user(&state);
 
@@ -56,7 +56,6 @@ async fn login_valid_credentials_returns_200_and_token() {
 
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["message"], "Login successful");
-    assert!(body["token"].is_string(), "Response must contain a token");
     assert!(body["user_id"].is_number(), "Response must contain user_id");
 }
 

@@ -71,6 +71,7 @@ insta = "1"
 prettyplease = "0.2"
 rust-embed = { version = "8.6", features = ["axum"] }
 mime_guess = "2.0"
+axum-extra = { version = "0.12", features = ["cookie"] }
 
 brom-core = { path = "crates/brom-core" }
 brom-macros = { path = "crates/brom-macros" }

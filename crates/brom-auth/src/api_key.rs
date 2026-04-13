@@ -84,6 +84,13 @@ pub trait ApiKeyStore: Send + Sync {
     /// # Errors
     /// Returns `AuthError::InternalError` if lookup fails.
     fn list_for_user(&self, user_id: i64) -> Result<Vec<ApiKeyRecord>, AuthError>;
+
+    /// Updates the `last_used_at` timestamp for a key.
+    /// This is decoupled from validation for better performance and flexibility.
+    ///
+    /// # Errors
+    /// Returns `AuthError::InternalError` if update fails.
+    fn update_last_used(&self, id: i64) -> Result<(), AuthError>;
 }
 
 #[cfg(test)]
@@ -99,7 +106,10 @@ mod tests {
 
         // FromStr
         assert_eq!(Permission::from_str("read").unwrap(), Permission::Read);
-        assert_eq!(Permission::from_str("read_write").unwrap(), Permission::ReadWrite);
+        assert_eq!(
+            Permission::from_str("read_write").unwrap(),
+            Permission::ReadWrite
+        );
 
         // Invalid
         assert!(Permission::from_str("admin").is_err());

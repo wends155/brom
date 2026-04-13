@@ -3,7 +3,9 @@ use axum::{
     extract::{FromRef, FromRequestParts},
     http::{header, request::Parts},
 };
+use axum_extra::extract::CookieJar;
 use brom_auth::{ApiKeyRecord, Session};
+use std::sync::Arc;
 
 /// Extractor that requires a valid admin session cookie.
 pub struct RequireAdmin(pub Session);
@@ -18,22 +20,37 @@ where
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let state = AppState::from_ref(state);
 
-        let auth_header = parts
+        // 1. Try Authorization header
+        let token = if let Some(auth_header) = parts
             .headers
             .get(header::AUTHORIZATION)
             .and_then(|v| v.to_str().ok())
-            .ok_or(brom_auth::AuthError::InvalidSession)?;
-
-        if !auth_header
-            .get(..7)
-            .is_some_and(|p| p.eq_ignore_ascii_case("bearer "))
         {
-            return Err(brom_auth::AuthError::InvalidSession.into());
-        }
+            if auth_header
+                .get(..7)
+                .is_some_and(|p| p.eq_ignore_ascii_case("bearer "))
+            {
+                Some(auth_header[7..].trim().to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
-        let token = &auth_header[7..].trim();
+        // 2. Try brom_session cookie
+        let token = if let Some(token) = token {
+            token
+        } else {
+            let jar = CookieJar::from_request_parts(parts, &state)
+                .await
+                .expect("CookieJar extraction is infallible");
+            jar.get("brom_session")
+                .map(|c| c.value().to_string())
+                .ok_or(brom_auth::AuthError::InvalidSession)?
+        };
 
-        let session = state.session_store.validate(token)?;
+        let session = state.session_store.validate(&token)?;
         Ok(RequireAdmin(session))
     }
 }
@@ -66,6 +83,14 @@ where
 
         let key = auth_header[7..].trim();
         let record = state.api_key_store.validate(key)?;
+
+        // Side-effect: update last used timestamp in background
+        let store = Arc::clone(&state.api_key_store);
+        let id = record.id;
+        tokio::spawn(async move {
+            let _ = store.update_last_used(id);
+        });
+
         Ok(RequireApiKey(record))
     }
 }
@@ -110,6 +135,34 @@ mod tests {
 
         let request = Request::builder()
             .header("Authorization", "Bearer valid_token")
+            .body(())
+            .unwrap();
+        let (mut parts, ()) = request.into_parts();
+
+        let result = RequireAdmin::from_request_parts(&mut parts, &state).await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().0.user_id, 1);
+    }
+
+    #[tokio::test]
+    #[allow(clippy::unwrap_used)]
+    async fn test_require_admin_cookie() {
+        let mut mock_sessions = MockSessionStore::new();
+        let expected_session = Session {
+            token: "cookie_token".into(),
+            user_id: 1,
+            expires_at: "never".into(),
+        };
+        let session_clone = expected_session.clone();
+        mock_sessions
+            .expect_validate()
+            .with(mockall::predicate::eq("cookie_token"))
+            .returning(move |_| Ok(session_clone.clone()));
+
+        let state = test_state(Arc::new(mock_sessions), Arc::new(MockApiKeyStore::new()));
+
+        let request = Request::builder()
+            .header("Cookie", "brom_session=cookie_token")
             .body(())
             .unwrap();
         let (mut parts, ()) = request.into_parts();

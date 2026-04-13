@@ -1,4 +1,4 @@
-use crate::auth::{auth_fetch, save_token_to_storage};
+use crate::auth::auth_fetch;
 use leptos::either::Either;
 use leptos::prelude::*;
 use leptos_router::hooks::use_navigate;
@@ -10,10 +10,6 @@ struct LoginRequest {
     password: String,
 }
 
-#[derive(serde::Deserialize)]
-struct LoginResponse {
-    token: String,
-}
 
 #[component]
 pub fn Login() -> impl IntoView {
@@ -54,12 +50,7 @@ pub fn Login() -> impl IntoView {
 
                         match resp {
                             Ok(resp) if resp.ok() => {
-                                if let Ok(data) = resp.json::<LoginResponse>().await {
-                                    save_token_to_storage(&data.token);
-                                    navigate("/admin", Default::default());
-                                } else {
-                                    set_error.set(Some("Failed to parse login response".into()));
-                                }
+                                navigate("/admin", Default::default());
                             }
                             Ok(resp) => {
                                 set_error.set(Some(format!("Login failed: {}", resp.status())));

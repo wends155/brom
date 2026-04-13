@@ -106,9 +106,10 @@ pub async fn create_key(
 ) -> Result<(StatusCode, Json<CreateApiKeyResponse>), ServerError> {
     let permissions = payload.permissions.parse::<Permission>()?;
 
-    let (raw_key, record) = state
-        .api_key_store
-        .create(session.user_id, &payload.name, permissions)?;
+    let (raw_key, record) =
+        state
+            .api_key_store
+            .create(session.user_id, &payload.name, permissions)?;
     Ok((
         StatusCode::CREATED,
         Json(CreateApiKeyResponse {

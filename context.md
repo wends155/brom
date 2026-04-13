@@ -484,3 +484,10 @@
 > * **Changes:** Updated `architecture.md` (Toolchain section) to formally mandate that all `rg` (ripgrep) usages in non-interactive agent scripts or operations MUST provide an explicit directory path (e.g. `.`) to prevent indefinite hanging on `stdin`.
 > * **New Constraints:** Any automated `rg` execution MUST include a path argument. 
 > * **Pruned:** The risk of workflows getting frozen on rogue `rg` invocations is formally documented and neutralized.
+
+> 📝 **Context Update:**
+> * **Feature:** Authentication Security Remediation (Finalization & Hardening)
+> * **Changes:** Completed comprehensive security hardening of the authentication system. (1) Migrated permissions to a type-safe `Permission` enum (F5). (2) Implemented SHA-256 session token hashing in `SessionStore` (F2). (3) Added `destroy_all_for_user` for rapid session invalidation (F4). (4) Migrated admin auth to `HttpOnly` / `SameSite=Lax` cookies with `RequireAdmin` fallback support for both headers and cookies (F1 + F6). (5) Decoupled `last_used_at` updates into background tasks in `RequireApiKey` (F3). (6) Hardened `LoginResponse` by removing session tokens from the response body. (7) Refactored the `admin` frontend to eliminate `localStorage` token persistence.
+> * **New Constraints:** Session tokens MUST NOT be transmitted in API response bodies. Admin-tier route handlers MUST use the `RequireAdmin` extractor. Background tasks for metadata updates MUST be spawned using `tokio::spawn` to preserve path latency.
+> * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%.
+

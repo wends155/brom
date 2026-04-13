@@ -63,15 +63,20 @@ impl ApiKeyStore for DbPool {
         hasher.update(raw_key.as_bytes());
         let computed_hash = hex::encode(hasher.finalize());
 
-        let mut record = conn
+        let record = conn
             .query_row(
                 "SELECT id, name, key_prefix, permissions, user_id, created_at, last_used_at 
              FROM _brom_api_key WHERE key_hash = ?1",
                 [computed_hash],
                 |row| {
                     let permissions_str: String = row.get(3)?;
-                    let permissions = Permission::from_str(&permissions_str)
-                        .map_err(|e| rusqlite::Error::FromSqlConversionFailure(3, rusqlite::types::Type::Text, Box::new(e)))?;
+                    let permissions = Permission::from_str(&permissions_str).map_err(|e| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            3,
+                            rusqlite::types::Type::Text,
+                            Box::new(e),
+                        )
+                    })?;
 
                     Ok(ApiKeyRecord {
                         id: row.get(0)?,
@@ -86,17 +91,22 @@ impl ApiKeyStore for DbPool {
             )
             .map_err(|_| AuthError::InvalidApiKey)?;
 
-        // Update last_used_at
+        Ok(record)
+    }
+
+    fn update_last_used(&self, id: i64) -> Result<(), AuthError> {
+        let conn = self
+            .get()
+            .map_err(|e| AuthError::InternalError(e.to_string()))?;
+
         let now = Utc::now().to_rfc3339();
         conn.execute(
             "UPDATE _brom_api_key SET last_used_at = ?1 WHERE id = ?2",
-            (&now, record.id),
+            (&now, id),
         )
-        .ok(); // Non-critical if this fails, don't block
+        .map_err(|e| AuthError::InternalError(e.to_string()))?;
 
-        record.last_used_at = Some(now);
-
-        Ok(record)
+        Ok(())
     }
 
     fn revoke(&self, id: i64, user_id: i64) -> Result<(), AuthError> {
@@ -133,8 +143,13 @@ impl ApiKeyStore for DbPool {
         let records = stmt
             .query_map([user_id], |row| {
                 let permissions_str: String = row.get(3)?;
-                let permissions = Permission::from_str(&permissions_str)
-                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(3, rusqlite::types::Type::Text, Box::new(e)))?;
+                let permissions = Permission::from_str(&permissions_str).map_err(|e| {
+                    rusqlite::Error::FromSqlConversionFailure(
+                        3,
+                        rusqlite::types::Type::Text,
+                        Box::new(e),
+                    )
+                })?;
 
                 Ok(ApiKeyRecord {
                     id: row.get(0)?,
@@ -197,7 +212,13 @@ mod tests {
         // Validate key
         let validated = pool.validate(&raw).expect("Failed to validate key");
         assert_eq!(validated.id, record.id);
-        assert!(validated.last_used_at.is_some());
+        assert!(validated.last_used_at.is_none());
+
+        // Touch key
+        pool.update_last_used(record.id)
+            .expect("Failed to touch key");
+        let touched = pool.validate(&raw).expect("Failed to validate key");
+        assert!(touched.last_used_at.is_some());
 
         // List for user
         let keys = pool.list_for_user(1).expect("Failed to list keys");

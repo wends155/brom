@@ -2,9 +2,9 @@ use axum::response::IntoResponse;
 use axum::{
     Json, Router,
     extract::State,
-    http::StatusCode,
     routing::{get, post},
 };
+use axum_extra::extract::cookie::{Cookie, CookieJar, SameSite};
 use serde::Deserialize;
 use serde::Serialize;
 use tower_http::trace::TraceLayer;
@@ -30,8 +30,6 @@ pub struct LoginResponse {
     pub message: String,
     /// Internal ID of the authenticated user.
     pub user_id: i64,
-    /// The session token to be used in the Authorization header for future requests.
-    pub token: String,
 }
 
 /// Handler for `POST /admin/api/login`.
@@ -52,6 +50,7 @@ pub struct LoginResponse {
 #[tracing::instrument(skip_all)]
 pub async fn login(
     State(state): State<AppState>,
+    jar: CookieJar,
     Json(payload): Json<LoginRequest>,
 ) -> Result<impl IntoResponse, ServerError> {
     let conn = state.db.get()?;
@@ -68,13 +67,18 @@ pub async fn login(
 
     let session = state.session_store.create(user_id)?;
 
+    let cookie = Cookie::build(("brom_session", session.token.clone()))
+        .path("/")
+        .http_only(true)
+        .same_site(SameSite::Lax)
+        .build();
+
     let body = Json(LoginResponse {
         message: "Login successful".into(),
         user_id,
-        token: session.token,
     });
 
-    Ok((StatusCode::OK, body))
+    Ok((jar.add(cookie), body))
 }
 
 /// Handler for `POST /admin/api/logout`.
@@ -98,10 +102,14 @@ pub async fn login(
 pub async fn logout(
     RequireAdmin(session): RequireAdmin,
     State(state): State<AppState>,
+    jar: CookieJar,
 ) -> Result<impl IntoResponse, ServerError> {
     state.session_store.destroy(&session.token)?;
 
-    Ok((StatusCode::OK, "Logout successful"))
+    Ok((
+        jar.remove(Cookie::from("brom_session")),
+        "Logout successful",
+    ))
 }
 
 /// Builds the complete Axum router for the brom-server.

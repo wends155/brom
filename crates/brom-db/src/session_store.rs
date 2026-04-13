@@ -207,8 +207,15 @@ mod tests {
             )
             .expect("Failed to query token from DB");
 
-        assert_ne!(stored_token, raw_token, "Stored token must be hashed, not plaintext");
-        assert_eq!(stored_token.len(), 64, "Stored hash should be 64 chars (SHA-256)");
+        assert_ne!(
+            stored_token, raw_token,
+            "Stored token must be hashed, not plaintext"
+        );
+        assert_eq!(
+            stored_token.len(),
+            64,
+            "Stored hash should be 64 chars (SHA-256)"
+        );
     }
 
     #[test]
@@ -228,7 +235,9 @@ mod tests {
 
         pool.destroy_all_for_user(1).expect("Failed logout all");
 
-        let count: i64 = conn.query_row("SELECT COUNT(*) FROM _brom_session", [], |r| r.get(0)).unwrap();
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM _brom_session", [], |r| r.get(0))
+            .unwrap();
         assert_eq!(count, 1, "Only user2's session should remain");
     }
 }
