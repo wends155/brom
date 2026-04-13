@@ -13,5 +13,35 @@
     "file": "crates/brom-db/src/migration.rs",
     "ruleId": "CWE-22",
     "reason": "run_rollback uses canonicalized paths with starts_with bounds checking."
+  },
+  {
+    "file": "crates/brom-db/src/repository.rs",
+    "ruleId": "CWE-89",
+    "reason": "All table/column identifiers validated via validate_sql_identifier() (char-class whitelist + reserved-word blocklist). Data payloads use parameterized queries via rusqlite::params_from_iter(). Inline narsil-ignore comments also present."
+  },
+  {
+    "file": "crates/brom-auth/src/password.rs",
+    "ruleId": "CWE-798",
+    "reason": "Test fixture string inside #[cfg(test)] mod tests. Not compiled into production binary."
+  },
+  {
+    "file": "admin/src/pages/login.rs",
+    "ruleId": "CWE-798",
+    "reason": "Form field binding (password: password_val). Narsil pattern-matches the variable name 'password' — no actual hardcoded credential."
+  },
+  {
+    "file": "crates/brom/src/app.rs",
+    "ruleId": "RUST-002",
+    "reason": "Startup panics for invalid CORS configuration per coding-standard.md §4.10 fail-fast pattern."
+  },
+  {
+    "file": "crates/brom-server/src/config.rs",
+    "ruleId": "RUST-002",
+    "reason": "Startup expect() for BROM_CORS_ORIGINS env var per coding-standard.md §4.10 fail-fast pattern."
+  },
+  {
+    "file": "crates/brom-core/src/entity.rs",
+    "ruleId": "RUST-002",
+    "reason": "Guarded .expect() on chars.next() preceded by is_empty() check. Provably infallible."
   }
 ]
