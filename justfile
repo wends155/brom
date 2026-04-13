@@ -93,3 +93,49 @@ verify:
     cargo clippy --workspace --all-targets -- -D warnings
     cargo test --workspace
     sg scan
+
+# Unified environment report for /toolcheck workflow (stdout only)
+check-env:
+    #!pwsh
+    $ErrorActionPreference = 'Continue'
+
+    Write-Output "=== Toolchain ==="
+    $pwshV = $PSVersionTable.PSVersion.ToString()
+    Write-Output "  pwsh    = v$pwshV"
+
+    $gitV = (git --version) -replace 'git version\s*', ''
+    Write-Output "  git     = v$gitV"
+
+    $rustcV = (rustc --version) -replace 'rustc\s+', '' -replace '\s+\(.*', ''
+    Write-Output "  rustc   = v$rustcV"
+
+    $cargoV = (cargo --version) -replace 'cargo\s+', '' -replace '\s+\(.*', ''
+    Write-Output "  cargo   = v$cargoV"
+
+    $clippyV = (cargo clippy --version) -replace 'clippy\s+', '' -replace '\s+\(.*', ''
+    Write-Output "  clippy  = v$clippyV"
+
+    $rgV = ((rg --version) | Select-Object -First 1) -replace 'ripgrep\s+', '' -replace '\s+.*', ''
+    Write-Output "  rg      = v$rgV"
+
+    try { $sgV = (sg --version) -replace 'ast-grep\s*', ''; Write-Output "  sg      = v$sgV" }
+    catch { Write-Output "  sg      = NOT FOUND" }
+
+    $justV = (just --version) -replace 'just\s+', ''
+    Write-Output "  just    = v$justV"
+
+    Write-Output ""
+    Write-Output "=== Blast Radius ==="
+    $status = git status --short
+    if ([string]::IsNullOrWhiteSpace($status)) { Write-Output "  Clean" }
+    else { $status | ForEach-Object { Write-Output "  $_" } }
+
+    Write-Output ""
+    Write-Output "=== Rustup ==="
+    rustup show
+
+    Write-Output ""
+    Write-Output "=== TODOs ==="
+    $todos = just scan-todos 2>&1
+    if ([string]::IsNullOrWhiteSpace($todos)) { Write-Output "  None found" }
+    else { Write-Output $todos }
