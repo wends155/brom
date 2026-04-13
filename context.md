@@ -471,3 +471,10 @@
 > * **Changes:** Remediated interactive suspension bugs caused by legacy PowerShell scripts. Quarantined all .ps1 scripts from .agent/scripts/ to .agent/scripts/archive/. Scrubbed `ipr.md` and `builder-rules.md` of legacy script references (Sync-TaskList.ps1, Git-Checkpoint.ps1), replacing them with native Agent Procedure mandates and standard git commands. Updated TARS protocol to enforce inline, non-interactive execution standards.
 > * **New Constraints:** All automation task syncing and git operations MUST use native tools (list_dir, grep_search, git add/commit) or safe inline pwsh -Command calls. Use of legacy helper scripts is strictly prohibited.
 > * **Pruned:** The legacy script-based task synchronization and git checkpoint logic is fully deprecated and archived.
+
+> ?? **Context Update:**
+> * **Feature:** Toolcheck Workflow Hardening (Unified Reporting)
+> * **Changes:** Implemented a unified `just check-env` recipe using a #!pwsh shebang to generate a clean, stdout-only environment report. Consolidated toolchain versions, blast radius (git status), rustup context, and TODO scans into a single report. Updated `.agent/workflows/toolcheck.md` to trigger this report as the primary environment scan mechanism.
+> * **New Constraints:** (None)
+> * **Pruned:** Separate, verbose commands for `verify-toolchain`, `rustup show`, and `scan-todos` in the toolcheck workflow are removed.
+> * **Verification:** Full `just verify` passed with zero-exit. Test count baseline (40) verified and maintained. Fidelity to Plan: 100%.
