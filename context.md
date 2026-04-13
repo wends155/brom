@@ -497,3 +497,9 @@
 > * **Changes:** Synchronized `spec.md` with the new cookie-based authentication flow and updated `LoginResponse` payload. Implemented a custom `utoipa::Modify` trait in `openapi.rs` to register the `cookieAuth` security scheme (`ApiKey::Cookie`). Updated all administrative endpoints in `router.rs` and `api_keys.rs` to use `cookieAuth` and documented the `Set-Cookie` header in the login response.
 > * **New Constraints:** Swagger UI (OpenAPI) now uses `cookieAuth` for administrative sessions. Handlers setting cookies MUST document the `Set-Cookie` header in their `#[utoipa::path]` attributes.
 > * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%. Commit: `4c1e697`.
+
+> 📝 **Context Update:**
+> * **Feature:** Test Credentials Security Remediation (S-tier)
+> * **Changes:** Replaced hardcoded literal `"test_password_123"` in `seed_admin_user()` fixture with randomly generated sequences using `rand::random::<u32>()`. Centralized `rand` workspace inheritance into `brom` dev-dependencies. Clean bill of health verified across integrations tests.
+> * **New Constraints:** (None)
+> * **Pruned:** The security scanner noise specifically relating to CWE-798 literal hardcoding in testing modules is formally resolved.
