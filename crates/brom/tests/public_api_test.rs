@@ -75,7 +75,7 @@ async fn test_auth_policy_none() {
 
 #[tokio::test]
 async fn test_auth_policy_api_key() {
-    use brom_auth::ApiKeyStore;
+    use brom_auth::{ApiKeyStore, Permission};
     let state = common::test_app_state();
     setup_mock_tables(&state);
 
@@ -87,7 +87,7 @@ async fn test_auth_policy_api_key() {
         ()
     ).unwrap();
     let user_id = conn.last_insert_rowid();
-    let (raw_key, _) = pool.create(user_id, "test_key", "read").unwrap();
+    let (raw_key, _) = pool.create(user_id, "test_key", Permission::Read).unwrap();
 
     let app = ApiKeySetting::public_router().with_state(state.clone());
 

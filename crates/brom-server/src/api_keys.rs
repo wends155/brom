@@ -3,7 +3,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
 };
-use brom_auth::ApiKeyRecord;
+use brom_auth::{ApiKeyRecord, Permission};
 use serde::{Deserialize, Serialize};
 
 use crate::{error::ServerError, extractor::RequireAdmin, state::AppState};
@@ -33,7 +33,7 @@ impl From<ApiKeyRecord> for ApiKeyRecordDto {
             id: record.id,
             name: record.name,
             key_prefix: record.key_prefix,
-            permissions: record.permissions,
+            permissions: record.permissions.to_string(),
             user_id: record.user_id,
             created_at: record.created_at,
             last_used_at: record.last_used_at,
@@ -104,10 +104,11 @@ pub async fn create_key(
     State(state): State<AppState>,
     Json(payload): Json<CreateApiKeyRequest>,
 ) -> Result<(StatusCode, Json<CreateApiKeyResponse>), ServerError> {
-    let (raw_key, record) =
-        state
-            .api_key_store
-            .create(session.user_id, &payload.name, &payload.permissions)?;
+    let permissions = payload.permissions.parse::<Permission>()?;
+
+    let (raw_key, record) = state
+        .api_key_store
+        .create(session.user_id, &payload.name, permissions)?;
     Ok((
         StatusCode::CREATED,
         Json(CreateApiKeyResponse {

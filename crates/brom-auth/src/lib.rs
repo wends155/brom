@@ -10,7 +10,7 @@ pub mod password;
 pub mod rbac;
 /// Session management and persistent storage.
 pub mod session;
-pub use api_key::{ApiKeyRecord, ApiKeyStore};
+pub use api_key::{ApiKeyRecord, ApiKeyStore, Permission};
 pub use error::AuthError;
 pub use rbac::evaluate_policy;
 pub use session::{Session, SessionStore};

@@ -19,3 +19,6 @@ mockall = { workspace = true, optional = true }
 
 [features]
 testing = ["mockall", "argon2", "rand", "sha2"]
+
+[dev-dependencies]
+serde_json.workspace = true

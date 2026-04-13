@@ -1,16 +1,17 @@
 use crate::pool::DbPool;
-use brom_auth::{ApiKeyRecord, ApiKeyStore, AuthError};
+use brom_auth::{ApiKeyRecord, ApiKeyStore, AuthError, Permission};
 use chrono::Utc;
 use rand::RngCore;
 use rand::rngs::OsRng;
 use sha2::{Digest, Sha256};
+use std::str::FromStr;
 
 impl ApiKeyStore for DbPool {
     fn create(
         &self,
         user_id: i64,
         name: &str,
-        permissions: &str,
+        permissions: Permission,
     ) -> Result<(String, ApiKeyRecord), AuthError> {
         let conn = self
             .get()
@@ -33,7 +34,7 @@ impl ApiKeyStore for DbPool {
         conn.execute(
             "INSERT INTO _brom_api_key (name, user_id, key_hash, key_prefix, permissions, created_at) 
              VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            (name, user_id, &key_hash, &key_prefix, permissions, &created_at),
+            (name, user_id, &key_hash, &key_prefix, permissions.to_string(), &created_at),
         ).map_err(|e| AuthError::InternalError(e.to_string()))?;
 
         let id = conn.last_insert_rowid();
@@ -44,7 +45,7 @@ impl ApiKeyStore for DbPool {
                 id,
                 name: name.to_string(),
                 key_prefix,
-                permissions: permissions.to_string(),
+                permissions,
                 user_id,
                 created_at,
                 last_used_at: None,
@@ -68,11 +69,15 @@ impl ApiKeyStore for DbPool {
              FROM _brom_api_key WHERE key_hash = ?1",
                 [computed_hash],
                 |row| {
+                    let permissions_str: String = row.get(3)?;
+                    let permissions = Permission::from_str(&permissions_str)
+                        .map_err(|e| rusqlite::Error::FromSqlConversionFailure(3, rusqlite::types::Type::Text, Box::new(e)))?;
+
                     Ok(ApiKeyRecord {
                         id: row.get(0)?,
                         name: row.get(1)?,
                         key_prefix: row.get(2)?,
-                        permissions: row.get(3)?,
+                        permissions,
                         user_id: row.get(4)?,
                         created_at: row.get(5)?,
                         last_used_at: row.get(6)?,
@@ -127,11 +132,15 @@ impl ApiKeyStore for DbPool {
 
         let records = stmt
             .query_map([user_id], |row| {
+                let permissions_str: String = row.get(3)?;
+                let permissions = Permission::from_str(&permissions_str)
+                    .map_err(|e| rusqlite::Error::FromSqlConversionFailure(3, rusqlite::types::Type::Text, Box::new(e)))?;
+
                 Ok(ApiKeyRecord {
                     id: row.get(0)?,
                     name: row.get(1)?,
                     key_prefix: row.get(2)?,
-                    permissions: row.get(3)?,
+                    permissions,
                     user_id: row.get(4)?,
                     created_at: row.get(5)?,
                     last_used_at: row.get(6)?,
@@ -179,10 +188,10 @@ mod tests {
 
         // Create key
         let (raw, record) = pool
-            .create(1, "test-key", "read_write")
+            .create(1, "test-key", Permission::ReadWrite)
             .expect("Failed to create key");
         assert_eq!(record.name, "test-key");
-        assert_eq!(record.permissions, "read_write");
+        assert_eq!(record.permissions, Permission::ReadWrite);
         assert_eq!(record.key_prefix.len(), 8);
 
         // Validate key

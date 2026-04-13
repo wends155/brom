@@ -74,7 +74,7 @@ where
 mod tests {
     use super::*;
     use axum::http::Request;
-    use brom_auth::{MockApiKeyStore, MockSessionStore};
+    use brom_auth::{MockApiKeyStore, MockSessionStore, Permission};
     use brom_db::DbPool;
     use std::sync::Arc;
 
@@ -127,7 +127,7 @@ mod tests {
             id: 1,
             name: "test".into(),
             key_prefix: "br_".into(),
-            permissions: "read".into(),
+            permissions: Permission::Read,
             user_id: 1,
             created_at: "now".into(),
             last_used_at: None,
