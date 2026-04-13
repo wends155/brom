@@ -25,8 +25,8 @@ pub fn test_app_state() -> AppState {
 /// Returns (`user_id`, `raw_password`).
 #[allow(dead_code)]
 pub fn seed_admin_user(state: &AppState) -> (i64, String) {
-    let password = "test_password_123";
-    let hash = brom_auth::password::hash_password(password).expect("hash");
+    let password = format!("test_password_{}", rand::random::<u32>());
+    let hash = brom_auth::password::hash_password(&password).expect("hash");
     let conn = state.db.get().expect("conn");
     conn.execute(
         "INSERT INTO _brom_user (email, password_hash, created_at, updated_at) \
@@ -35,7 +35,7 @@ pub fn seed_admin_user(state: &AppState) -> (i64, String) {
     )
     .expect("seed user");
     let user_id = conn.last_insert_rowid();
-    (user_id, password.to_string())
+    (user_id, password)
 }
 
 /// Creates a real session via the `SessionStore` trait and returns the token.
