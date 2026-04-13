@@ -24,15 +24,13 @@ User invokes: `/toolcheck`
 
 Run the following checks. All are auto-runnable:
 
-**Shell Tools:**
+**Environment Report:**
 // turbo
-- `just verify-toolchain` (fast multi-tool version check)
+- `just check-env` (unified toolchain, blast radius, rustup, and TODO report)
+
+**Git Configuration:**
 // turbo
 - `just disable-git-prompts`
-
-**Rust Toolchain:**
-// turbo
-- `rustup show`
 
 **Workflow & Script Files:**
 Use the native `list_dir` tool to list the contents of `.agent/workflows/` and `.agent/scripts/` to verify all expected files exist.
