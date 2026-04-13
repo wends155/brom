@@ -491,3 +491,9 @@
 > * **New Constraints:** Session tokens MUST NOT be transmitted in API response bodies. Admin-tier route handlers MUST use the `RequireAdmin` extractor. Background tasks for metadata updates MUST be spawned using `tokio::spawn` to preserve path latency.
 > * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%.
 
+
+> 📝 **Context Update:**
+> * **Feature:** Authentication Documentation & OpenAPI Synchronization
+> * **Changes:** Synchronized `spec.md` with the new cookie-based authentication flow and updated `LoginResponse` payload. Implemented a custom `utoipa::Modify` trait in `openapi.rs` to register the `cookieAuth` security scheme (`ApiKey::Cookie`). Updated all administrative endpoints in `router.rs` and `api_keys.rs` to use `cookieAuth` and documented the `Set-Cookie` header in the login response.
+> * **New Constraints:** Swagger UI (OpenAPI) now uses `cookieAuth` for administrative sessions. Handlers setting cookies MUST document the `Set-Cookie` header in their `#[utoipa::path]` attributes.
+> * **Verification:** Full `just verify` (fmt, clippy, test, sg scan) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%. Commit: `4c1e697`.
