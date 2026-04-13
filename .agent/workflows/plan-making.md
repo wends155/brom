@@ -14,27 +14,20 @@ It enforces the Planning Gate and Think Phase of the TARS protocol.
 
 > [!TIP]
 > Load context using native agent tools (zero-prompt):
-> 1. Read `architecture.md`, `context.md`, `.agent/rules/coding-standard.md`, and `.agent/rules/ipr.md` with `view_file` (if they exist).
+> 1. Read `architecture.md`, `context.md`, `.agent/rules/coding-standard.md`, `.agent/rules/ipr.md`, and `.agent/rules/phase-rules.md` (if multi-phase) with `view_file` (if they exist).
 > 2. Run these auto-runnable commands:
 // turbo
 >    - `git log -n 20 --oneline`
 // turbo
 >    - `rg -n -e "TODO" -e "FIXME" -e "HACK" --glob "*.rs" --glob "*.go" --glob "*.ts" --glob "*.js" --glob "*.svelte" --glob "*.py" .`
+>
+> If a Report was produced by `/issue`, `/audit`, or `/feature`, use it as the **primary input**. Confirm you are operating in **Planning mode** (no code edits allowed).
 
-- Read `architecture.md` (if present) for project-specific design, toolchain, and patterns.
-- Read `.agent/rules/coding-standard.md` (if present) for language-specific coding standards.
-- Read `.agent/rules/ipr.md` (if present) for implementation plan format and handoff rules.
-- Read `context.md` (if present) for historical decisions and prior context.
-- If the plan scope requires multiple phases (assessed during Step 1), also read `.agent/rules/phase-rules.md` for phase manifest format, STUB conventions, and phase gate requirements.
-- If a Report was produced by `/issue`, `/audit`, or `/feature`, use it as the **primary input** for Step 1. Do not re-investigate areas already covered.
-- Confirm you are operating in **Planning mode** (no code edits allowed).
+## Phases
 
-## Steps
-
-### 1. Scope & Impact Analysis
+### Phase 1: Scope & Impact Analysis 
 
 Investigate the request before writing anything:
-
 - **Identify affected files**: List every file/module that will be touched.
 - **Map dependencies**: What depends on those files? What do they depend on?
 - **Flag risks**: Security concerns, breaking changes, performance impacts.
@@ -49,107 +42,33 @@ Investigate the request before writing anything:
 // turbo
 > - `rg "^impl.*for" <affected-path>` — locate trait implementations that may need updating
 
-- **Assess phase scope**: Determine if this is a single-phase or multi-phase plan. Multi-phase indicators: scope touches >3 modules, requires infrastructure setup before features, or depends on stubs from prior phases. If multi-phase, load `phase-rules.md` and include Phase Context / Phase Manifest in the plan.
+**Assess phase scope**: Determine if this is a single-phase or multi-phase plan. Multi-phase indicators: scope touches >3 modules, requires infrastructure setup before features, or depends on stubs from prior phases. If multi-phase, load `phase-rules.md` and include Phase Context / Phase Manifest in the plan.
+
+#### Pre-Draft Review Lenses
+Before drafting, apply selected `/review` lenses on the **existing code**. Outcomes should be baked into the plan:
+- 🏗️ **Design:** (M/L tier) Find coupling risks → Document in the plan's Edge Cases & Risks.
+- 📐 **API:** (When modifying public interfaces) Find breaking changes → Trigger Deprecation Protocol (`ipr.md`).
+- 🔒 **Security:** (When modifying taint-carrying code) Mandate sanitization in the plan's proposed changes.
 
 #### MCP-Enhanced Analysis *(when available)*
+If **Narsil MCP** is available, actively use it throughout planning. Primary use cases include:
+- **Blast Radius & Contracts (`get_callers`, `get_callees`, `get_call_graph`):** Trace upstream/downstream impact to populate Blast Radius table and ensure strict execution ordering without breaking downstream consumers.
+- **Security & Complexity (`check_dependencies`, `check_owasp_top10`, `get_complexity`):** Find risks early and flag highly complex targets for potential refactor before feature integration.
+- **Interfaces (`find_symbols`, `get_symbol_definition`):** Understand signatures prior to modifying them and find existing usage patterns (`find_similar_code`).
 
-If **Narsil MCP** is available, use it throughout planning:
+### Phase 2: Draft the Plan
 
-**Investigation** (Step 1):
-
-| Tool | Purpose |
-|------|---------|
-| `get_callers`, `get_callees` | Trace upstream/downstream blast radius from seed functions |
-| `get_call_graph` | Visualize full structural impact of proposed changes |
-| `get_complexity` | Flag overly complex functions that need refactoring before modification |
-| `get_function_hotspots` | Identify high-fan-in/fan-out functions at risk of cascading breakage |
-| `find_call_path` | Verify no indirect call paths are missed between affected modules |
-| `find_circular_imports`, `check_cwe_top25`, `check_owasp_top10` | Catch structural or security risks early |
-| `find_symbols`, `get_symbol_definition` | Understand interfaces before proposing changes |
-| `find_unused_exports`, `find_dead_code` | Identify cleanup opportunities to include in the plan |
-
-**Validation** (Step 4 — use results to support proposed changes):
-
-| Tool | Purpose |
-|------|---------|
-| `get_callers` | Verify blast radius — populate Blast Radius Table with exact caller counts |
-| `get_callees` | Verify downstream contracts aren't violated by proposed changes |
-| `get_symbol_definition` | Verify interfaces/types being modified exist as expected |
-| `check_dependencies` | Check for vulnerable deps before adding new ones |
-| `find_similar_code` | Find existing patterns the plan should follow |
-
-For **M/L tier plans**, the Architect **MUST** use `sequentialthinking` to break down complex changes, reason about ordering, and validate root cause coverage before drafting. For **S-tier plans**, skip it — the overhead isn't worth it.
-
-### 2. Structured Reasoning Gate *(M/L tier — mandatory)*
-
-Before drafting the plan, the Architect **MUST** use `sequentialthinking` with
-3–5 thoughts to reason through:
-
-1. **Root cause validation** — Is the proposed change solving the right problem?
-   If fed from `/issue` or `/feature`, verify the diagnosis holds.
-2. **Change ordering** — What's the dependency graph of the changes? What must
-   come first?
-3. **Blast radius analysis** — Using Narsil Call-Graph Analysis (`get_callers`
-   for upstream blast radius, `get_callees` for downstream impact, and
-   `find_call_path` to verify indirect paths) when available, or `rg`/manual
-   analysis as fallback, map every consumer of the interfaces being modified.
-   Use results to derive the **topological step ordering** for the Global
-   Execution Order (see `ipr.md` GEO section). Populate the Blast Radius Table.
-4. **Interface contract risks** — Will any signature changes break downstream
-   callers? Are there trait/interface impls that need updating?
-5. **Confidence check** — After the above, does the plan still make sense or
-   does scope need adjustment?
-
-> [!CAUTION]
-> If blast radius analysis reveals cross-package impact, the **Deprecation
-> Protocol** defined in `ipr.md` applies. The plan MUST include a Deprecation
-> Schedule section.
-
-For **S-tier plans**, skip this step — the overhead isn't worth it.
-
-### 3. Pre-Draft Review *(M/L tier)*
-
-Before drafting, apply selected `/review` lenses on the **existing code** being
-targeted for change. This catches design and compatibility issues before they're
-baked into the plan.
-
-| Lens | When to apply | MCP Tools |
-|------|--------------|-----------|
-| 🏗️ **Design** | Always (M/L tier) | `get_import_graph`, `find_circular_imports`, `get_dependencies` |
-| 📐 **API** | When modifying public interfaces | `find_symbols`, `get_export_map`, `find_symbol_usages` |
-| 🔒 **Security** | When modifying taint-carrying code | `scan_security`, `find_injection_vulnerabilities`, `get_taint_sources` |
-
-**Outcomes:**
-
-- **API lens finds breaking changes** → Trigger Deprecation Protocol
-  (`ipr.md`). Plan must include new function + deprecation annotation with
-  inline migration guide + Deprecation Schedule section.
-- **Design lens finds coupling risks** → Document in the plan's Edge Cases &
-  Risks section.
-- **Security lens finds taint issues** → Mandate sanitization in the plan's
-  proposed changes.
-
-> [!NOTE]
-> **Logic** and **Performance** lenses are skipped at plan time — those are
-> post-implementation concerns handled by `/audit` and `/review`.
-
-### 4. Draft the Plan
+For **M/L tier** plans, the Architect **MUST** use `sequentialthinking` to reason through root cause validation, change ordering, blast radius analysis (populating the Blast Radius Table), and interface contract risks before drafting.
 
 > [!IMPORTANT]
-> **IPR Alignment Checkpoint (Cognitive Hardening):**
-> Before drafting, the Architect **MUST** use `mcp_sequential-thinking_sequentialthinking` to perform a "Just-In-Time Structure Retrieval".
-> 1. Read `.agent/rules/ipr.md` to identify the required Tier (S, M, or L) for the current task.
-> 2. List the exact mandatory markdown headers and sections for that tier inside your thought block.
-> 3. Verify that your proposed plan structure matches this mapping identically.
->
-> **Protocol Gate:** Do not invoke `write_to_file` for `implementation_plan.md` until this internal structural mapping confirms 100% semantic alignment against the `ipr.md` requirements. This suppresses generic system templates and ensures protocol compliance.
+> Follow `.agent/rules/ipr.md` strictly — do NOT use default system templates.
 
-Write the implementation plan to `<artifacts>/implementation_plan.md` using the `write_to_file` tool (`IsArtifact: true`). Follow the plan format, revision protocol, and handoff rules defined in `.agent/rules/ipr.md`. Include a clickable `[implementation_plan.md](file:///path)` artifact link in your chat response.
+Write the implementation plan to `<artifacts>/implementation_plan.md` using the `write_to_file` tool (`IsArtifact: true`). Follow the plan format, revision protocol, and handoff rules defined in `.agent/rules/ipr.md`.
 
 > [!NOTE]
 > Once the artifact is written, you **MUST** provide a clickable markdown link to it in your final chat response (e.g., `[Implementation Plan](file:///absolute/path/to/implementation_plan.md)`).
 
-### 5. Sync task.md (Agent Procedure)
+### Phase 3: Sync task.md (Agent Procedure)
 
 Generate `task.md` from the plan:
 
@@ -174,79 +93,31 @@ Generate `task.md` from the plan:
 > [!WARNING]
 > task.md must be aligned with the plan before requesting approval.
 
-### 6. Self-Review Checklist
+### Phase 4: Pre-Flight Gate (Agent Procedure)
 
-Before requesting approval, verify each item. Items marked 🤖 can be verified
-with Narsil MCP or scripts; items marked 🧠 require LLM judgment.
+Before requesting approval, run the **Validate task.md** inline procedure:
+1. Read both `task.md` and the plan file with `view_file`.
+2. Check that every `[NEW|MODIFY|DELETE|TEST] filename` in the plan appears 1:1 in `task.md` and vice-versa. 
+3. Verify `task.md` contains checklist markers (`[ ]`, `[x]`, `[/]`).
 
-**Scope & Coverage:**
-- [ ] 🤖 All affected files are listed (verify upstream/downstream blast radius with Narsil `get_callers`/`get_callees`)
-- [ ] 🤖 Each change is broken into numbered, independently verifiable steps
-- [ ] 🤖 Blast Radius Table populated (M/L tier) — verify with Narsil `get_callers`/`get_callees`; GEO topologically ordered per `ipr.md`
-- [ ] 🧠 Deprecation Protocol followed (if breaking changes detected)
-- [ ] 🧠 Pre-Draft Review lenses applied (Design + API + Security as applicable)
-- [ ] 🧠 Module boundaries defined (Owns / Does NOT own)
-- [ ] 🧠 Interface contracts specified (signatures, invariants, error conditions)
-- [ ] 🧠 Cross-module handshakes documented (caller/callee, data format, error propagation)
-- [ ] 🧠 Code snippets included for non-trivial changes
-- [ ] 🧠 Function sub-tags (`[+]`, `[~]`, `[-]`) used for M/L tier plans per `ipr.md` (Optional for S-tier)
-
-**Compliance** (cross-reference each proposed change against these rules):
-
-| Rule Source | Check |
-|-------------|-------|
-| GEMINI.md § Error Handling | New functions handle errors with what/where/why; no silent failures |
-| GEMINI.md § Observability | Plan includes structured logging for significant operations |
-| GEMINI.md § Testing | Test Plan covers all new/changed logic |
-| GEMINI.md § Documentation | New public APIs will have doc comments |
-| coding-standard.md *(if present)* | Error handling (§4.1), async (§4.2), patterns (§4.6), module org (§4.7), observability (§4.8), defensive programming (§4.9), prohibited patterns (§10) |
-| architecture.md *(if present)* | Layout conventions, toolchain commands |
+Verify the 6 Critical Fail-Paths (M/L criteria marked with 🧠):
+- [ ] No code was edited (Planning Gate enforced).
+- [ ] All touched files are listed in the plan (check upstream/downstream blast radius).
+- [ ] 🧠 Deprecation Protocol invoked if cross-package blast radius exists.
+- [ ] Test cases specified *before* implementation steps (TDD ordering).
+- [ ] `task.md` matches the drafted plan 1:1.
+- [ ] 🧠 Global Execution Order is topologically sorted (`ipr.md`).
 
 > [!CAUTION]
-> If any proposed change cannot satisfy a rule, document the exception with
-> justification in the Edge Cases & Risks section. Do not silently skip compliance.
+> The pre-flight gate MUST pass before requesting approval. If it fails, fix the issues and re-check.
 
-**Process:**
-- [ ] 🤖 No code was edited (Planning Gate enforced)
-- [ ] 🧠 `context.md` consulted for historical decisions (if present)
-- [ ] 🧠 Constraints clearly documented in Problem Statement
-- [ ] 🤖 Dependencies researched — check with Narsil `check_dependencies`
-- [ ] 🧠 Risks and edge cases documented
-- [ ] 🧠 Mermaid diagram included for structural changes
-
-**Integration:**
-- [ ] 🤖 Report findings incorporated (if `/issue`, `/audit`, or `/feature` was run)
-- [ ] 🤖 MCP tools used for investigation/analysis where available
-// turbo
-- [ ] 🤖 task.md synced — run the **Validate task.md** procedure:
-  1. Read both `task.md` and the plan file with `view_file`.
-  2. Check that every `[NEW|MODIFY|DELETE|TEST] filename` in the plan appears in `task.md`.
-  3. Check that every such entry in `task.md` appears in the plan.
-  4. If mismatches → report and STOP.
-
-### 7. Pre-flight Gate (Agent Procedure)
-
-Verify before requesting approval:
-
-1. `task.md` exists — check with `view_file`; if not found, STOP.
-2. `task.md` contains `[ ]`, `[x]`, or `[/]` checklist markers.
-3. Run the **Validate task.md** procedure above — must pass.
-4. If all three pass → proceed to request approval.
-
-> [!CAUTION]
-> The pre-flight gate MUST pass before requesting approval.
-> If it fails, fix the issues and re-check. Do NOT skip this step.
+> [!NOTE]
+> **Post-Approval Handoff:** Once approved, follow **GEMINI.md §6 Handoff Protocol** for the full Act cycle. After `/audit` passes, run `/update-doc` scoped to affected files, then summarize in `context.md`.
 
 End the plan with:
-
 > 🛑 **Think Phase Complete.** Reply with **"Proceed"** to Act.
 
 Do NOT proceed to implementation until the user explicitly approves.
-
-### 8. Post-Approval Handoff
-
-Once approved, follow **GEMINI.md §6 Handoff Protocol** for the full Act cycle.
-After `/audit` passes, run `/update-doc` scoped to affected files, then summarize in `context.md` per GEMINI.md §8.
 
 ## Rules
 

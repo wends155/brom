@@ -503,3 +503,9 @@
 > * **Changes:** Replaced hardcoded literal `"test_password_123"` in `seed_admin_user()` fixture with randomly generated sequences using `rand::random::<u32>()`. Centralized `rand` workspace inheritance into `brom` dev-dependencies. Clean bill of health verified across integrations tests.
 > * **New Constraints:** (None)
 > * **Pruned:** The security scanner noise specifically relating to CWE-798 literal hardcoding in testing modules is formally resolved.
+
+> 📝 **Context Update:**
+> * **Feature:** TARS Workflow Refactoring (plan-making.md)
+> * **Changes:** Structurally refactored `.agent/workflows/plan-making.md` from a verbose 8-step process into a lean 4-phase protocol. Abstracted duplicate prerequisite documentation, merged prompt-engineering commands, condensed 21-point checklist down to 6 critical fail-paths, and removed forced template-generation literals. Relied on `GEMINI.md §8` (Cognitive Hardening) to maintain strict format compliance across M/L-tier outputs.
+> * **New Constraints:** (None - adherence defaults back to core TARS guidelines in `GEMINI.md` and `.agent/rules/ipr.md`)
+> * **Pruned:** Outdated prompt-engineering steps in `plan-making.md` and visually distracting checklist checkpoints.
