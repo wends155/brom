@@ -478,3 +478,9 @@
 > * **New Constraints:** (None)
 > * **Pruned:** Separate, verbose commands for `verify-toolchain`, `rustup show`, and `scan-todos` in the toolcheck workflow are removed.
 > * **Verification:** Full `just verify` passed with zero-exit. Test count baseline (40) verified and maintained. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
+> * **Feature:** Tooling Constraints Documentation (ripgrep quirk)
+> * **Changes:** Updated `architecture.md` (Toolchain section) to formally mandate that all `rg` (ripgrep) usages in non-interactive agent scripts or operations MUST provide an explicit directory path (e.g. `.`) to prevent indefinite hanging on `stdin`.
+> * **New Constraints:** Any automated `rg` execution MUST include a path argument. 
+> * **Pruned:** The risk of workflows getting frozen on rogue `rg` invocations is formally documented and neutralized.
