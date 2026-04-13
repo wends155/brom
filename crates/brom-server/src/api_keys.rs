@@ -67,7 +67,7 @@ pub struct CreateApiKeyResponse {
         (status = 401, description = "Unauthorized")
     ),
     tag = "admin",
-    security(("session" = []))
+    security(("cookieAuth" = []))
 )]
 /// Lists API keys for the current user.
 ///
@@ -92,7 +92,7 @@ pub async fn list_keys(
         (status = 401, description = "Unauthorized")
     ),
     tag = "admin",
-    security(("session" = []))
+    security(("cookieAuth" = []))
 )]
 /// Creates a new API key.
 ///
@@ -128,7 +128,7 @@ pub async fn create_key(
         (status = 401, description = "Unauthorized")
     ),
     tag = "admin",
-    security(("session" = []))
+    security(("cookieAuth" = []))
 )]
 /// Revokes an API key.
 ///

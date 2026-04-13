@@ -212,7 +212,8 @@ AND injects a SQL `-- TODO: Manual rollback needed` comment for developer action
 GIVEN valid admin credentials
 WHEN a POST to `/admin/api/login` is made
 THEN an Argon2 hash comparison succeeds
-AND an HttpOnly, secure session cookie is returned holding a JWT or Session ID
+AND an HttpOnly, secure session cookie is returned holding a Session ID
+AND a `LoginResponse` JSON body is returned (`message` and `user_id`) without exposing the session token
 
 [HAPPY] API Key Provisioning
 GIVEN an authenticated administrator

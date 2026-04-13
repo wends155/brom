@@ -42,7 +42,9 @@ pub struct LoginResponse {
     path = "/admin/api/login",
     request_body = LoginRequest,
     responses(
-        (status = 200, description = "Login successful", body = LoginResponse),
+        (status = 200, description = "Login successful", body = LoginResponse, headers(
+            ("Set-Cookie" = String, description = "HttpOnly session cookie")
+        )),
         (status = 401, description = "Invalid credentials")
     ),
     tag = "admin"
@@ -95,7 +97,7 @@ pub async fn login(
     ),
     tag = "admin",
     security(
-        ("session" = [])
+        ("cookieAuth" = [])
     )
 )]
 #[tracing::instrument(skip_all)]

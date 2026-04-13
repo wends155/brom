@@ -10,7 +10,6 @@ struct LoginRequest {
     password: String,
 }
 
-
 #[component]
 pub fn Login() -> impl IntoView {
     let (email, set_email) = signal(String::new());

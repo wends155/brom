@@ -2,6 +2,22 @@
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
+use utoipa::Modify;
+use utoipa::openapi::security::{ApiKey, ApiKeyValue, SecurityScheme};
+
+struct SecurityAddon;
+
+impl Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "cookieAuth",
+                SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new("brom_session"))),
+            );
+        }
+    }
+}
+
 /// Base `OpenAPI` specification for the `brom` framework.
 ///
 /// This includes the core administrative APIs. Entity-specific routes
@@ -31,7 +47,8 @@ use utoipa_swagger_ui::SwaggerUi;
     ),
     tags(
         (name = "admin", description = "Framework administrative operations")
-    )
+    ),
+    modifiers(&SecurityAddon)
 )]
 pub struct ApiDoc;
 
