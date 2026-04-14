@@ -209,7 +209,7 @@ When a Post check fails:
 
 ### 9.2 Second Consecutive Failure (Same Step)
 
-**STOP immediately.** Per `ipr.md §7`:
+**STOP immediately.**
 1. Commit current progress: `WIP: stopped at step N — [reason]`
 2. Do NOT revert completed steps
 3. Report the failure to the Architect with:
