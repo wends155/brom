@@ -527,7 +527,7 @@
 > * **New Constraints:** Relational fields in the admin dashboard use a lazy-loading pattern; any new relational widgets must be gated by user interaction (click/focus) to prevent OOM on large datasets.
 > * **Verification:** Full `just verify` (fmt, clippy, test, trybuild, sg scan) passed with exit code 0. Zero-Exit gate fully satisfied. Fidelity to Plan: 100%.
 > 📝 **Context Update:**
-> * **Feature:** Phase 5 Final Verification & Audit Closure
-> * **Changes:** Successfully completed the `/build` and `/audit` cycle for Admin Dashboard remediation. (1) Binary optimized to 384KB via `[profile.wasm-release]`. (2) Immutable caching implemented for hashed assets. (3) Data rendering fixed via type-safe JSON matching. (4) Relational N+1 OOM issues resolved through the lazy-loading pattern in `form_editor.rs`. Finalized session bootstrap with a successful `/toolcheck` and environment validation.
-> * **New Constraints:** (None - all remediation goals satisfied)
-> * **Pruned:** The Phase 5 remediation issue report and implementation plan are officially closed and archived.
+> * **Feature:** Phase 5 Behavioral Specification Sync
+> * **Changes:** Performed a synchronization of `spec.md` with the Phase 5 implementation baseline. Added two critical behavioral scenarios: (1) **Static Asset Caching** — documenting the differentiation between `index.html` (no-cache) and hashed assets (immutable cache) in `brom-server`. (2) **Relational Lazy-Loading** — documenting the deferred fetching and reactive state gating and in the admin SPA to prevent OOM errors.
+> * **New Constraints:** (None - synchronization successful)
+> * **Verification:** Executed full verification pipeline (fmt, clippy, test). Zero regressions detected.
