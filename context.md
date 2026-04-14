@@ -509,3 +509,9 @@
 > * **Changes:** Structurally refactored `.agent/workflows/plan-making.md` from a verbose 8-step process into a lean 4-phase protocol. Abstracted duplicate prerequisite documentation, merged prompt-engineering commands, condensed 21-point checklist down to 6 critical fail-paths, and removed forced template-generation literals. Relied on `GEMINI.md §8` (Cognitive Hardening) to maintain strict format compliance across M/L-tier outputs.
 > * **New Constraints:** (None - adherence defaults back to core TARS guidelines in `GEMINI.md` and `.agent/rules/ipr.md`)
 > * **Pruned:** Outdated prompt-engineering steps in `plan-making.md` and visually distracting checklist checkpoints.
+
+> 📝 **Context Update:**
+> * **Feature:** Workflow Redundancy Remediation
+> * **Changes:** Removed the duplicate "Command Execution Constraints" paragraph block from 13 different workflow files. Replaced the `ipr.md` §7 "Builder Obligations & STOP Conditions" section with a cross-reference to `builder-rules.md`, mitigating documentation duplication and cognitive bloat. Condensed the `ipr.md` vocabulary and Pre/Post condition rules.
+> * **New Constraints:** Command Execution Constraints are governed globally by `GEMINI.md` and `builder-rules.md`.
+> * **Verification:** Full `just verify` (fmt, clippy, test) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%.
