@@ -95,4 +95,4 @@ When the idea feels solid enough, the user chooses how to proceed:
 4. **Use Sequential Thinking internally** — reason before responding, but show only conclusions.
 5. **Validate claims** — use Context7 MCP to verify library status, API surfaces, and ecosystem facts.
 6. **Respect the exit** — when the user transitions to `/architecture`, carry context forward seamlessly.
-7. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

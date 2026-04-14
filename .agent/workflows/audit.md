@@ -255,4 +255,4 @@ The task is now considered fully closed under the TARS protocol.
 3. **Use MCP tools** — prefer Narsil and Sequential Thinking when available for accuracy.
 4. **Preserve passing items** — document compliant items too, not just failures.
 5. **Respect the Planning Gate** — never tell the Builder to fix without routing through `/plan-making`.
-6. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

@@ -145,4 +145,4 @@ End the report with:
 4. **Ask early** — if the issue is ambiguous, ask questions in Step 1, not Step 4.
 5. **Stay focused** — investigate just enough to produce a clear report; avoid rabbit holes.
 6. **Use MCP tools** — when Narsil or Sequential Thinking are available, prefer them over manual grep/search for higher accuracy.
-7. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

@@ -197,5 +197,5 @@ After committing, compress the interaction per TARS protocol:
 6. **Preserve existing content** — when updating docs, preserve user-written sections and only update stale data.
 7. **Always pause** — the user must approve before committing.
 8. **Record hash** — always write the verification hash to spec.md after doc generation.
-9. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+
 10. **Preserve Sentinels** — README.md sentinel blocks (`<!-- custom:start/end -->`) must be preserved verbatim across regenerations.

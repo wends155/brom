@@ -155,4 +155,4 @@ End with:
 6. **Per-screen approval** — "Approve" applies to individual screens, not the entire spec.
 7. **Re-entry is scoped** — revision mode targets specific screens, not full redesign (per §5).
 8. `/design` can be re-entered from `/plan-making`, `/audit`, or `/issue` per `design-rules.md` §5.
-9. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

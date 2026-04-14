@@ -214,4 +214,4 @@ Output a **Spec Coverage Report** — do NOT edit `spec.md` directly.
 - `architecture.md` is a **hard prerequisite** — defer if it doesn't exist.
 - If drift is found during Audit, **document it** — do not fix. Fixes go through `/plan-making`.
 - Drift detection mechanics (hash-based tracking) are owned by `doc-rules.md §5` and `/update-doc`, not this workflow.
-- **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

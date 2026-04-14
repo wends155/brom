@@ -215,4 +215,4 @@ Present the report to the user.
 4. **Always pause** — the user must explicitly invoke `/issue` to proceed.
 5. **Strip ANSI** — log files may contain escape codes; always strip before analysis.
 6. **Check for project override** — if the project has its own `log-audit.md`, use that instead.
-7. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

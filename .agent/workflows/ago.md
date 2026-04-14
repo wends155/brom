@@ -178,4 +178,4 @@ End with:
 5. **Use MCP tools** — Sequential Thinking for analysis, Context7 for library research, web search for papers.
 6. **Challenge assumptions** — probe the user's constraints. "Do you really need exact solutions?"
 7. **Carry context forward** — when transitioning to `/architecture`, reference algorithm.md conclusions.
-8. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

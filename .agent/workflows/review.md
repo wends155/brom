@@ -200,4 +200,4 @@ End the report with:
 4. **Use MCP tools** when available for deeper analysis.
 5. **Stay scoped** — review only what was asked. Don't expand to unrelated code.
 6. **Be constructive** — every finding should include a suggestion, not just a complaint.
-7. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+

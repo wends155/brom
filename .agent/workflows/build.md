@@ -165,4 +165,4 @@ Do NOT proceed to audit yourself — the Architect role handles Reflect.
 6. **Update task.md** — Antigravity reads this for UI progress. Stale markers hide progress from the user.
 7. **Git checkpoint at 🔒** — every checkpoint is a commit. No skipping.
 8. **Wait for user instruction** before pushing to remote repositories.
-9. **Command Execution Constraints** — NEVER use shell chaining (`&&`, `||`, `;`), redirects (`>`, `2>&1`), or shell pipes (`cmd1 | cmd2`) in `run_command` calls. Regex special characters inside `rg` pattern strings (e.g., `rg "pub (struct|enum)"`) are permitted. One standalone command per `run_command` call. See GEMINI.md §6.
+
