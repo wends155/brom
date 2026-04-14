@@ -515,3 +515,8 @@
 > * **Changes:** Removed the duplicate "Command Execution Constraints" paragraph block from 13 different workflow files. Replaced the `ipr.md` §7 "Builder Obligations & STOP Conditions" section with a cross-reference to `builder-rules.md`, mitigating documentation duplication and cognitive bloat. Condensed the `ipr.md` vocabulary and Pre/Post condition rules.
 > * **New Constraints:** Command Execution Constraints are governed globally by `GEMINI.md` and `builder-rules.md`.
 > * **Verification:** Full `just verify` (fmt, clippy, test) passed with exit code 0. Zero-Exit gate satisfied. Fidelity to Plan: 100%.
+
+> 📝 **Context Update:**
+> * **Feature:** Documentation Synchronization & Baseline Refresh
+> * **Changes:** Performed `/update-doc` workflow. Verified zero semantic drift in `README.md`, `Cargo.toml`, and inline rustdoc comments following recent architectural performance and JSON JSON-formatting interventions. Updated `spec.md` Last Verified Commit metadata to point to `5b0f48e`. The project documentation stack is perfectly synced with the implementation baseline.
+> * **Verification:** Executed `just verify` (fmt, clippy, test, sg scan). Soft warnings from AST-grep identified (`scattered-dotenv`, `scattered-env-var`) but zero-exit gate held at code 0.
