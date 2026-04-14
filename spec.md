@@ -256,6 +256,15 @@ THEN a `403 Forbidden` response is returned
 | `ServerError` | `enum ServerError` | - | - |
 | `router` | `pub fn router(...) -> Router` | `Router` | - |
 
+### Behavioral Scenarios
+
+[HAPPY] Static Asset Caching
+GIVEN a compiled admin SPA embedded via `rust-embed`
+WHEN a request is made for `index.html`
+THEN the response headers explicitly prevent caching
+WHEN a request is made for a hashed asset (e.g., `pkg/admin-12345.js`)
+THEN the response receives `public, max-age=31536000, immutable` headers
+
 ### Contract Constraints
 - **Data Envelope Format**: All successful responses must use `{ "data": ... }` to allow top-level metadata injection without breaking client mapping.
 - **Problem Details**: Error responses must map to JSON format containing `error`, `message`, and optionally `fields` corresponding to `RFC 7807` shaped problem details.
@@ -299,6 +308,12 @@ GIVEN an entity schema containing a `FieldType::Link`
 WHEN the schema-driven form encounters this field
 THEN a dynamic Fetch request triggers to the linked entity's schema endpoint
 AND populates a `<ForgeSelect>` with the available related entities
+
+[HAPPY] Relational Lazy-Loading
+GIVEN a schema containing a `FieldType::Link` or `ManyToMany` relation
+WHEN the admin dashboard renders the `DataTable`
+THEN relational data fetching is deferred until explicitly triggered
+AND `RwSignal` state updates do not eagerly capture large closures, preventing OOM errors
 
 ### Required Test Coverage
 
