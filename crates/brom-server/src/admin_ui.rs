@@ -18,22 +18,16 @@ pub async fn spa_fallback(uri: Uri) -> impl IntoResponse {
     // 1. Try serving the exact path
     if let Some(content) = AdminUi::get(path) {
         let mime = mime_guess::from_path(path).first_or_octet_stream();
-        let mut builder = Response::builder()
-            .header(header::CONTENT_TYPE, mime.as_ref());
+        let mut builder = Response::builder().header(header::CONTENT_TYPE, mime.as_ref());
 
         // Apply immutable caching to hashed assets (not index.html)
         if path != "index.html" {
-            builder = builder.header(
-                header::CACHE_CONTROL,
-                "public, max-age=31536000, immutable",
-            );
+            builder = builder.header(header::CACHE_CONTROL, "public, max-age=31536000, immutable");
         }
 
-        return builder
-            .body(Body::from(content.data))
-            .unwrap_or_else(|_| {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
-            });
+        return builder.body(Body::from(content.data)).unwrap_or_else(|_| {
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error").into_response()
+        });
     }
 
     // 2. Fallback to index.html for CSR routing

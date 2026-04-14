@@ -186,49 +186,87 @@ pub fn EditorForm() -> impl IntoView {
                                                                         }.into_any()
                                                                     }
                                                                     (FieldType::Link { ref target }, _) => {
-                                                                        let target_entity = target.clone();
-                                                                        let link_options = LocalResource::new(move || {
-                                                                            let entity = target_entity.clone();
-                                                                            async move {
-                                                                                let url = format!("/api/v1/{}", entity);
-                                                                                let resp = auth_fetch(&url, "GET", None::<()>).await.ok()?;
-                                                                                let items: Vec<Value> = resp.json().await.ok()?;
-                                                                                Some(items.into_iter().filter_map(|item| {
-                                                                                    let id = item.get("id")?.to_string();
-                                                                                    let label = item.get("name")
-                                                                                        .or_else(|| item.get("title"))
-                                                                                        .and_then(|v| v.as_str())
-                                                                                        .unwrap_or(&id)
-                                                                                        .to_string();
-                                                                                    Some((id, label))
-                                                                                }).collect::<Vec<(String, String)>>())
-                                                                            }
-                                                                        });
+                                                                        let target_entity = StoredValue::new(target.clone());
+                                                                        let is_open = RwSignal::new(false);
+                                                                        let field_name = StoredValue::new(field_name_inner.clone());
+                                                                        let field_name_cb = StoredValue::new(field_name_for_callback.clone());
+                                                                        let label = StoredValue::new(field_name_for_label.clone());
 
                                                                         view! {
-                                                                            <Suspense fallback=move || view! { <span class="text-muted-foreground text-xs font-mono">"Loading options..."</span> }>
-                                                                                {move || {
-                                                                                    let opts = link_options.get()
-                                                                                        .and_then(|r| (*r).clone())
-                                                                                        .unwrap_or_default();
-                                                                                    let opts_signal = Signal::derive(move || opts.clone());
-                                                                                    let field_name_select = field_name_inner.clone();
-                                                                                    let field_name_cb = field_name_for_callback.clone();
-                                                                                    view! {
-                                                                                        <ForgeSelect
-                                                                                            value=Signal::derive(move || {
-                                                                                                form_data.get().get(&field_name_select).map(|v| v.to_string().replace("\"", "")).unwrap_or_default()
-                                                                                            })
-                                                                                            on_change=Callback::new(move |v: String| {
-                                                                                                let json_val = v.parse::<i64>().map(Value::from).unwrap_or(Value::String(v));
-                                                                                                form_data.update(|map| { map.insert(field_name_cb.clone(), json_val); });
-                                                                                            })
-                                                                                            options=opts_signal
-                                                                                            placeholder=format!("Select {}...", field_name_for_label)
-                                                                                        />
+                                                                            <div
+                                                                                on:click=move |_| is_open.set(true)
+                                                                                on:focusin=move |_| is_open.set(true)
+                                                                            >
+                                                                                <Show when=move || !is_open.get()>
+                                                                                    <ForgeSelect
+                                                                                        value=Signal::derive(move || {
+                                                                                            form_data.get().get(&field_name.get_value())
+                                                                                                .map(|v| match v {
+                                                                                                    Value::String(s) => s.clone(),
+                                                                                                    Value::Null => String::new(),
+                                                                                                    other => other.to_string(),
+                                                                                                })
+                                                                                                .unwrap_or_default()
+                                                                                        })
+                                                                                        on_change=Callback::new(move |v: String| {
+                                                                                            let json_val = v.parse::<i64>().map(Value::from).unwrap_or(Value::String(v));
+                                                                                            form_data.update(|map| { map.insert(field_name_cb.get_value(), json_val); });
+                                                                                        })
+                                                                                        options=Signal::derive(Vec::new)
+                                                                                        placeholder=format!("Select {}...", label.get_value())
+                                                                                    />
+                                                                                </Show>
+                                                                                <Show when=move || is_open.get()>
+                                                                                    {
+                                                                                        let link_options = LocalResource::new(move || {
+                                                                                            let entity = target_entity.get_value();
+                                                                                            async move {
+                                                                                                let url = format!("/api/v1/{}", entity);
+                                                                                                let resp = auth_fetch(&url, "GET", None::<()>).await.ok()?;
+                                                                                                let items: Vec<Value> = resp.json().await.ok()?;
+                                                                                                Some(items.into_iter().filter_map(|item| {
+                                                                                                    let id = item.get("id")?.to_string();
+                                                                                                    let label = item.get("name")
+                                                                                                        .or_else(|| item.get("title"))
+                                                                                                        .and_then(|v| v.as_str())
+                                                                                                        .unwrap_or(&id)
+                                                                                                        .to_string();
+                                                                                                    Some((id, label))
+                                                                                                }).collect::<Vec<(String, String)>>())
+                                                                                            }
+                                                                                        });
+                                                                                        view! {
+                                                                                            <Suspense fallback=move || view! { <span class="text-muted-foreground text-xs font-mono">"Loading options..."</span> }>
+                                                                                                {move || {
+                                                                                                    let opts = link_options.get()
+                                                                                                        .and_then(|r| (*r).clone())
+                                                                                                        .unwrap_or_default();
+                                                                                                    let opts_signal = Signal::derive(move || opts.clone());
+                                                                                                    view! {
+                                                                                                        <ForgeSelect
+                                                                                                            value=Signal::derive(move || {
+                                                                                                                form_data.get().get(&field_name.get_value())
+                                                                                                                    .map(|v| match v {
+                                                                                                                        Value::String(s) => s.clone(),
+                                                                                                                        Value::Null => String::new(),
+                                                                                                                        other => other.to_string(),
+                                                                                                                    })
+                                                                                                                    .unwrap_or_default()
+                                                                                                            })
+                                                                                                            on_change=Callback::new(move |v: String| {
+                                                                                                                let json_val = v.parse::<i64>().map(Value::from).unwrap_or(Value::String(v));
+                                                                                                                form_data.update(|map| { map.insert(field_name_cb.get_value(), json_val); });
+                                                                                                            })
+                                                                                                            options=opts_signal
+                                                                                                            placeholder=format!("Select {}...", label.get_value())
+                                                                                                        />
+                                                                                                    }
+                                                                                                }}
+                                                                                            </Suspense>
+                                                                                        }
                                                                                     }
-                                                                                }}
-                                                                            </Suspense>
+                                                                                </Show>
+                                                                            </div>
                                                                         }.into_any()
                                                                     }
                                                                     (field_type_inner, _) => {

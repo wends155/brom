@@ -4,9 +4,9 @@
 |-------|-------|
 | **Project** | brom |
 | **Version** | 1.1.0 |
-| **Last Updated** | 2026-04-13 |
+| **Last Updated** | 2026-04-14 |
 
-> Last verified against: f6d3a4e
+> Last verified against: 5b0f48e
 
 ## 1. brom-macros
 
