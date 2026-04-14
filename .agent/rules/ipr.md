@@ -286,29 +286,16 @@ function, include a code snippet regardless of size.**
 
 **Pre/Post Vocabulary:**
 
-| Shorthand | Meaning | Default Command |
-|-----------|---------|-----------------|
-| `CHECK` | Type-check compiles | `cargo check` |
-| `FMT` | Format passes | `cargo fmt --check` |
-| `CLIPPY` | Lint passes | `cargo clippy -- -D warnings` |
-| `TEST` | Tests pass | `cargo test` |
-| `BUILD` | Full build | `cargo build` |
-| `ALL` | FMT + CLIPPY + TEST | Full pipeline |
-| `RED` | Named test compiles but fails | *Per `architecture.md § Toolchain`* |
-| `GREEN` | Previously-RED test now passes | *Per `architecture.md § Toolchain`* |
-
-> [!NOTE]
-> Default commands shown. Projects override in `architecture.md § Toolchain`.
-
-**`RED` / `GREEN` semantics:**
-
-- `RED(test_name)`: The named test **compiles** but **fails** (exit non-zero).
-  The Pre condition (typically `ALL`) already guarantees the rest of the suite
-  is green. If the test doesn't compile, that's a bug in the test code —
-  Builder fixes it before proceeding.
-- `GREEN(test_name)`: The named test **passes** (exit 0). Semantically
-  equivalent to `TEST` but communicates the TDD intent — this is the
-  Red→Green transition, not a generic test run.
+| Shorthand | Meaning |
+|-----------|---------|
+| `CHECK` | Type-check compiles |
+| `FMT` | Format passes |
+| `CLIPPY` | Lint passes |
+| `TEST` | Tests pass |
+| `BUILD` | Full build |
+| `ALL` | FMT + CLIPPY + TEST pipeline passes |
+| `RED(test)` | Named test **compiles** but **fails**. Rest of suite is green. |
+| `GREEN(test)` | Named test **passes** (exit 0). Communicates TDD Red→Green transition intent. |
 
 Pre/Post can combine shorthand with conditions: `Post: CHECK, no anyhow imports in file`.
 
@@ -449,26 +436,8 @@ Before the Architect can request "Proceed", the plan must satisfy:
 
 ## 7. Builder Obligations & STOP Conditions
 
-**Obligations:**
-1. Execute plan items in order — no deviations.
-2. If a plan item is unclear or flawed → **STOP**, request re-audit.
-3. Update `task.md` in the artifacts directory after each file modification:
-   - Mark `[ ]` → `[/]` when starting a step.
-   - Mark `[/]` → `[x]` when the step passes verification.
-   - Antigravity reads this file for UI progress — stale markers hide progress from the user.
-4. Run `ALL` at each 🔒 CHECKPOINT.
-5. Use standard git add/git commit commands for atomic commits tied to task.md progress.
-6. 🛑 **Wait for user instruction** before pushing to remote repositories.
-
-**STOP Conditions** — Builder must immediately halt and return to the Architect when:
-- The plan contradicts `architecture.md`.
-- A plan item is ambiguous or untestable.
-- An unplanned dependency or breaking change is discovered.
-- The second consecutive test failure occurs on the same item.
-
-**On STOP:** Commit current progress with message `WIP: stopped at step N — [reason]`.
-Do NOT revert completed steps. The Architect decides rollback scope during re-planning.
-If a step broke prior work, note the regression in the STOP report.
+> See `builder-rules.md` for full execution discipline, scope fencing,
+> STOP conditions, and error recovery protocol.
 
 ## 8. Resumption Protocol
 
