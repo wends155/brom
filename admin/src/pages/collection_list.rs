@@ -67,7 +67,11 @@ pub fn CollectionList() -> impl IntoView {
                                     let table_rows: Vec<Vec<String>> = items.iter().map(|item| {
                                         fields.iter().filter(|f| !f.hidden).map(|f| {
                                             item.get(&f.name)
-                                                .map(|val| val.to_string().replace("\"", ""))
+                                                .map(|val| match val {
+                                                    Value::String(s) => s.clone(),
+                                                    Value::Null => String::new(),
+                                                    other => other.to_string(),
+                                                })
                                                 .unwrap_or_default()
                                         }).collect()
                                     }).collect();
