@@ -520,3 +520,14 @@
 > * **Feature:** Documentation Synchronization & Baseline Refresh
 > * **Changes:** Performed `/update-doc` workflow. Verified zero semantic drift in `README.md`, `Cargo.toml`, and inline rustdoc comments following recent architectural performance and JSON JSON-formatting interventions. Updated `spec.md` Last Verified Commit metadata to point to `5b0f48e`. The project documentation stack is perfectly synced with the implementation baseline.
 > * **Verification:** Executed `just verify` (fmt, clippy, test, sg scan). Soft warnings from AST-grep identified (`scattered-dotenv`, `scattered-env-var`) but zero-exit gate held at code 0.
+
+> 📝 **Context Update:**
+> * **Feature:** Admin Dashboard Performance Remediation (Completion)
+> * **Changes:** Finalized the remediation of WASM bloat, N+1 fetching, and data rendering corruption. (1) Enabled `strip = true` in `wasm-release` profile. (2) Removed `reqwest` bloat from the admin crate. (3) Injected immutable cache headers for hashed assets while preserving index.html cache-busting. (4) Replaced naive quote-stripping with type-safe JSON extraction in `DataTable`. (5) Implemented lazy-loading for `FieldType::Link` using `StoredValue` and `RwSignal` gating, resolving Leptos 0.7 `Fn` trait capture issues.
+> * **New Constraints:** Relational fields in the admin dashboard use a lazy-loading pattern; any new relational widgets must be gated by user interaction (click/focus) to prevent OOM on large datasets.
+> * **Verification:** Full `just verify` (fmt, clippy, test, trybuild, sg scan) passed with exit code 0. Zero-Exit gate fully satisfied. Fidelity to Plan: 100%.
+> 📝 **Context Update:**
+> * **Feature:** Phase 5 Final Verification & Audit Closure
+> * **Changes:** Successfully completed the `/build` and `/audit` cycle for Admin Dashboard remediation. (1) Binary optimized to 384KB via `[profile.wasm-release]`. (2) Immutable caching implemented for hashed assets. (3) Data rendering fixed via type-safe JSON matching. (4) Relational N+1 OOM issues resolved through the lazy-loading pattern in `form_editor.rs`. Finalized session bootstrap with a successful `/toolcheck` and environment validation.
+> * **New Constraints:** (None - all remediation goals satisfied)
+> * **Pruned:** The Phase 5 remediation issue report and implementation plan are officially closed and archived.
