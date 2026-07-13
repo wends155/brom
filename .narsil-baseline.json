@@ -43,5 +43,10 @@
     "file": "crates/brom-core/src/entity.rs",
     "ruleId": "RUST-002",
     "reason": "Guarded .expect() on chars.next() preceded by is_empty() check. Provably infallible."
+  },
+  {
+    "file": "crates/brom/src/app.rs",
+    "ruleId": "CWE-22",
+    "reason": "Path originates from developer-controlled BromApp::migrations_dir() builder or hardcoded default 'migrations'. MigrationRunner::run_pending() performs full canonicalization and starts_with bounds-checking internally (migration.rs L145-194)."
   }
 ]
