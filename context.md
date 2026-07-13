@@ -561,4 +561,10 @@
 > * **Changes:** Remediated 7 security and design findings from the auth review report. (1) Implemented dynamic secure cookie toggling via `ServerConfig::secure_cookie` (driven by `BROM_SECURE_COOKIE` env var). (2) Added Content-Security-Policy header (`default-src 'self'`) in middleware. (3) Added 15-minute background throttling for API key `last_used_at` updates to reduce DB write contention. (4) Introduced a background tokio task `spawn_session_cleanup` running every hour to purge expired sessions. (5) Removed `testing` feature gates on dependency crates (`argon2`, `rand`, `sha2`). (6) Aligned documentation by removing obsolete `role` column references from `spec.md` and `architecture.md`.
 > * **New Constraints:** (1) The application now spawns a session cleanup task at server startup. (2) `BROM_SECURE_COOKIE` configures the cookie `Secure` flag. (3) API key updates are throttled; real-time updates are not expected.
 > * **Verification:** Added `test_csp_header_present` and `test_secure_cookie_flag` integration tests. All 13 API integration tests passed. Zero-exit verification pipeline (fmt, clippy, test) passed cleanly.
+> 
+> 📝 **Context Update:**
+> * **Feature:** Documentation Sync (Auth Remediation BDD Scenarios)
+> * **Changes:** Performed `/update-doc` workflow. Verified zero semantic drift in `README.md`, `Cargo.toml`, and `lib.rs` overview. Updated `spec.md` with new BDD behavioral scenarios for Content-Security-Policy (CSP) headers, secure cookie flag config, background session cleanup timer, and throttled API key `last_used_at` updates. Recorded verified hash in `spec.md` as `182424d`.
+> * **New Constraints:** (None)
+> * **Verification:** Executed `just verify` (fmt, clippy, test, trybuild, sg scan). Zero-exit gate fully satisfied.
 
