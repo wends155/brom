@@ -18,6 +18,6 @@ chrono.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 hex.workspace = true
-brom-auth = { workspace = true, features = ["testing"] }
+brom-auth.workspace = true
 rand = { workspace = true, features = ["std"] }
 sha2.workspace = true
