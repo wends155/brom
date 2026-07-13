@@ -36,16 +36,22 @@ pub struct BromApp {
 }
 
 impl BromApp {
-    /// Creates a new builder with default configuration.
+    /// Creates a new `BromApp` builder with default configuration.
     ///
-    /// On construction:
-    /// - Loads `.env` file if present (via `dotenvy`).
-    /// - Initializes the `tracing` subscriber with `RUST_LOG` env filter support.
+    /// Loads environment variables from a `.env` file if present, and sets up
+    /// structured logging under `tracing` via the `RUST_LOG` environment filter.
     ///
-    /// Defaults:
-    /// - Database path: `DATABASE_URL` env var, or `"brom.db"`.
-    /// - CORS origins: `BROM_CORS_ORIGINS` env var (comma-separated).
-    /// - Migrations directory: `"migrations"`.
+    /// # Returns
+    ///
+    /// A default `BromApp` builder instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom::BromApp;
+    ///
+    /// let app = BromApp::new();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         // Load .env file if present — ignore errors (file may not exist).
@@ -70,18 +76,52 @@ impl BromApp {
 
     /// Overrides the database file path.
     ///
-    /// If not called, defaults to the `DATABASE_URL` environment variable,
-    /// falling back to `"brom.db"`.
+    /// By default, the application resolves the database path using the `DATABASE_URL`
+    /// environment variable, falling back to `"brom.db"` if unset.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The file path to the target `SQLite` database file.
+    ///
+    /// # Returns
+    ///
+    /// The updated builder instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom::BromApp;
+    ///
+    /// let app = BromApp::new().database("my_custom_db.sqlite");
+    /// ```
     #[must_use]
     pub fn database(mut self, path: &str) -> Self {
         self.db_path = Some(path.to_string());
         self
     }
 
-    /// Registers an entity type with the CMS.
+    /// Registers an entity type with the CMS schema registry.
     ///
-    /// The entity must implement `EntitySchema` (typically via `#[derive(BromEntity)]`).
-    /// Each call collects the entity's schema metadata for runtime registration.
+    /// Registers the entity's table structure and field metadata. Registered entities
+    /// are exposed as REST API routes and automatically migrated.
+    ///
+    /// # Returns
+    ///
+    /// The updated builder instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use brom::{BromApp, BromEntity};
+    /// use serde::{Deserialize, Serialize};
+    ///
+    /// #[derive(Serialize, Deserialize, BromEntity)]
+    /// struct Post {
+    ///     pub title: String,
+    /// }
+    ///
+    /// let app = BromApp::new().entity::<Post>();
+    /// ```
     #[must_use]
     pub fn entity<T: EntitySchema>(mut self) -> Self {
         self.schemas.push(T::schema_info());
@@ -90,8 +130,24 @@ impl BromApp {
 
     /// Overrides the CORS allowed origins.
     ///
-    /// If not called, defaults to the `BROM_CORS_ORIGINS` environment variable
-    /// (comma-separated list).
+    /// By default, allowed origins are read from the `BROM_CORS_ORIGINS` environment
+    /// variable as a comma-separated list.
+    ///
+    /// # Arguments
+    ///
+    /// * `origins` - A slice of string references representing allowed origins.
+    ///
+    /// # Returns
+    ///
+    /// The updated builder instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom::BromApp;
+    ///
+    /// let app = BromApp::new().cors(&["http://localhost:8000", "https://example.com"]);
+    /// ```
     #[must_use]
     pub fn cors(mut self, origins: &[&str]) -> Self {
         self.cors_origins = origins.iter().map(|s| (*s).to_string()).collect();
@@ -100,34 +156,68 @@ impl BromApp {
 
     /// Overrides the migrations directory path.
     ///
-    /// If not called, defaults to `"migrations"`.
+    /// By default, the application reads pending migrations from `"migrations"`.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The folder path containing declarative migration SQL scripts.
+    ///
+    /// # Returns
+    ///
+    /// The updated builder instance.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use brom::BromApp;
+    ///
+    /// let app = BromApp::new().migrations_dir("db/migrations");
+    /// ```
     #[must_use]
     pub fn migrations_dir(mut self, path: &str) -> Self {
         self.migrations_dir = Some(path.to_string());
         self
     }
 
-    /// Builds the application and starts the HTTP server.
+    /// Builds the application state and starts the HTTP server.
     ///
-    /// This method performs the full startup sequence:
-    /// 1. Resolves database path from builder config or environment.
-    /// 2. Creates the connection pool.
-    /// 3. Runs internal table migrations (users, sessions, API keys).
-    /// 4. Runs user-defined migrations from the migrations directory.
-    /// 5. Registers all entity schemas.
-    /// 6. Constructs the application state.
-    /// 7. Builds the Axum router with CORS middleware.
-    /// 8. Binds and serves on the given address.
+    /// Binds to `addr` and serves the dynamic REST endpoints, static embedded
+    /// admin panel UI, and Swagger API documentation. Executes table migrations,
+    /// compiles CORS policy, and registers entity schemas on startup.
+    ///
+    /// # Arguments
+    ///
+    /// * `addr` - The TCP socket address string to listen on (e.g. `"127.0.0.1:3000"`).
+    ///
+    /// # Returns
+    ///
+    /// A success result once the server shuts down, or a box error if binding or startup fails.
     ///
     /// # Errors
     ///
-    /// Returns an error if database initialization, migration execution,
-    /// address parsing, or server binding fails.
+    /// Returns an error if:
+    /// * Database connection pool creation fails.
+    /// * Running declarative table migrations fails.
+    /// * Parsing the target TCP socket address fails.
+    /// * Binding the listener to the specified address fails.
     ///
     /// # Panics
     ///
-    /// Panics if the `BROM_CORS_ORIGINS` environment variable contains
-    /// invalid HTTP header values (fail-fast startup per coding-standard §4.10).
+    /// Panics if the configured CORS origins list contains invalid HTTP header values.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use brom::BromApp;
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     BromApp::new()
+    ///         .serve("127.0.0.1:3000")
+    ///         .await
+    ///         .unwrap();
+    /// }
+    /// ```
     pub async fn serve(self, addr: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
         // 1. Resolve database path
         let db_path = self.db_path.unwrap_or_else(|| {

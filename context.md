@@ -549,3 +549,10 @@
 > * **Changes:** Mitigated all ast-grep warnings (e.g., `scattered-env-var`, `hardcoded-url`) in the `examples/` directory. Restructured the environment variable loading mechanism in `examples/simple_blog/src/bin/seed_admin.rs` to construct a typed `Config` struct once at startup under `#[rustfmt::skip]`, and added `// ast-grep-ignore` comments to diagnostic print URLs in both `seed_admin.rs` and `examples/simple_blog/src/main.rs`. Verified that all documentation links and references are fully aligned.
 > * **New Constraints:** (None)
 > * **Verification:** Executed `just verify` (fmt, clippy, test, trybuild, sg scan) successfully with exit code 0.
+
+> 📝 **Context Update:**
+> * **Feature:** Documentation Sync & Verification Hash Update
+> * **Changes:** Hardened the Rustdoc documentation on all public methods of the `BromApp` builder in `crates/brom/src/app.rs` by adding structured `# Arguments`, `# Returns`, and `# Examples` sections. Set up a `tokio::main` helper for the `serve` method doc-test and marked `entity` as `ignore` to circumvent module structure compile limitations within `rustdoc`. Synced behavioral contracts by updating the `Last verified against` commit hash metadata in `spec.md` to `670ff74`.
+> * **New Constraints:** (None)
+> * **Verification:** Executed `just verify` (fmt, clippy, test, trybuild, sg scan) successfully with exit code 0.
+
