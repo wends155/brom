@@ -6,7 +6,7 @@
 | **Version** | 1.1.0 |
 | **Last Updated** | 2026-04-14 |
 
-> Last verified against: 670ff74
+> Last verified against: cb7b9e6
 
 ## 1. brom-macros
 
@@ -334,7 +334,6 @@ AND `RwSignal` state updates do not eagerly capture large closures, preventing O
 | `id` | `i64` | PK, auto-generated | — | — |
 | `email` | `String` | NOT NULL, UNIQUE | — | Login identifier |
 | `password_hash` | `String` | NOT NULL | — | Argon2id hash |
-| `role` | `String` | NOT NULL | `admin` | Roles: superadmin, admin, editor |
 | `created_at` | `String` | NOT NULL | `now()` | ISO 8601 |
 | `updated_at` | `String` | NOT NULL | `now()` | ISO 8601 |
 

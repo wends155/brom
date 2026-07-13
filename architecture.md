@@ -496,7 +496,6 @@ erDiagram
         integer id PK
         text email UK
         text password_hash
-        text role
         text created_at
         text updated_at
     }
@@ -553,7 +552,6 @@ user-defined entities.
 | `id`            | INTEGER | PK AUTOINCREMENT          | —                      |
 | `email`         | TEXT    | NOT NULL, UNIQUE          | Login identifier       |
 | `password_hash` | TEXT    | NOT NULL                  | Argon2id hash          |
-| `role`          | TEXT    | NOT NULL, DEFAULT 'admin' | superadmin, admin, editor |
 | `created_at`    | TEXT    | NOT NULL                  | ISO 8601               |
 | `updated_at`    | TEXT    | NOT NULL                  | ISO 8601               |
 
