@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# Pre-commit hook: runs the full TARS verification pipeline.
+# Install with: just install-hooks
+
+echo "Running pre-commit verification (just verify)..."
+just verify
+exit_code=$?
+
+if [ $exit_code -ne 0 ]; then
+    echo ""
+    echo "❌ Pre-commit verification failed. Commit blocked."
+    echo "   Fix the issues above, then try again."
+    exit 1
+fi

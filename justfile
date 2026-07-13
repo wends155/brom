@@ -74,6 +74,10 @@ disable-git-prompts:
     git config --local core.terminalprompt false
     git config --local credential.interactive false
 
+# Install git hooks for automated pre-commit verification
+install-hooks:
+    git config core.hooksPath .githooks
+
 # Check PowerShell version safely
 pwsh-version:
     @pwsh -NoProfile -Command 'Write-Output $PSVersionTable.PSVersion.ToString()'
@@ -93,6 +97,26 @@ verify:
     cargo clippy --workspace --all-targets -- -D warnings
     cargo test --workspace
     sg scan
+
+# --- examples/simple_blog (run from example dir so `brom.db` is beside the example)
+
+# Build the simple_blog example package
+simple-blog-build:
+    cargo build -p simple-blog
+
+# Run unit/integration tests for the simple_blog package (compiles all targets)
+simple-blog-test:
+    cargo test -p simple-blog
+
+# Seed an admin user into the example SQLite DB (`DATABASE_URL` or `brom.db` in the example dir)
+simple-blog-seed:
+    cd examples/simple_blog
+    cargo run -p simple-blog --bin seed_admin
+
+# Run the simple_blog HTTP server on 0.0.0.0:3000
+simple-blog-run:
+    cd examples/simple_blog
+    cargo run -p simple-blog
 
 # Unified environment report for /toolcheck workflow (stdout only)
 check-env:
