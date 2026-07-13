@@ -19,13 +19,13 @@ scope fencing, and self-verification.
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
 > [!TIP]
 > These are loaded in sequence. Do not skip any.
 
-1. Read `.agent/rules/builder-rules.md` for execution discipline rules.
-2. Read `.agent/rules/coding-standard.md` for language-specific coding standards.
+1. Read `.agents/rules/builder-rules.md` for execution discipline rules.
+2. Read `.agents/rules/coding-standard.md` for language-specific coding standards.
 3. Read the approved plan's **Builder Context** section — files and line ranges to read before starting.
 4. Read the approved plan's **Negative Scope** section — files and areas NOT to touch.
 5. Read `architecture.md` (if present) for project-specific design and toolchain commands.

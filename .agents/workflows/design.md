@@ -25,9 +25,9 @@ User invokes: `/design <description>`
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
-- Read `.agent/rules/design-rules.md` for design modes, spec format, mockup conventions, and review protocol.
+- Read `.agents/rules/design-rules.md` for design modes, spec format, mockup conventions, and review protocol.
 - Read `architecture.md` (if present) for project structure and module boundaries.
 - Read `design/design-spec.md` (if present) for existing designs (revision mode).
 - Confirm you are operating as the **Architect** role.

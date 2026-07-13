@@ -20,7 +20,7 @@ User invokes: `/feature <description>`
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
 > [!TIP]
 > Load context using native agent tools (zero-prompt):
@@ -31,9 +31,9 @@ User invokes: `/feature <description>`
 // turbo
 >    - `just scan-todos`
 
-- Read `.agent/rules/feature-rules.md` for classification criteria, report format, and architectural fit assessment.
+- Read `.agents/rules/feature-rules.md` for classification criteria, report format, and architectural fit assessment.
 - Read `architecture.md` (if present) for project structure, patterns, and constraints.
-- Read `.agent/rules/coding-standard.md` (if present) for language-specific coding standards.
+- Read `.agents/rules/coding-standard.md` (if present) for language-specific coding standards.
 - Read `context.md` (if present) for historical decisions and prior feature work.
 - Confirm you are operating as the **Architect** role.
 

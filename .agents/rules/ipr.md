@@ -29,7 +29,7 @@
 | **Scope** | One-line summary of what changes |
 | **Tier** | S / M / L |
 
-> All code produced must comply with `.agent/rules/coding-standard.md`.
+> All code produced must comply with `.agents/rules/coding-standard.md`.
 
 ### Builder Context *(M/L tier)*
 

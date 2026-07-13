@@ -23,9 +23,9 @@ User invokes: `/issue <description>`
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
-- Read `.agent/rules/issue-rules.md` for classification criteria, report format, and investigation depth.
+- Read `.agents/rules/issue-rules.md` for classification criteria, report format, and investigation depth.
 - Read `architecture.md` (if present) for project structure, components, and toolchain.
 - Read `context.md` (if present) for historical decisions and known issues.
 - Confirm you are operating as the **Architect** role.

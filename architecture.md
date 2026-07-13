@@ -81,7 +81,7 @@ brom/
 ├── architecture.md             # This document
 ├── context.md                  # Decision history (TARS)
 ├── spec.md                     # Behavioral contracts (TARS)
-├── .agent/                     # TARS agent config
+├── .agents/                    # TARS agent config
 │   ├── workflows/              # Workflow definitions
 │   ├── scripts/                # Automation scripts
 │   └── rules/                  # Coding standards

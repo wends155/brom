@@ -9,9 +9,9 @@ Create, discover, or audit a project's architectural documentation.
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
-- Read `.agent/rules/architecture-rules.md` for required sections and conventions.
+- Read `.agents/rules/architecture-rules.md` for required sections and conventions.
 - Read `context.md` (if present) for historical decisions.
 - Read `algorithm.md` (if present) for algorithm integration contracts — place each algorithm in the module boundary map.
 - Read `design/design-spec.md` (if present) for UI/UX constraints that affect system structure.

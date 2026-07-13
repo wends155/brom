@@ -9,9 +9,9 @@ Create, update, or audit a project's behavioral contracts in `spec.md`.
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
-- Read `.agent/rules/spec-rules.md` for required sections, BDD conventions, and templates.
+- Read `.agents/rules/spec-rules.md` for required sections, BDD conventions, and templates.
 - Read `architecture.md` (**required** — module boundaries are the input for behavioral contracts).
 - Read `context.md` (if present) for historical decisions.
 - Read `spec.md` (if present) to assess current state.

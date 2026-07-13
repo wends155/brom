@@ -14,7 +14,7 @@ The output is a diagnostic report that feeds directly into `/issue` for formal t
 > [!IMPORTANT]
 > This is a **generic** version. Projects with specialized log formats (e.g., OPC,
 > gRPC, database) may have a project-specific `log-audit.md` that overrides this.
-> Check the project's `.agent/workflows/` first.
+> Check the project's `.agents/workflows/` first.
 
 > [!IMPORTANT]
 > This workflow is **diagnostic only** — no recommendations, no code edits, no plans.
@@ -23,7 +23,7 @@ The output is a diagnostic report that feeds directly into `/issue` for formal t
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
 - Read `architecture.md` (if present) for expected component lifecycle and event flow.
 - Read `context.md` (if present) for historical decisions and known issues.

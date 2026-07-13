@@ -21,7 +21,7 @@ It enforces the **Reflect** phase of the TARS protocol and generates a structure
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
 // turbo
 > [!TIP]
@@ -45,9 +45,9 @@ It enforces the **Reflect** phase of the TARS protocol and generates a structure
 >
 > If Narsil MCP is available, also run `scan_security` and `check_cwe_top25`. Use `-Scope full` for compliance mode.
 
-- Read `.agent/rules/audit-rules.md` for report format, finding classification, and verdict criteria.
+- Read `.agents/rules/audit-rules.md` for report format, finding classification, and verdict criteria.
 - Read `architecture.md` (if present) for project-specific design and toolchain.
-- Read `.agent/rules/coding-standard.md` (if present) for language-specific coding standards.
+- Read `.agents/rules/coding-standard.md` (if present) for language-specific coding standards.
 - Read `context.md` (if present) for historical decisions.
 - If post-implementation: the original implementation plan is available for cross-reference.
 - Confirm you are operating as the **Architect** (high-reasoning model).

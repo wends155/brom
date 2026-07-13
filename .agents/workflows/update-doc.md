@@ -23,9 +23,9 @@ User invokes: `/update-doc`
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
-- Read `.agent/rules/doc-rules.md` for documentation standards.
+- Read `.agents/rules/doc-rules.md` for documentation standards.
 - Read `spec.md` (if present) to understand existing behavioral contracts.
 - Read `context.md` (if present) for historical decisions.
 - Confirm you are operating as the **Architect** role.

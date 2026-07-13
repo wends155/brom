@@ -20,7 +20,7 @@ Example: `/brainstorm an OPC UA client library in Rust`
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
 - Read `context.md` (if present) for existing project history.
 - Confirm you are operating as the **Architect** (high-reasoning model).

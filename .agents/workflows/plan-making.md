@@ -10,11 +10,11 @@ It enforces the Planning Gate and Think Phase of the TARS protocol.
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
 > [!TIP]
 > Load context using native agent tools (zero-prompt):
-> 1. Read `architecture.md`, `context.md`, `.agent/rules/coding-standard.md`, `.agent/rules/ipr.md`, and `.agent/rules/phase-rules.md` (if multi-phase) with `view_file` (if they exist).
+> 1. Read `architecture.md`, `context.md`, `.agents/rules/coding-standard.md`, `.agents/rules/ipr.md`, and `.agents/rules/phase-rules.md` (if multi-phase) with `view_file` (if they exist).
 > 2. Run these auto-runnable commands:
 // turbo
 >    - `git log -n 20 --oneline`
@@ -61,9 +61,9 @@ If **Narsil MCP** is available, actively use it throughout planning. Primary use
 For **M/L tier** plans, the Architect **MUST** use `sequentialthinking` to reason through root cause validation, change ordering, blast radius analysis (populating the Blast Radius Table), and interface contract risks before drafting.
 
 > [!IMPORTANT]
-> Follow `.agent/rules/ipr.md` strictly — do NOT use default system templates.
+> Follow `.agents/rules/ipr.md` strictly — do NOT use default system templates.
 
-Write the implementation plan to `<artifacts>/implementation_plan.md` using the `write_to_file` tool (`IsArtifact: true`). Follow the plan format, revision protocol, and handoff rules defined in `.agent/rules/ipr.md`.
+Write the implementation plan to `<artifacts>/implementation_plan.md` using the `write_to_file` tool (`IsArtifact: true`). Follow the plan format, revision protocol, and handoff rules defined in `.agents/rules/ipr.md`.
 
 > [!NOTE]
 > Once the artifact is written, you **MUST** provide a clickable markdown link to it in your final chat response (e.g., `[Implementation Plan](file:///absolute/path/to/implementation_plan.md)`).

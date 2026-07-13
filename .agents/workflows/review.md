@@ -29,7 +29,7 @@ bugs, design smells, and performance issues that compliance checklists miss.
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
 - Read `architecture.md` and `coding-standard.md` (if present).
 - Confirm you are operating as the **Architect** (no code edits).

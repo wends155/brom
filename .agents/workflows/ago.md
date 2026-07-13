@@ -22,9 +22,9 @@ Example: `/ago truck routing with time windows and capacity constraints`
 ## Prerequisites
 
 > [!IMPORTANT]
-> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agent/rules/...`) before starting Step 1. Do not rely on internal memory.
+> **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
-- Read `.agent/rules/algo-rules.md` for required sections and integration contract format.
+- Read `.agents/rules/algo-rules.md` for required sections and integration contract format.
 - Read `context.md` (if present) for existing project context.
 - If `/brainstorm` was run, carry forward the conclusions about scope and constraints.
 - Confirm you are operating as the **Architect** (high-reasoning model).
