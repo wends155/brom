@@ -10,7 +10,7 @@ checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
 name = "admin"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "brom-core",
  "console_error_panic_hook",
@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "brom"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "axum",
  "brom-auth",
@@ -344,7 +344,7 @@ dependencies = [
 
 [[package]]
 name = "brom-auth"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "argon2",
  "brom-core",
@@ -359,7 +359,7 @@ dependencies = [
 
 [[package]]
 name = "brom-cli"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "anyhow",
  "brom-core",
@@ -376,7 +376,7 @@ dependencies = [
 
 [[package]]
 name = "brom-core"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "chrono",
  "mockall",
@@ -388,7 +388,7 @@ dependencies = [
 
 [[package]]
 name = "brom-db"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "brom-auth",
  "brom-core",
@@ -407,7 +407,7 @@ dependencies = [
 
 [[package]]
 name = "brom-macros"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "brom-core",
  "brom-db",
@@ -426,7 +426,7 @@ dependencies = [
 
 [[package]]
 name = "brom-server"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "axum",
  "axum-extra",
@@ -2581,7 +2581,7 @@ checksum = "bbbb5d9659141646ae647b42fe094daf6c6192d1620870b449d9557f748b2daa"
 
 [[package]]
 name = "simple-blog"
-version = "0.1.0"
+version = "0.1.0-beta"
 dependencies = [
  "brom",
  "brom-auth",
