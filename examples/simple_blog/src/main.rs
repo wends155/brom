@@ -1,10 +1,11 @@
 //! A minimal blog example demonstrating the brom headless CMS framework.
 //!
-//! Run with: `cargo run -p simple-blog`
+//! Run with: `cargo run -p simple-blog` (from `examples/simple_blog/` is recommended
+//! so the default `SQLite` file `brom.db` is created next to the example).
 //!
 //! Then visit:
 //! - Admin UI: <http://localhost:3000/admin>
-//! - API docs: <http://localhost:3000/swagger-ui>
+//! - API docs (Swagger UI): <http://localhost:3000/docs>
 
 use brom::BromApp;
 use brom::BromEntity;
@@ -34,9 +35,20 @@ pub struct Category {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    const ADDR: &str = "0.0.0.0:3000";
+
+    // If you see `ERR_CONNECTION_REFUSED` in the browser, the server is not running.
+    // Start this process and keep the terminal open, then open the URLs below.
+    eprintln!();
+    eprintln!("simple_blog listening on {ADDR}");
+    eprintln!("  Admin UI:  http://127.0.0.1:3000/admin");
+    eprintln!("  API docs:  http://127.0.0.1:3000/docs");
+    eprintln!("  (Stop with Ctrl+C.)");
+    eprintln!();
+
     BromApp::new()
         .entity::<Post>()
         .entity::<Category>()
-        .serve("0.0.0.0:3000")
+        .serve(ADDR)
         .await
 }

@@ -3,6 +3,7 @@ name = "simple-blog"
 version = "0.1.0"
 edition = "2024"
 publish = false
+default-run = "simple-blog"
 description = "A minimal blog example demonstrating the brom headless CMS framework."
 
 [lints]
@@ -10,5 +11,8 @@ workspace = true
 
 [dependencies]
 brom = { path = "../../crates/brom" }
+brom-auth = { path = "../../crates/brom-auth" }
+brom-db = { path = "../../crates/brom-db" }
 tokio = { workspace = true, features = ["full"] }
 serde = { workspace = true, features = ["derive"] }
+rand = { workspace = true }

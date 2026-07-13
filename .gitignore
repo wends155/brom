@@ -3,6 +3,8 @@
 .env.local
 .env.*.local
 *.db
+*.db-*
 admin/dist/
 /logs
 node_modules/
+.vscode/
