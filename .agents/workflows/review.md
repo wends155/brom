@@ -31,7 +31,7 @@ bugs, design smells, and performance issues that compliance checklists miss.
 > [!IMPORTANT]
 > **Execution Discipline:** You **MUST** use the `view_file` tool to read all listed rule files (e.g., `.agents/rules/...`) before starting Step 1. Do not rely on internal memory.
 
-- Read `architecture.md` and `coding-standard.md` (if present).
+- Read `architecture.md` and `.agents/rules/coding-standard.md` (if present) for governance core rules. Next, check its Language Dispatch Table to determine which language skill files from `.gemini/skills/` to read based on the task's language.
 - Confirm you are operating as the **Architect** (no code edits).
 
 ## Steps
@@ -41,7 +41,7 @@ bugs, design smells, and performance issues that compliance checklists miss.
 Determine what code to review and which lens to apply:
 
 - **File path** → read the file(s) directly.
-- **`HEAD~N`** → run `git diff HEAD~N HEAD` to see changes from the last N commits, or use `git log -n N --oneline` to find a specific commit hash.
+- **`HEAD~N`** → run `git log -n N --oneline` to find the boundary commit hash, then `git diff <hash> HEAD` using the explicit hash (the `~` character is banned by the IDE).
 - **`staged`** → `git diff --cached --name-only` for staged files.
 - **`all`** → full codebase scan (use Narsil `get_project_structure` if available).
 
@@ -50,24 +50,13 @@ Determine what code to review and which lens to apply:
 Read the scoped files. For diff-based scopes, focus on changed regions but
 read enough surrounding context to understand the logic.
 
-> [!TIP]
-> **Quick structural scan** before applying lenses:
-// turbo
-> - `rg "pub (?:struct|enum|trait|type)\s+[A-Z]" <scope>` — map public API surface
-// turbo
-> - `rg "->\s*Result<" <scope>` — find fallible functions for error path review
-// turbo
-> - `rg "\.clone\(\)" <scope>` — identify potential unnecessary allocations
-// turbo
-> - `rg "unsafe\s+(?:fn|impl|\{)" <scope>` — locate unsafe boundaries for security lens
-
 // turbo
 > [!TIP]
 > For diff-based scopes, run:
 // turbo
 > - `git diff --cached --name-only` (staged)
 // turbo
-> - `git diff HEAD~N HEAD --name-only` (recent commits)
+> - `git log -n N --name-only --oneline` (recent commits — `~` is banned by IDE; use explicit hashes for diffs)
 
 ### 3. Apply Review Lenses
 
@@ -200,4 +189,5 @@ End the report with:
 4. **Use MCP tools** when available for deeper analysis.
 5. **Stay scoped** — review only what was asked. Don't expand to unrelated code.
 6. **Be constructive** — every finding should include a suggestion, not just a complaint.
+
 

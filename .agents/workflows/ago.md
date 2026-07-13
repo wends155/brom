@@ -179,3 +179,4 @@ End with:
 6. **Challenge assumptions** — probe the user's constraints. "Do you really need exact solutions?"
 7. **Carry context forward** — when transitioning to `/architecture`, reference algorithm.md conclusions.
 
+

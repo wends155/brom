@@ -20,7 +20,7 @@ Create, discover, or audit a project's architectural documentation.
 > [!TIP]
 > Scan project state using native agent tools (zero-prompt):
 > 1. Read `Cargo.toml`, `package.json`, or `go.mod` with `view_file`.
-> 2. Use the native `list_dir` tool (and `grep_search` if needed) to list source files and config files (`rustfmt.toml`, `clippy.toml`).
+> 2. Use `find_by_name` to list source files and config files (`rustfmt.toml`, `clippy.toml`).
 // turbo
 > 3. `git log -n 10 --oneline` — recent changes for context.
 
@@ -135,7 +135,7 @@ For multi-module projects, the Architect **SHOULD** use `sequentialthinking` to 
 
 ### Step 2A: Scan the Project
 
-Same as Discover path — full Narsil scan and manual verification.
+Same as Discover path — full Narsil scan + `Scan-ProjectDocs.ps1 -Mode scan`.
 
 ### Step 3A: Compare Declared vs Actual
 
@@ -196,6 +196,7 @@ Output an **Architecture Recommendations Report** — do NOT edit architecture.m
 // turbo
 1. Re-read `architecture.md` with `view_file` and verify all 15 required section headings from `architecture-rules.md §1` are present.
 // turbo
+2. `rg -n "## " architecture.md` (section heading audit).
 3. Cross-reference the draft/report against `architecture-rules.md §1` checklist.
 4. Verify all 15 required sections are present (New/Discover) or assessed (Audit).
 
@@ -205,4 +206,5 @@ Output an **Architecture Recommendations Report** — do NOT edit architecture.m
 - Output: `architecture.md` (New/Discover) or Recommendations Report (Audit).
 - If violations are found, **document them** — do not fix. Fixes go through `/plan-making`.
 - The Architect may reference `architecture-rules.md` §7 Best Practices for recommendations, but those are advisory — the project decides.
+
 

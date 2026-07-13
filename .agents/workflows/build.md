@@ -25,7 +25,7 @@ scope fencing, and self-verification.
 > These are loaded in sequence. Do not skip any.
 
 1. Read `.agents/rules/builder-rules.md` for execution discipline rules.
-2. Read `.agents/rules/coding-standard.md` for language-specific coding standards.
+2. Read `.agents/rules/coding-standard.md` for governance core rules. Next, check its Language Dispatch Table to determine which language skill files from `.gemini/skills/` to read based on the task's language.
 3. Read the approved plan's **Builder Context** section — files and line ranges to read before starting.
 4. Read the approved plan's **Negative Scope** section — files and areas NOT to touch.
 5. Read `architecture.md` (if present) for project-specific design and toolchain commands.
@@ -38,21 +38,28 @@ scope fencing, and self-verification.
 
 Verify the environment is ready:
 
-Verify task.md is aligned with the plan (Agent Procedure):
+> 📘 **Skill:** [`validate-task-alignment`](.gemini/skills/validate-task-alignment/SKILL.md) — cross-check task.md entries against plan
 
-1. Read both `task.md` and the plan file with `view_file`.
-2. Check that every `[NEW|MODIFY|DELETE|TEST] filename` in the plan appears in `task.md`.
-3. Check that every such entry in `task.md` appears in the plan.
-4. If mismatches → report them and STOP. Fix alignment before starting.
+Invoke the skill to verify task.md is aligned with the plan.
+
+**Capture test count baseline:**
+
+Run the project's test-list command (from `architecture.md § Toolchain`) and record
+the total test count. This baseline is compared in Step 4.
+
+> [!TIP]
+> Rust: `cargo test -- --list 2>&1 | Select-String "test$"` and count lines.
+> If `architecture.md` does not define a test-list command, count test markers
+> (e.g., `#[test]`, `test_`) via `grep_search`.
+
 
 > [!WARNING]
+> If validation fails, fix alignment issues before starting. Do NOT proceed
 > with a misaligned task.md.
 
-**Capture Test Baseline (Regression Guard):**
-Before writing any code, run the project's test suite to capture the baseline test count (e.g., `cargo test` and note the total).
-Record this baseline in `task.md` or a local scratchpad.
-
 ### 2. Git Checkpoint
+
+> 📘 **Skill:** [`git-checkpoint`](.gemini/skills/git-checkpoint/SKILL.md) — atomic commit with quality gate verification
 
 Ensure a clean working tree:
 
@@ -66,22 +73,9 @@ establishes the "before" state for the audit's `git diff`.
 
 ### 3. Step Execution Loop
 
-For each step in the plan's Global Execution Order, follow the protocol
-from `builder-rules.md §2`:
+> 📘 **Skill:** [`execute-plan-step`](.gemini/skills/execute-plan-step/SKILL.md) — full PARSE→READ→EXECUTE→VERIFY→UPDATE cycle
 
-```
-For each Step N:
-  1. PARSE  — Extract file tag, file, function sub-tag (if present), function, line range from step header
-  2. READ   — Read the target file/function. Verify Pre-condition holds.
-  3. CODE   — Execute the Action. For [TEST] steps, write test first (TDD Red).
-  4. VERIFY — Re-read changed code. Run Post check. Confirm match to plan.
-  5. UPDATE — Mark task.md: [ ] → [/] → [x]
-  6. REPEAT — Next step
-```
-
-**When replacing a STUB:** Verify the new implementation satisfies the original contract
-comment from the `// STUB(Phase N)` marker. The replacement must pass all existing tests
-that exercised the stub.
+For each step in the plan's Global Execution Order, invoke the skill to perform the PARSE→READ→EXECUTE→VERIFY→UPDATE cycle.
 
 #### MCP-Enhanced Implementation *(when available)*
 
@@ -95,63 +89,78 @@ tools for precision verification:
 | **TEST** (TDD) | `get_callees` | Ensure test cases cover all downstream call paths of the target function. |
 | **VERIFY** | `get_complexity` | Confirm the modified function's complexity hasn't exceeded project thresholds. |
 
+
+**When replacing a STUB:** Verify the new implementation satisfies the original contract
+comment from the `// STUB(Phase N)` marker. The replacement must pass all existing tests
+that exercised the stub.
+
 **At 🔒 CHECKPOINT markers:**
 
-1. *(Optional)* Run the **Validate task.md** procedure from Step 1 to confirm alignment.
-2. Stage and commit (separate commands — no chaining):
+> 📘 **Skill:** [`git-checkpoint`](.gemini/skills/git-checkpoint/SKILL.md) — atomic commit with quality gate verification
 
-   ```
-   git add <changed-files>
-   ```
-   ```
-   git commit -m "step N-M: <description>"
-   ```
+Invoke the skill.
 
 > [!CAUTION]
 > Do NOT skip checkpoints. They create atomic commits for the audit trail.
 > All verification (fmt + clippy + test) must pass before committing.
-> **BANNED OPERATORS:** Never chain git commands with `&&`. You MUST run `git add` and `git commit` as separate `run_command` tool calls to prevent IDE auto-run blocking.
+
+#### Subagent Delegation *(Antigravity v2, L-tier with Parallel Lanes)*
+
+When the approved plan declares Parallel Execution Lanes and multi-agent
+orchestration is available:
+
+1. The main Builder agent reads all lanes from the plan.
+2. For each lane, delegate execution to a subagent, providing:
+   - The lane's step range (e.g., Steps 1-3)
+   - The lane's module boundary (e.g., `src/api/`)
+   - The lane's sub-task file path (`task_lane_a.md`)
+3. Each subagent follows the Step Execution Loop independently within its lane.
+4. At the 🔒 SYNC CHECKPOINT, the main agent:
+   - Merges all lane branches into the working branch
+   - Runs the full `ALL` verification pipeline
+   - Updates the main `task.md` with aggregated lane completion status
+5. If any lane failed, the main agent STOPs and escalates to the Architect (using the standard escalation format and diagnostic file defined in `builder-rules.md` §4.5).
+
+> [!NOTE]
+> If multi-agent orchestration is NOT available, ignore this section entirely.
+> The standard sequential Step Execution Loop applies.
 
 ### 4. Final Verification
 
-After all steps are complete, run the full verification pipeline one last time:
+> 📘 **Skill:** [`run-quality-gate`](.gemini/skills/run-quality-gate/SKILL.md) — run FMT + LINT + TEST pipeline
 
-```
-FMT + LINT + TEST
-```
+Invoke the skill. Confirm zero-exit on all gates.
 
-Use the exact commands from `architecture.md § Toolchain`. Confirm zero-exit on all gates.
+**Test count regression check:**
 
-**Test Regression Guard Verification:**
-Compare the final test count from the verification logs against the baseline test count captured in Pre-Flight.
-- The final count MUST be ≥ the baseline count.
-- If the count decreased, verify the plan explicitly authorized the removal in a **Test Removal Justification** section.
-- If tests were removed without authorization, **STOP**, revert the removal, and escalate to the Architect. Do not complete the Act Phase.
+Re-run the test-list command from Pre-Flight and compare to the baseline:
 
-> [!CAUTION]
-> **BANNED OPERATORS:** Do NOT chain these checks together with `&&` or `;`. You MUST run `fmt`, `clippy`, and `test` sequentially as *separate* `run_command` tool calls.
+- **Count equal or higher** → proceed.
+- **Count decreased** → check if the plan explicitly authorizes test deletion
+  (look for `[DELETE]` or `[-]` on test files/functions in the GEO).
+  - **Authorized** → proceed, note the delta in the Build Report.
+  - **Unauthorized** → **STOP**. Log as `⚠️ Deviation: Test count regressed
+    (baseline: N, current: M) without plan authorization.`
+
+
+### 5. Build Report Generation
+
+> 📘 **Skill:** [`generate-build-report`](.gemini/skills/generate-build-report/SKILL.md) — generate Act→Reflect handoff artifact
+
+Invoke the skill. Follow its tiered logic and extraction rules to generate the report.
 
 > [!NOTE]
-> If `sgconfig.yml` exists in the project root, also run `sg scan` as Gate 4 (AST Linting) and confirm zero findings.
-
-### 5. Builder Notes Review
-
-If you logged any observations or suggestions during execution, verify
-the Builder Notes section exists in `task.md` (per `builder-rules.md §7`):
-
-```markdown
-## Builder Notes
-- 💡 Step N: [suggestion]
-- ⚠️ Step M: [observation]
-```
-
-These will be reviewed by the Architect during `/audit`.
+> The report aggregates notes from task.md — it does not replace them.
+> Builder Notes remain in task.md for traceability.
 
 ### 6. Completion
 
 End the build with:
 
 > ✅ **Act Phase Complete.** Reply with `/audit` for Reflect.
+
+If a Build Report was generated, include a clickable link:
+> [Build Report](file:///path/to/builder_report.md)
 
 Do NOT proceed to audit yourself — the Architect role handles Reflect.
 
@@ -165,4 +174,6 @@ Do NOT proceed to audit yourself — the Architect role handles Reflect.
 6. **Update task.md** — Antigravity reads this for UI progress. Stale markers hide progress from the user.
 7. **Git checkpoint at 🔒** — every checkpoint is a commit. No skipping.
 8. **Wait for user instruction** before pushing to remote repositories.
+
+
 

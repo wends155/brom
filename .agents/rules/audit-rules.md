@@ -14,6 +14,7 @@
 | **Auditor** | Architect |
 | **Scope** | post-implementation / compliance |
 | **Plan Reference** | [Link to original plan, or N/A] |
+| **Build Report** | [Link to builder_report.md, or N/A] |
 | **Verdict** | ✅ Pass / ⚠️ Pass with notes / ❌ Fail |
 
 ### Verification Gate Results
@@ -24,14 +25,14 @@
 | Tests | ✅ / ❌ |
 
 ### Violations & Deviations
-*(If there are no violations, output a single row stating "No violations found".)*
+> *(If there are no violations, output a single row stating "No violations found".)*
 
 | # | Finding | Category | Severity | File | Rule |
 |---|---------|----------|----------|------|------|
 | 1 | [description] | [category] | critical/high/med/low | [file:line] | [doc § section] |
 
 ### Compliant Items
-- *(Positive confirmations and items that successfully passed the audit belong here, NOT in the table above.)*
+> *(Positive confirmations and items that successfully passed the audit belong here, NOT in the table above.)*
 - [List items that passed audit — document what's working well]
 ```
 <!-- TEMPLATE_END -->
@@ -50,7 +51,7 @@
 | Architecture | Structural violations, dependency direction breaches |
 | Code Quality | Dead code, unused imports, hardcoded values, unclear naming |
 | Coding Standards | Violations of `coding-standard.md` rules |
-| Security | Vulnerabilities, hardcoded secrets, injection risks |
+| Security | Vulnerabilities, hardcoded secrets (verify with `make search-secrets`), injection risks |
 
 ### Severity
 
@@ -86,12 +87,16 @@ Used during post-implementation audits to verify plan adherence.
 | **Omission** | Plan item not implemented | Fail — missing deliverable |
 | **Addition** | Unplanned substantive change introduced | Fail unless justified and documented |
 | **Minor Addition** | Pre-approved per `builder-rules.md §4` (imports, derives, formatting) | Not a finding |
-| **Stale Stub** | `STUB(Phase N)` where N ≤ current phase remains unreplaced | Fail — deferred work not completed |
+| **Stale Stub** | `STUB(Phase N)` where N ≤ current phase remains (verify with `make find-stubs`) | Fail — deferred work not completed |
 | **Deviation** | Implementation differs from plan | Fail unless justified and documented |
 | **Justified** | Deviation with documented reasoning | Acceptable — note in findings |
+| **Test Regression** | Test count decreased, test disabled, or test file deleted without plan authorization | Fail — anti-regression violation |
+
 
 Scoring:
 - Any unjustified Omission → ❌ Fail
 - Any unjustified Addition or Deviation → ❌ Fail
 - Minor Additions (as defined in `builder-rules.md §4`) are pre-approved and excluded from fidelity scoring
 - Justified deviations are noted as `medium` findings with documentation
+- Any unauthorized test regression (deletion, disabling, commenting out) → ❌ Fail
+

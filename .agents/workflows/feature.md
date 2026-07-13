@@ -29,11 +29,11 @@ User invokes: `/feature <description>`
 // turbo
 >    - `git log -n 20 --oneline`
 // turbo
->    - `just scan-todos`
+>    - `make search-todos`
 
 - Read `.agents/rules/feature-rules.md` for classification criteria, report format, and architectural fit assessment.
 - Read `architecture.md` (if present) for project structure, patterns, and constraints.
-- Read `.agents/rules/coding-standard.md` (if present) for language-specific coding standards.
+- Read `.agents/rules/coding-standard.md` (if present) for governance core rules. Next, check its Language Dispatch Table to determine which language skill files from `.gemini/skills/` to read based on the task's language.
 - Read `context.md` (if present) for historical decisions and prior feature work.
 - Confirm you are operating as the **Architect** role.
 
@@ -56,7 +56,7 @@ If the description is too vague to understand the user's intent,
 
 ### 2. Load Context
 
-Gather background information using native tools:
+Gather background information (or use the output from `Load-Context.ps1` above):
 
 - **`architecture.md`**: Identify relevant modules, patterns, frameworks, and constraints.
 - **`context.md`**: Check for related prior discussions, rejected ideas, or relevant decisions.
@@ -110,6 +110,8 @@ For **small** features, skip sequential thinking — the overhead isn't worth it
 
 ### 4. Produce Feature Research Report
 
+> 📘 **Skill:** [`scaffold-feature-report`](../../.gemini/skills/scaffold-feature-report/SKILL.md) — generate the feature report skeleton from `feature-rules.md` format
+
 Create a structured report following the format in `feature-rules.md` §2.
 Include the architectural fit assessment per `feature-rules.md` §3 (if `architecture.md` exists).
 
@@ -140,4 +142,5 @@ End the report with:
 5. **Ask early** — if the feature is ambiguous, ask questions in Step 1, not Step 4.
 6. **Leverage the ecosystem** — check for existing libraries before proposing custom code.
 7. **Stay focused** — research just enough to inform a decision; avoid deep prototyping.
+
 

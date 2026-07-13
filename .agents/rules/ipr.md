@@ -1,3 +1,8 @@
+---
+trigger: model_decision
+description: Loaded by `/plan-making` workflow. Defines plan format, revision protocol, and handoff rules.
+---
+
 # Implementation Plan Rules (IPR)
 
 > Loaded by `/plan-making` workflow. Defines plan format, revision protocol, and handoff rules.
@@ -11,6 +16,9 @@
 - **Output:** Always an artifact, never code changes.
 
 ## 2. Plan Format
+
+> [!CAUTION]
+> DO NOT generate plan structures from memory. You MUST load `.gemini/skills/scaffold-plan/SKILL.md` and extract the exact markdown template for the chosen tier.
 
 ### Scaling Tiers
 
@@ -161,6 +169,12 @@ When a change affects callers/callees across modules:
 > Number ALL steps globally across ALL files. The Builder follows steps 1, 2, 3... linearly.
 > No per-file numbering. No jumping.
 >
+> Line ranges in `(L##-##)` are advisory hints for initial orientation. The
+> **Target name** (function, struct, module) is the binding anchor. If prior
+> steps shifted line numbers, the Builder locates the target by name using
+> `grep_search` or Narsil `get_symbol_definition` — not by stale line range.
+>
+> [!TIP]
 > **Call-Graph-Driven Ordering (M/L tier):** When Narsil call-graph is available,
 > use `get_callers`/`get_callees` on each seed function being modified to discover
 > the complete modification set. Order steps topologically:
@@ -171,11 +185,6 @@ When a change affects callers/callees across modules:
 > - **New functions**: insert at the dependency layer where they'll be consumed.
 >
 > Use `find_call_path(A, B)` to verify no indirect paths are missed.
->
-> Line ranges in `(L##-##)` are advisory hints for initial orientation. The
-> **Target name** (function, struct, module) is the binding anchor. If prior
-> steps shifted line numbers, the Builder locates the target by name using
-> `grep_search` or Narsil `get_symbol_definition` — not by stale line range.
 
 Each step is verification-oriented:
 
@@ -194,37 +203,21 @@ Step N: [NEW/MODIFY/DELETE/TEST] file_path — [+/~/−] function_name() (L##-##
 - `[DELETE]` — remove a file or code block
 - `[TEST]` — write or update a test (TDD Red step)
 
-**Function sub-tags** *(optional modifier after the `—` separator)*:
-- `[+]` — **create** a new symbol (function, struct, trait, enum, impl block)
-- `[~]` — **modify** an existing symbol (edit body, signature, or attributes)
-- `[-]` — **remove** a symbol from the file
+> [!WARNING]
+> Steps that `[DELETE]` test files or use `[-]` on test functions require an
+> explicit justification in the Action description. Test regression without
+> justification will be flagged as a Fidelity Matrix violation during `/audit`
+> (see `audit-rules.md §4: Test Regression`).
 
-**Applicability:**
+**Function sub-tags** *(optional S-tier, recommended M-tier, required L-tier):*
+- `[+]` — new symbol (function, struct, trait) being added
+- `[~]` — existing symbol being modified
+- `[-]` — symbol being removed from the file
 
-| Tier | Sub-Tags | Rationale |
-|------|----------|-----------|
-| **S** | Optional | 1–3 files, context is obvious from reading the Action body |
-| **M** | Recommended | 4–10 files, scanability matters for Builder orientation |
-| **L** | Required | 10+ files, function-level intent must be unambiguous |
-
-> [!NOTE]
-> When sub-tags are omitted, the step behaves exactly as today — no breaking change.
-
-**Valid combinations:**
-
-| File Tag | Sub-Tag | Meaning |
-|----------|---------|---------|
-| `[NEW]` | `[+]` | New file, new function (redundant but explicit) |
-| `[MODIFY]` | `[+]` | Existing file, **new** function being added |
-| `[MODIFY]` | `[~]` | Existing file, **existing** function being changed |
-| `[MODIFY]` | `[-]` | Existing file, function being **removed** |
-| `[DELETE]` | *(none)* | Entire file removal — no function sub-tag needed |
-| `[TEST]` | `[+]` | New test function |
-| `[TEST]` | `[~]` | Modifying an existing test |
-
-> [!NOTE]
-> Renames use `[~]` with the Action field clarifying the rename mapping
-> (e.g., `Action: Rename old_fn() → new_fn(). Update all callers.`).
+When present, the sub-tag **overrides** the file-level tag for Action Specificity:
+- `[MODIFY] — [+]` follows `[NEW]` specificity (full code body)
+- `[MODIFY] — [~]` follows `[MODIFY]` specificity (code snippet / prose)
+- `[MODIFY] — [-]` follows `[DELETE]` specificity (prose, name the target)
 
 **Action specificity rules:**
 
@@ -237,18 +230,6 @@ Step N: [NEW/MODIFY/DELETE/TEST] file_path — [+/~/−] function_name() (L##-##
 | `[MODIFY]` | ≤ 20 changed lines | Code snippet showing the replacement |
 | `[MODIFY]` | > 20 changed lines | Prose + **all new/changed function signatures** (see Control Flow Override below) |
 | `[DELETE]` | Any | Prose — name the target to remove |
-
-**Sub-tag specificity override** *(when function sub-tags are present)*:
-
-The function sub-tag **overrides** the file-level tag for determining action specificity:
-
-| Step Pattern | Effective Specificity | What Architect Provides |
-|-------------|----------------------|------------------------|
-| `[MODIFY] — [+] new_fn()` | Follows **`[NEW]`** rules | Full code body (≤30 lines) or signatures + core logic (31–80) |
-| `[MODIFY] — [~] old_fn()` | Follows **`[MODIFY]`** rules | Code snippet (≤20 lines) or prose + signatures (>20) |
-| `[MODIFY] — [-] dead_fn()` | Follows **`[DELETE]`** rules | Prose — name the target to remove |
-| `[TEST] — [+] test_fn()` | Follows **`[TEST]`** rules | Full test body (always) |
-| `[TEST] — [~] test_fn()` | Follows **`[TEST]`** rules | Full test body (always) |
 
 **Placeholder convention:** Skeleton code uses `// STUB(Phase N): description`
 markers per `phase-rules.md`. Do NOT use `todo!()` or `unimplemented!()`.
@@ -286,16 +267,29 @@ function, include a code snippet regardless of size.**
 
 **Pre/Post Vocabulary:**
 
-| Shorthand | Meaning |
-|-----------|---------|
-| `CHECK` | Type-check compiles |
-| `FMT` | Format passes |
-| `CLIPPY` | Lint passes |
-| `TEST` | Tests pass |
-| `BUILD` | Full build |
-| `ALL` | FMT + CLIPPY + TEST pipeline passes |
-| `RED(test)` | Named test **compiles** but **fails**. Rest of suite is green. |
-| `GREEN(test)` | Named test **passes** (exit 0). Communicates TDD Red→Green transition intent. |
+| Shorthand | Meaning | Default Command |
+|-----------|---------|-----------------|
+| `CHECK` | Type-check compiles | `cargo check` |
+| `FMT` | Format passes | `cargo fmt --check` |
+| `CLIPPY` | Lint passes | `cargo clippy -- -D warnings` |
+| `TEST` | Tests pass | `cargo test` |
+| `BUILD` | Full build | `cargo build` |
+| `ALL` | FMT + CLIPPY + TEST | Full pipeline |
+| `RED` | Named test compiles but fails | *Per `architecture.md § Toolchain`* |
+| `GREEN` | Previously-RED test now passes | *Per `architecture.md § Toolchain`* |
+
+> [!NOTE]
+> Default commands shown. Projects override in `architecture.md § Toolchain`.
+
+**`RED` / `GREEN` semantics:**
+
+- `RED(test_name)`: The named test **compiles** but **fails** (exit non-zero).
+  The Pre condition (typically `ALL`) already guarantees the rest of the suite
+  is green. If the test doesn't compile, that's a bug in the test code —
+  Builder fixes it before proceeding.
+- `GREEN(test_name)`: The named test **passes** (exit 0). Semantically
+  equivalent to `TEST` but communicates the TDD intent — this is the
+  Red→Green transition, not a generic test run.
 
 Pre/Post can combine shorthand with conditions: `Post: CHECK, no anyhow imports in file`.
 
@@ -324,6 +318,25 @@ Free-form Post conditions **MUST** include the verification command with an
 > package (TS/Go), or top-level module. When the plan's execution order crosses
 > a crate/package boundary, place a 🔒 CHECKPOINT before entering the next
 > boundary.
+
+#### Parallel Execution Lanes *(L-tier, optional — Multi-Agent only)*
+
+When multi-agent orchestration is available (detected by `/toolcheck`) AND the
+Architect declares parallel lanes in the plan:
+
+- **Lane syntax**: Group steps into named lanes, each scoped to a module boundary:
+  ```
+  Lane A (Steps N-M): `src/module_a/` — description
+  Lane B (Steps N-M): `src/module_b/` — description
+  🔒 SYNC CHECKPOINT — integrate and verify all lanes
+  ```
+- Steps within a lane execute **sequentially**; lanes execute **concurrently**.
+- Each lane has its own local `🔒` checkpoints for lane-scoped verification.
+- The `🔒 SYNC CHECKPOINT` at lane convergence runs the FULL `ALL` pipeline
+  on the integrated workspace.
+- **No file may appear in more than one lane** (strict module partitioning).
+- If multi-agent orchestration is NOT available, ignore this section entirely.
+  The standard sequential GEO applies.
 
 ### Dependency Chain *(L tier)*
 
@@ -359,12 +372,6 @@ For each proposed change, define:
 **Code snippets as executable tests:** Instead of describing expected output in prose,
 express verification as a test assertion. The plan's code should be testable, not illustrative.
 
-**Test Regression Guard:**
-The total test count must be monotonically non-decreasing. If a plan requires deleting or disabling tests (e.g., removing a deprecated feature), it MUST include an explicit **Test Removal Justification** section within the Test Plan.
-- List the exact tests to be removed.
-- Provide the rationale for why they are no longer valid.
-Without this explicit authorization, the Builder is forbidden from removing any tests.
-
 ### Verification Plan *(all tiers)*
 
 | Type | Required? | Details |
@@ -389,27 +396,11 @@ Without this explicit authorization, the Builder is forbidden from removing any 
 
 ## 3. Revision Protocol
 
-When revising an approved or in-progress plan:
-
-1. **Targeted edits only** — Use `replace_file_content` or `multi_replace_file_content`.
-   Do NOT rewrite the entire plan. Unchanged sections must be preserved verbatim.
-2. **Mark revisions** — Tag changed sections with `[REVISED]` so the diff is visible.
-3. **No summarization** — Never condense unchanged content. If a section wasn't
-   discussed in the revision, do not touch it.
-4. **Re-sync task.md** — After any revision, re-run the **Validate task.md** procedure defined in `plan-making.md`.
+> 📘 **Skill:** [`scaffold-plan`](../../.gemini/skills/scaffold-plan/SKILL.md) — Load this skill when instructed to review and update an existing plan.
 
 ## 4. Decision Resolution
 
-When a plan presents options and the user decides:
-
-1. **Delete rejected options entirely** — Do not leave them as "rejected" or "not chosen."
-2. **State the chosen option as fact** — No "we chose X over Y"; just state X.
-3. **Log the rationale** — Record what was decided and why in the plan's Problem Statement
-   or in `context.md` so the reasoning isn't lost.
-4. **Sweep for strays** — After resolving, use `rg` to catch lingering references:
-   ```powershell
-   rg "Option A|Option B|Alternative|vs\." <plan-file>
-   ```
+> 📘 **Skill:** [`scaffold-plan`](../../.gemini/skills/scaffold-plan/SKILL.md) — Load this skill when asked to finalize a drafted plan by resolving open decisions or selecting among alternatives.
 
 ## 5. Handoff-Ready Requirements
 
@@ -422,75 +413,43 @@ Before the Architect can request "Proceed", the plan must satisfy:
 | Test cases pre-specified (TDD: Red → Green → Refactor) | Test Plan section exists |
 | Verification commands sourced from `architecture.md § Toolchain` | Cross-reference check |
 | Plan Summary filled in | Manual review |
-| `task.md` aligned per §6 | Agent Procedure validation passes |
+| `task.md` aligned | Pre-Flight Gate (Validate task.md procedure) |
 
 ## 6. The task.md Contract
 
 `task.md` is the bridge between the Architect's plan and the Builder's execution:
 
-1. **Updated** via native Agent Procedures — writes `task.md` to the plan directory automatically.
+1. **Generated** by the Architect during the `/plan-making` workflow.
 2. **1:1 Mapping**: Each checklist item maps to exactly one plan item.
 3. **Progress Tracking**: Builder marks `[ ]` → `[/]` (in-progress) → `[x]` (done).
-4. **Validation Gate**: Before each commit, native validation must pass.
-5. **Pre-flight**: Before plan approval, native preflight check must pass.
+4. **Validation Gate**: Before each commit, the Builder MUST verify that all modified files have a corresponding `[x]` entry in `task.md`.
+5. **Parallel Lane Partitioning** *(optional — Multi-Agent only)*: When a plan declares Parallel Execution Lanes, the Architect generates per-lane sub-task files (`task_lane_a.md`, `task_lane_b.md`). The main `task.md` retains a summary line per lane linking to the sub-file. Each subagent updates ONLY its assigned sub-task file to prevent write conflicts.
 
 ## 7. Builder Obligations & STOP Conditions
 
-> See `builder-rules.md` for full execution discipline, scope fencing,
-> STOP conditions, and error recovery protocol.
+**Obligations:**
+1. Execute plan items in order — no deviations.
+2. If a plan item is unclear or flawed → **STOP**, request re-audit.
+3. Update `task.md` in the artifacts directory after each file modification:
+   - Mark `[ ]` → `[/]` when starting a step.
+   - Mark `[/]` → `[x]` when the step passes verification.
+   - Antigravity reads this file for UI progress — stale markers hide progress from the user.
+4. Run `ALL` at each 🔒 CHECKPOINT.
+5. Emulate `Git-Checkpoint.ps1` behavior natively: ensure `task.md` is updated, then run `git add .` and `git commit -m "..."`.
+6. 🛑 **Wait for user instruction** before pushing to remote repositories.
+
+**STOP Conditions** — Builder must immediately halt and return to the Architect when:
+- The plan contradicts `architecture.md`.
+- A plan item is ambiguous or untestable.
+- An unplanned dependency or breaking change is discovered.
+- The second consecutive test failure occurs on the same item.
+
+**On STOP:** Commit current progress with message `WIP: stopped at step N — [reason]`.
+Do NOT revert completed steps. The Architect decides rollback scope during re-planning.
+If a step broke prior work, note the regression in the STOP report.
 
 ## 8. Resumption Protocol
 
-When resuming a plan in a new session:
+> 📘 **Skill:** [`scaffold-plan`](../../.gemini/skills/scaffold-plan/SKILL.md) — Load this skill when starting a new session to resume execution of an approved plan.
 
-1. Read `context.md` for prior session summary.
-2. Read `task.md` — identify last `[x]` item and first `[ ]` item.
-3. Verify partial state: run `ALL` to confirm prior work still passes.
-4. Resume from the first `[ ]` step. Do not re-execute `[x]` steps.
-5. If `ALL` fails on prior work → STOP, escalate (do not silently fix).
 
-## 9. Example: S-Tier Plan
-
-```markdown
-**Role:** Architect · **Date:** 2026-02-26 · **Tier:** S
-
-### Problem Statement
-`parse_config()` panics on empty input. Should return `ConfigError::EmptyInput`.
-
-### Global Execution Order
-
-Step 1: [TEST] src/config.rs — test_empty_input()
-- Pre: ALL
-- Target: #[cfg(test)] mod tests
-- Action: Add test asserting parse_config("") returns Err(ConfigError::EmptyInput)
-- Post: RED(test_empty_input)
-
-Step 2: [MODIFY] src/config.rs — parse_config() (L12-30)
-- Pre: Step 1 test exists
-- Target: parse_config() L12
-- Action: Add early return: if input.is_empty() { return Err(ConfigError::EmptyInput); }
-- Post: GREEN(test_empty_input), ALL 🔒
-
-### Verification Plan
-| Type | Command |
-|------|---------|
-| Tests | cargo test |
-| Lint | cargo clippy -- -D warnings |
-
-### Plan Summary
-| Metric | Value |
-|--------|-------|
-| Tier | S |
-| Files | 1 |
-| Steps | 2 |
-| Checkpoints | 1 |
-| Estimated effort | Low |
-```
-
-> [!TIP]
-> For S-tier plans, function sub-tags are **optional**. The example above omits
-> them for brevity. An enhanced version would read:
-> ```markdown
-> Step 1: [TEST] src/config.rs — [+] test_empty_input()
-> Step 2: [MODIFY] src/config.rs — [~] parse_config() (L12-30)
-> ```

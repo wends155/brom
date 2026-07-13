@@ -37,9 +37,9 @@ It enforces the **Reflect** phase of the TARS protocol and generates a structure
 // turbo
 > - Unwrap scan: covered by `sg scan` rule `unwrap-in-production` *(see L41 — only if `sgconfig.yml` exists)*
 // turbo
-> - Secret scan: `just scan-secrets`
+> - Secret scan: `make search-secrets`
 // turbo
-> - TODO markers: `just scan-todos`
+> - TODO markers: `make search-todos`
 // turbo
 > - AST lint scan: `sg scan` *(only if `sgconfig.yml` exists in project root)*
 >
@@ -47,7 +47,7 @@ It enforces the **Reflect** phase of the TARS protocol and generates a structure
 
 - Read `.agents/rules/audit-rules.md` for report format, finding classification, and verdict criteria.
 - Read `architecture.md` (if present) for project-specific design and toolchain.
-- Read `.agents/rules/coding-standard.md` (if present) for language-specific coding standards.
+- Read `.agents/rules/coding-standard.md` (if present) for governance core rules. Next, check its Language Dispatch Table to determine which language skill files from `.gemini/skills/` to read based on the task's language.
 - Read `context.md` (if present) for historical decisions.
 - If post-implementation: the original implementation plan is available for cross-reference.
 - Confirm you are operating as the **Architect** (high-reasoning model).
@@ -59,10 +59,11 @@ It enforces the **Reflect** phase of the TARS protocol and generates a structure
 Before auditing, collect all relevant materials:
 
 - **Scope**: Determine if this is a post-implementation audit (changed files) or a full compliance check.
-- **Changed Files**: `git show --name-only --format="" HEAD` to identify what was created, modified, or deleted.
+- **Changed Files**: `git diff --name-only` to identify what was created, modified, or deleted.
 - **Implementation Plan**: Locate and re-read the original approved plan (post-implementation only).
+- **Build Report**: Locate and read `builder_report.md` if present (M/L tier builds; see `builder-rules.md §10`).
 - **Verification Logs**: Review any test output, lint results, or build logs from the Act phase.
-- **Git Diff**: Run `git diff HEAD~1 HEAD` or `just git-diff-last` to see the exact changes made.
+- **Git Diff**: Run `git diff` or `git log` to see the exact changes made.
 
 ### 2. Compliance Audit
 
@@ -71,23 +72,30 @@ Systematically verify the code against project standards.
 #### 2a. Plan Fidelity *(post-implementation only; see GEMINI.md §7)*
 - [ ] Every plan item maps to a `[x]` in `task.md` and a corresponding `git diff`
 - [ ] No unapproved changes were introduced (check for Additions per Fidelity Matrix)
-- [ ] Function sub-tag fidelity: `[+]` symbols are net-new in the diff, `[~]` symbols modified existing code, `[-]` symbols were removed *(M/L tier plans with sub-tags only)*
 - [ ] If deviations occurred, they are documented with justification
-- [ ] Builder Notes section of `task.md` reviewed and processed (see §2a-bis)
-- [ ] No stale stubs remain: `STUB(Phase N)` where N ≤ current phase are all addressed *(multi-phase only — verify with `just scan-stubs`)*
-- [ ] **Test Regression Guard**: Test count is ≥ the pre-implementation baseline, OR test removal was explicitly authorized in the plan's Test Plan section.
-- [ ] No unauthorized removal of test files (`*_test.*`, `*_spec.*`, etc.) or test macros (`#[test]`, `it(`, `describe(`) observed in the diff.
+- [ ] Build Report reviewed and processed, OR Builder Notes in `task.md` reviewed (see §2a-bis)
+- [ ] No stale stubs remain: `STUB(Phase N)` where N ≤ current phase are all addressed *(multi-phase only — verify with `make find-stubs`)*
+- [ ] Function sub-tags verified (M/L tier): `[+]` symbols are net-new in diff, `[~]` symbols existed pre-change, `[-]` symbols are removed
+- [ ] No unauthorized test regression: test files were not deleted, tests were not removed or disabled without plan authorization (see Fidelity Matrix: Test Regression)
+- [ ] If plan used Parallel Execution Lanes: all lane branches were merged at Sync Checkpoint, no orphan lane branches remain (git branch --list "build/lane-*" expects: 0 matches)
 
-#### 2a-bis. Builder Notes Processing *(if Builder Notes exist in task.md)*
 
-Review each note in the `## Builder Notes` section:
+
+#### 2a-bis. Builder Notes Processing *(if Build Report or Builder Notes exist)*
+
+**Preferred source:** `builder_report.md` artifact (M/L tier builds).
+**Fallback:** `## Builder Notes` section in `task.md` (S-tier builds, or if report is absent).
+
+Review each note:
 
 - **💡 Suggestions**: Promote to a future plan backlog item, or dismiss with brief rationale.
 - **⚠️ Observations**: Acknowledge and record in `context.md` if relevant to future work.
+- **Deviations** *(report only)*: Verify each deviation is justified per fidelity hierarchy (builder-rules.md §1).
 
 > [!NOTE]
 > Builder Notes are informational — they were logged during `/build` per
-> `builder-rules.md §7`. The Architect decides what action (if any) to take.
+> `builder-rules.md §8`. The Build Report aggregates them into a structured
+> format. The Architect decides what action (if any) to take.
 
 #### 2b. GEMINI.md Compliance *(skip items already covered by §2f)*
 - [ ] **Error Handling**: No silent failures; errors communicate what/where/why
@@ -100,6 +108,8 @@ Review each note in the `## Builder Notes` section:
 - [ ] **Mocks & stubs**: External dependencies are abstracted behind interfaces/traits and mocked in tests
 - [ ] **Testable design**: Code avoids tight coupling to global state, filesystems, or network — dependencies are injectable
 - [ ] **No crashes**: No unhandled exceptions, raw panics, or uncontrolled termination paths remain untested
+- [ ] **No test regression**: Diff does not show removed `#[test]`/`test_` markers, added `#[ignore]`/`.skip()`, or deleted test files without plan justification
+
 
 #### 2d. Architecture Compliance *(if `architecture.md` exists)*
 - [ ] Code follows the project's directory structure and layout conventions
@@ -134,19 +144,12 @@ If **Narsil MCP** is available, use it to automate specific checklist items:
 | Error handling (CWE) | `check_cwe_top25` | 2b, 2f |
 | Security vulnerabilities | `check_owasp_top10` | 2e |
 | Prohibited patterns | `find_similar_code` against anti-patterns | 2f |
-| Dependency structure | `get_import_graph`, `find_circular_imports` | 2d |
+| Structural drift | `get_call_graph`, `get_callers`, `get_callees` | 2d, 2f |
+| Dependency structure | `find_call_path`, `find_circular_imports` | 2d |
 | Type errors | `check_type_errors` | 2e |
 | `.unwrap()` usage | `search_code` excluding test files | 2f |
-| Coupling hotspots | `get_function_hotspots` | 2d, 2e |
-| Cyclomatic complexity | `get_complexity` | 2e |
-| Call-graph drift (post-impl) | `get_callers`/`get_callees` vs plan's Blast Radius Table | 2a |
-| Taint source tracing | `get_taint_sources`, `get_callers` | 2b, 2f |
+| Test regression | `search_code` for removed `#[test]`, added `#[ignore]` in diff | 2a, 2c |
 
-**Post-Implementation Call-Graph Verification** *(post-implementation only)*:
-Re-run `get_callers`/`get_callees` on every modified function and compare caller
-counts against the plan's Blast Radius Table. Divergence indicates the
-implementation changed the call graph in ways the plan didn't predict —
-classify as a **Plan Fidelity** finding (§2a).
 
 For **multi-file audits** (>5 changed files), the Architect **SHOULD** use `sequentialthinking` to:
 - Structure the audit across many files systematically.
@@ -155,22 +158,9 @@ For **multi-file audits** (>5 changed files), the Architect **SHOULD** use `sequ
 
 For **single-file audits**, skip sequential thinking — the overhead isn't worth it.
 
-#### Structural Scanning *(rg-based, complements MCP tools)*
-
-> [!TIP]
-> Use these regex patterns for rapid structural checks on changed files:
-// turbo
-> - `rg "pub (?:struct|enum|trait|type)\s+[A-Z]" <changed-files>` — verify public API surface
-// turbo
-> - `rg "->\s*Result<" <changed-files>` — audit error propagation paths
-// turbo
-> - `rg "\.unwrap\(\)" <changed-files>` — find potential panic points (cross-ref with `sg scan`)
-// turbo
-> - `rg "#\[derive\(.*Serialize" <changed-files>` — check serialization coverage
-// turbo
-> - `git diff HEAD~1 HEAD | rg "^\-\s.*(#\[test\]|test_|it\(|describe\()"` — detect deleted or disabled tests
-
 ### 3. Verification Gate
+
+> 📘 **Skill:** [`run-quality-gate`](.gemini/skills/run-quality-gate/SKILL.md) — run the full verification pipeline
 
 Re-run the project's standard verification pipeline and confirm zero-exit:
 
@@ -197,7 +187,17 @@ Re-run the project's standard verification pipeline and confirm zero-exit:
 >
 > All three must exit 0.
 
+**Browser-Based Validation** *(Antigravity v2 only)*: When the browser validation
+tool is available (detected during /toolcheck), run automated visual checks:
+- Viewport responsiveness (desktop, tablet, mobile breakpoints)
+- WCAG contrast ratio compliance (AA minimum)
+- Interactive element accessibility (focus indicators, ARIA labels)
+
+If browser validation is NOT available, skip this row. It is advisory, not blocking.
+
 ### 4. Audit Report
+
+> 📘 **Skill:** [`scaffold-audit-report`](../../.gemini/skills/scaffold-audit-report/SKILL.md) — generate the audit report skeleton from `audit-rules.md` format
 
 Write the audit results to `<artifacts>/audit_report.md` using the `write_to_file` tool (`IsArtifact: true`). Follow the format in `audit-rules.md` §1. Classify each finding per `audit-rules.md` §2 (categories and severity). Include a clickable `[audit_report.md](file:///path)` artifact link in your chat response.
 
@@ -208,6 +208,8 @@ Write the audit results to `<artifacts>/audit_report.md` using the `write_to_fil
 > [!NOTE]
 > Once the artifact is written, you **MUST** provide a clickable markdown link to it in your final chat response (e.g., `[Audit Report](file:///absolute/path/to/audit_report.md)`).
 ### 5. Verdict & Handoff
+
+> 📘 **Skill:** [`run-phase-gate`](.gemini/skills/run-phase-gate/SKILL.md) — verify phase gate criteria (multi-phase only)
 
 Determine the verdict per `audit-rules.md` §3. For post-implementation audits, also apply the Fidelity Matrix per `audit-rules.md` §4.
 
@@ -226,6 +228,8 @@ Present the verdict and handoff options to the user:
 `/plan-making` to enforce the TARS Planning Gate.
 
 ### 6. Summarize (Context Compression)
+
+> 📘 **Skill:** [`compress-context`](.gemini/skills/compress-context/SKILL.md) — compress interaction to context.md
 
 **Critical:** This step prevents context bloat per TARS protocol rules.
 
@@ -255,4 +259,6 @@ The task is now considered fully closed under the TARS protocol.
 3. **Use MCP tools** — prefer Narsil and Sequential Thinking when available for accuracy.
 4. **Preserve passing items** — document compliant items too, not just failures.
 5. **Respect the Planning Gate** — never tell the Builder to fix without routing through `/plan-making`.
+
+
 

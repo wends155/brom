@@ -96,3 +96,4 @@ When the idea feels solid enough, the user chooses how to proceed:
 5. **Validate claims** — use Context7 MCP to verify library status, API surfaces, and ecosystem facts.
 6. **Respect the exit** — when the user transitions to `/architecture`, carry context forward seamlessly.
 
+

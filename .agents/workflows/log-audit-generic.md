@@ -37,10 +37,10 @@ The output is a diagnostic report that feeds directly into `/issue` for formal t
 Run these log inspection commands (auto-runnable):
 
 ```
-just logs-level-counts
+make audit-log-levels
 ```
 ```
-just logs-warnings
+make audit-log-errors
 ```
 
 This produces a severity count per log file and the most recent warning/error entries.
@@ -53,13 +53,13 @@ This produces a severity count per log file and the most recent warning/error en
 Run the lifecycle extraction commands:
 
 ```
-just logs-lifecycle
+make audit-log-lifecycle
 ```
 ```
-just logs-connections
+make audit-log-network
 ```
 ```
-just logs-latency
+make audit-log-latency
 ```
 
 This produces:
@@ -75,10 +75,10 @@ Use this output to pre-populate §3b (Event Ordering) and §3d (Resource Lifecyc
 Run these deep analysis commands:
 
 ```
-just logs-latency-counts
+make metrics-log-count
 ```
 ```
-just logs-extract-latency
+make metrics-log-raw
 ```
 
 Agent performs statistical analysis on the output:
@@ -215,4 +215,5 @@ Present the report to the user.
 4. **Always pause** — the user must explicitly invoke `/issue` to proceed.
 5. **Strip ANSI** — log files may contain escape codes; always strip before analysis.
 6. **Check for project override** — if the project has its own `log-audit.md`, use that instead.
+
 

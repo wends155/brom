@@ -107,8 +107,8 @@ spec.md must contain a metadata line recording the source code commit it was las
 ```
 
 - The hash is the **source code** commit (`git rev-parse --short HEAD`) at the time of verification.
-- Drift detection is performed by verifying the recorded commit hash against the current HEAD.
-- If source files changed since the recorded hash, an advisory warning is emitted.
+- `Scan-ProjectDocs.ps1` compares this hash against HEAD to detect drift.
+- If source files changed since the recorded hash, the script emits an advisory warning.
 - The hash does NOT refer to the spec.md commit (avoids chicken-and-egg).
 
 ## 6. Style
@@ -119,21 +119,22 @@ spec.md must contain a metadata line recording the source code commit it was las
 | **Voice** | Use third person ("Parses the input") not imperative ("Parse the input") |
 | **Cross-references** | Use `[`backtick links`]` to reference other items: ``[`Config`]``, ``[`parse_config`]`` |
 | **Line length** | Soft wrap at 100 characters for readability |
+| **Markdown in docs** | Use headers (`#`), lists, code blocks — rustdoc renders full Markdown |
 | **Deprecation** | Use `#[deprecated(since = "x.y.z", note = "Use X instead")]` with doc explanation |
 
 ## 7. Package Documentation Ownership
 
-Define the synchronization contract:
+The `/update-doc` workflow owns all package-level documentation surfaces:
 
-| Artifact | Owned By | Scope |
-|----------|----------|-------|
-| `README.md` (full file) | `/update-doc` | All sections: overview, install, usage, features, API surface, contributing, license |
-| `Cargo.toml` `description` | `/update-doc` | Single `description` field only — no other `[package]` fields |
-| `lib.rs` / `main.rs` `//!` | `/update-doc` | Crate-level overview (already in scope via §3) |
+| Artifact | Scope |
+|----------|-------|
+| `README.md` (full file) | All sections: overview, install, usage, features, API surface, contributing, license |
+| `Cargo.toml` `description` | Single `description` field only — no other `[package]` fields |
+| `lib.rs` / `main.rs` `//!` | Crate-level overview (already in scope via §3) |
 
 **Synchronization Rule:** The first-line summary in `Cargo.toml [package.description]` and the first paragraph of the `//!` crate doc in `lib.rs` must be semantically equivalent. The README overview section expands on this summary with full context.
 
-**README Section Template:**
+### README Section Template
 
 ```markdown
 # Crate Name
@@ -141,7 +142,7 @@ Define the synchronization contract:
 > One-line description (synced with Cargo.toml)
 
 ## Overview
-## Installation  
+## Installation
 ## Usage / Quick Start
 ## Features / Feature Flags
 ## API Surface (optional — for libraries)
@@ -154,7 +155,12 @@ Define the synchronization contract:
 <!-- custom:end -->
 ```
 
-**Preservation Rules:**
+### Preservation Rules
+
 - Content inside `<!-- custom:start -->` / `<!-- custom:end -->` sentinel blocks is never overwritten.
-- Badges at the top of the file (lines matching `[![`) are preserved in-place.
+- Badge lines at the top of the file (lines matching `[![`) are preserved in-place.
 - If no sentinel blocks exist, the workflow generates the full README from scratch.
+
+### Workspace Inheritance
+
+If `Cargo.toml` contains `description.workspace = true`, the workflow must edit the workspace root `Cargo.toml` (`[workspace.package].description`) instead of the crate-level one.

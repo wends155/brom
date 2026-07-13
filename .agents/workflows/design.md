@@ -50,15 +50,46 @@ Determine the design mode per `design-rules.md` §1:
 | **CLI** | Command-line output format |
 | **Assets** | Favicon, app icon, logo, splash screen |
 
-Gather requirements:
+> [!TIP]
+> **Agency Skill JIT Loading (Phase A: Intent & Discovery)**
+> If mode is **GUI** or **Assets**, use `view_file` to load Phase A skills:
+> - `.gemini/skills/agency-ux-researcher/SKILL.md`
+> - `.gemini/skills/agency-brand-guardian/SKILL.md`
+> - `.gemini/skills/agency-visual-storyteller/SKILL.md`
 
-- What screens/views are needed?
-- What's the user workflow? (action → response → next screen)
-- Any reference designs, inspiration, or existing patterns?
-- Constraints: framework (Svelte, Ratatui, React), responsive, accessibility, theme?
+Gather requirements using the **Design Intent Questionnaire**:
+
+#### GUI Mode — 8 Dimensions
+
+| # | Dimension | Question |
+|---|-----------|----------|
+| 1 | **Audience Persona** | Who is the primary user? Expert (shortcuts, dense data), Casual (guidance, spacious layout), or Accessibility-dependent (WCAG AA+)? |
+| 2 | **Primary Objective** | What is the single most important action on each screen? (e.g., "Sign up", "Export report") |
+| 3 | **Data Density** | High (analytics dashboards, admin panels), Medium (content apps), or Low (marketing pages, onboarding)? |
+| 4 | **Emotional Tone** | Corporate/Trustworthy, Playful/Whimsical, Clinical/Precise, Aggressive/Kinetic, Warm/Organic, or Minimal/Zen? |
+| 5 | **Content Strategy** | Real copy or placeholder content? What's the copy tone? (Technical, Friendly, Formal) |
+| 6 | **Reference Anchors** | Products to emulate or avoid? (e.g., "like Stripe but darker") |
+| 7 | **Interaction Complexity** | Simple (mostly static), Medium (forms, modals), or Complex (drag-and-drop, real-time, multi-panel)? |
+| 8 | **Navigation & Menu Structure** | Primary nav pattern? (Top bar, Left sidebar, Bottom tabs, Hamburger). Main menu items? Sub-menus, nested levels, breadcrumbs? Search placement? |
+
+#### Assets Mode — 5 Dimensions (Brand Identity Gate)
+
+> [!IMPORTANT]
+> **Brand Identity Gate:** Brand identity MUST be solidified before any asset generation. See `design-rules.md` §3.6. Wireframes are skipped for Assets mode — the Gate is the prerequisite instead.
+
+| # | Dimension | Question |
+|---|-----------|----------|
+| 1 | **Brand Identity** *(mandatory gate)* | Define or confirm: Primary/secondary/accent colors (HEX), typography family, logo mark, brand voice. |
+| 2 | **Brand Context** | Extending existing brand or creating from scratch? |
+| 3 | **Usage Context** | Where will the asset appear? (favicon tab, app store, print, social media) |
+| 4 | **Symbolic Intent** | What concept should the asset communicate? (Speed, Security, Growth, Community) |
+| 5 | **Style Constraint** | Flat/geometric, illustrative, photorealistic, or abstract? |
+
+#### TUI/CLI Modes
 - For TUI: terminal size assumptions, color support (256/truecolor), mouse support?
-- For GUI: target viewport sizes, mobile support, dark mode?
-- For Assets: what's needed? Required sizes/formats?
+- For CLI: output format, verbosity levels, color support?
+
+Persist questionnaire answers to `design/design-brief.md` using the template from `design-rules.md` §2 before proceeding.
 
 If the description is too vague, **ask clarifying questions immediately**
 before proceeding to Step 2.
@@ -67,11 +98,47 @@ For **medium/large** designs (multiple screens), the Architect **SHOULD** use
 `sequentialthinking` to structure the screen inventory and interaction flows
 before generating mockups.
 
+### 1.5 Generate Wireframes *(GUI mode only)*
+
+> [!TIP]
+> **Agency Skill JIT Loading (Wireframe Phase)**
+> Load before wireframe generation:
+> - `.gemini/skills/agency-image-prompt-engineer/SKILL.md` (Wireframe Prompt Scaffold section)
+
+Using the Design Brief answers and the prompt templates from `design-rules.md` §3.5:
+
+1. Compose wireframe prompts by filling the GUI Wireframe Base Prompt template variables.
+2. Generate low-fidelity wireframe images using `generate_image` (one per screen).
+3. Present wireframes to the user for **structural approval only** — layout, not style.
+4. User reviews:
+   - **Feedback**: Revise layout (add sidebar, move CTA, split form, change nav pattern).
+   - **"Structure Approved"**: Proceed to styled mockup generation.
+5. On **"Structure Approved"**: Generate a **Wireframe Structure Description** per `design-rules.md` §3.5 and save it alongside the wireframe image for use as the mockup layout constraint.
+6. Add wireframe entry to the `Wireframe Reference` table in `design/design-spec.md`.
+
+> [!CAUTION]
+> The agent **MUST NOT** proceed to Step 2 (styled mockups) until **"Structure Approved"** is given for each screen.
+
+> [!NOTE]
+> **Skip conditions:** This step is skipped for:
+> - **Assets mode** (wireframes not applicable — Brand Identity Gate applies instead)
+> - **TUI/CLI modes** (use ASCII/box-drawing directly in Step 2)
+> - **Small designs** (≤2 screens) when the user explicitly says "skip wireframes"
+
 ### 2. Generate Initial Mockups
+
+> [!TIP]
+> **Agency Skill JIT Loading (Phase B: Foundation & Structure)**
+> - For **GUI** mode, load Phase B GUI skills:
+>   - `.gemini/skills/agency-ux-architect/SKILL.md`
+>   - `.gemini/skills/agency-ui-designer/SKILL.md`
+> - For **Assets** mode, load Phase B Asset skills:
+>   - `.gemini/skills/agency-inclusive-visuals-specialist/SKILL.md`
+>   - `.gemini/skills/agency-image-prompt-engineer/SKILL.md`
 
 Based on the design mode:
 
-- **GUI**: use `generate_image` to create mockup images (one per screen)
+- **GUI**: use `generate_image` to create mockup images (one per screen). For screens with an approved wireframe, use the **Mockup Upgrade Prompt** from `design-rules.md` §3.5, embedding the Wireframe Structure Description verbatim to preserve the approved layout.
 - **TUI**: use ASCII/box-drawing in fenced code blocks per `design-rules.md` §3
 - **CLI**: show sample command invocation + expected output
 - **Assets**: use `generate_image` for icons/logos at target sizes
@@ -90,6 +157,11 @@ If **Narsil MCP** is available, use it to understand existing UI code:
 | `get_project_structure` | Understand where UI code lives |
 
 ### 3. Review Loop
+
+> [!TIP]
+> **Agency Skill JIT Loading (Phase C: Polish & Delight)**
+> If mode is **GUI**, load Phase C skills to enhance personality and interaction states before generating final revisions:
+> - `.gemini/skills/agency-whimsy-injector/SKILL.md`
 
 Present mockups to the user and iterate per `design-rules.md` §4:
 
@@ -155,4 +227,7 @@ End with:
 6. **Per-screen approval** — "Approve" applies to individual screens, not the entire spec.
 7. **Re-entry is scoped** — revision mode targets specific screens, not full redesign (per §5).
 8. `/design` can be re-entered from `/plan-making`, `/audit`, or `/issue` per `design-rules.md` §5.
+9. **"Structure Approved" gate** — for GUI mode, the agent MUST NOT generate styled mockups until the user says "Structure Approved" for each screen's wireframe (Step 1.5).
+10. **Design Brief persistence** — questionnaire answers MUST be saved to `design/design-brief.md` using the template in `design-rules.md` §2 before any generation begins.
+
 

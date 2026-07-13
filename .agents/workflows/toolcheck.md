@@ -24,19 +24,56 @@ User invokes: `/toolcheck`
 
 Run the following checks. All are auto-runnable:
 
-**Environment Report:**
+**Shell Tools:**
 // turbo
-- `just check-env` (unified toolchain, blast radius, rustup, and TODO report)
+- `git --version`
+// turbo
+- `rg --version`
+// turbo
+- `sg --version`
 
-**Git Configuration:**
+**Git Non-Interactive Safety:**
 // turbo
-- `just disable-git-prompts`
+- `git config credential.helper`
+
+If the output matches `manager`, `wincred`, or `osxkeychain`, set these env vars for the session:
+- `$env:GCM_INTERACTIVE = 'never'`
+- `$env:GIT_TERMINAL_PROMPT = '0'`
+
+**Workspace State:**
+// turbo
+- `git status --short`
+
+If output is empty, report "Clean working tree." Otherwise, list dirty files in the Session Readiness Report under a "Workspace State" row.
+
+**Rust Toolchain:**
+// turbo
+- `rustc --version`
+// turbo
+- `cargo --version`
+// turbo
+- `cargo clippy --version`
+// turbo
+- `rustfmt --version`
+// turbo
+- `rustup show`
 
 **Workflow & Script Files:**
-Use the native `list_dir` tool to list the contents of `.agents/workflows/` and `.agents/scripts/` to verify all expected files exist.
+Use `find_by_name` to verify all expected `.md` files exist in `.agents/workflows/` and all expected `.ps1` files exist in `.agents/scripts/`.
+
+**Skills Ecosystem:**
+Verify `.gemini/skills/` directory exists and contains expected skill files:
+// turbo
+- `Get-ChildItem .gemini/skills/*/SKILL.md | Select-Object Name,FullName`
+
+Report the count and list of discovered skills in the Session Readiness Report.
 
 **Project Detection:**
 Use `view_file` on `Cargo.toml`, `package.json`, or `go.mod` (whichever exists in repo root).
+
+**TODO/FIXME Markers:**
+// turbo
+- `make search-todos`
 
 Produce a structured report from the above output (see Session Readiness Report format in Step 6).
 
@@ -89,6 +126,16 @@ Other workflows can fall back to manual investigation.
    - If it returns, Sequential Thinking is available.
    - If it errors, note as a warning.
 
+#### Antigravity v2 Session Detection
+
+Detect whether the current session is running under Antigravity v2 (standalone
+app) or the legacy Antigravity IDE:
+
+1. **Check for Agent Manager**: Look for multi-agent orchestration capability
+   by checking if the invoke_subagent tool is available in the current tool set.
+2. **Check for Background Execution**: Verify if background scheduling is available.
+3. **Report**: Add to Session Readiness Report under ### Antigravity v2 Features.
+
 #### Context7 MCP
 
 1. **Connectivity**: Call `resolve-library-id` with a simple query.
@@ -107,31 +154,13 @@ If **Narsil MCP** is connected and indexed, perform a project-level scan:
 
 Report any critical vulnerabilities or structural issues found.
 
-#### Security Baseline Diffing
-If security findings are present, the agent **MUST** perform baseline comparison BEFORE reporting warnings:
-
-1. **Read Baseline**: Use `view_file` on `.narsil-baseline.json` (if it exists).
-2. **Diff Results**: Compare `get_security_summary` findings against the baseline.
-   - Match on `file` path and `ruleId`.
-   - If a finding's hash (file + ruleId) exists in the baseline, it is **Suppressed**.
-   - If a finding is not in the baseline, it is **New**.
-3. **Report**: In the Session Readiness Report (§6), summarize findings as:
-   - `✅ 0 new findings, N baselined` (if all findings are suppressed)
-   - `🟠 M new findings, N baselined` (if unverified findings exist)
-
-> [!CAUTION]
-> **Strict Suppression:** Baselined findings MUST NOT appear in the `⚠️ Warnings` section of the report. They are considered "handled" technical debt and should only be mentioned in the summary line above.
-
-
 ### 5. Automation Opportunities
 
 If **Sequential Thinking MCP** is available, use `sequentialthinking` to analyze:
 
 1. **Scan results** — are there patterns that could be automated?
 
-2. **TODO/FIXME markers** — scan with:
-// turbo
-   `just scan-todos`
+2. **TODO/FIXME markers** — review the results from Step 1.
 3. **Project structure** — are there build scripts, CI configs, or Makefiles?
 4. **MCP capabilities** — which Narsil tools could help with current project state?
 5. **Script gaps** — are there repetitive tasks that need a new script?
@@ -169,13 +198,25 @@ Produce the final structured report:
 |-----------|--------|
 | Workflows | N/M present |
 | Scripts | N/M present |
+| Skills | o./?O | N skills discovered |
+
+### Antigravity v2 Features
+| Feature | Status | Details |
+|---------|--------|---------|
+| Multi-Agent | ✅/❌ | invoke_subagent tool available |
+| Background Exec | ✅/❌ | background scheduling available |
+| Browser Validation | ✅/❌ | browser validation tool available |
+
+### Fallback Recommendations (R2)
+- If Multi-Agent is ❌: Workflows must follow standard single-Builder sequential execution (e.g., standard GEO in `ipr.md`).
+- If Background Exec is ❌: Run commands synchronously in the active workspace.
+- If Browser Validation is ❌: Validate visual changes manually or using standard unit/integration tests.
 
 ### Fixes Applied
 - [list of auto-fixes attempted and their results]
 
 ### ⚠️ Warnings
 - [unfixable issues + recommended user actions]
-- Note: DO NOT include baselined security findings here.
 
 ### 🤖 Automation Opportunities
 - [identified by Sequential Thinking analysis]
@@ -198,5 +239,7 @@ or:
 4. **Always index** — trigger Narsil `reindex` for fresh data every session.
 5. **Don't block** — unfixable issues are warnings, not blockers. Other workflows fall back to manual investigation.
 6. **Report everything** — even passing items go in the report for the session record.
-7. **Auto-run** — see `GEMINI.md` §6 Auto-Run table. All commands in this workflow are read-only; set `SafeToAutoRun: true` for every `run_command` call.
+7. **Auto-run** — see `GEMINI.md` §6 Auto-Run Discipline. All commands in this workflow are read-only; set `SafeToAutoRun: true` for every `run_command` call.
+
+
 

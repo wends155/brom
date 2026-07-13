@@ -57,7 +57,7 @@ Gather background information:
 // turbo
 >    - `git log -n 20 --oneline`
 // turbo
->    - `just scan-todos`
+>    - `make search-todos`
 
 - **`architecture.md`**: Identify relevant modules, patterns, and frameworks.
 - **`context.md`**: Check for prior decisions, known bugs, or related history.
@@ -74,30 +74,14 @@ Search the codebase to understand the problem area:
 - **Look for obvious causes**: Missing error handling, logic errors, race conditions, etc.
 - **Check tests**: Are there existing tests covering this area? Are they passing?
 
-> [!TIP]
-> **Structural Diagnostics** — use these `rg` patterns to quickly map the affected area:
-// turbo
-> - `rg "pub (?:struct|enum|trait|type)\s+[A-Z]" <path>` — list public API surface
-// turbo
-> - `rg "->\s*Result<" <path>` — find all fallible function signatures
-// turbo
-> - `rg "^impl" <path>` — locate all implementation blocks
-// turbo
-> - `rg "unsafe\s+(?:fn|impl|\{)" <path>` — audit unsafe boundaries
-
 #### MCP-Enhanced Investigation *(when available)*
 
 If **Narsil MCP** is available, use it to improve investigation accuracy:
-
-| Category | Tools | Purpose |
-|----------|-------|---------|
-| **Call-graph tracing** | `get_callers`, `get_callees` | Trace bad inputs upstream; verify failing downstream layers |
-| **Structural diagnosis** | `get_control_flow`, `get_data_flow` | Analyze exact code paths and variable flows for complex behavioral bugs |
-| **Hotspot detection** | `get_function_hotspots`, `get_complexity` | Identify brittle, high-coupling locations where bugs congregate |
-| **Code navigation** | `search_code`, `semantic_search`, `search_chunks` | Find relevant code faster than manual grep |
-| **Dependency analysis** | `get_dependencies`, `get_import_graph` | Map module-level import structure |
-| **Structure** | `get_project_structure`, `find_symbols` | Orient in unfamiliar codebases |
-| **Security** | `scan_security`, `check_owasp_top10`, `check_cwe_top25` | If the issue has security implications |
+- **Code search & navigation**: `search_code`, `semantic_search`, `search_chunks` — find relevant code faster than manual grep.
+- **Structural investigation**: `get_callers`, `get_callees`, `find_call_path` — trace the bug's propagation path and structural dependencies.
+- **Complexity analysis**: `get_complexity`, `get_function_hotspots` — identify high-risk, brittle code areas.
+- **Taint tracking**: `trace_taint`, `get_typed_taint_flow` — trace data flow from untrusted sources to sinks.
+- **Security scanning**: `scan_security`, `check_owasp_top10`, `check_cwe_top25` — if the issue has security implications.
 
 For **critical/high** severity issues, the Architect **SHOULD** use `sequentialthinking` to:
 - Structure complex, multi-factor investigations step by step.
@@ -113,6 +97,8 @@ Scale investigation depth per `issue-rules.md` §3.
 > write a clear report — not to find the exact fix (that's for `/plan-making`).
 
 ### 4. Produce Issue Report
+
+> 📘 **Skill:** [`scaffold-issue-report`](../../.gemini/skills/scaffold-issue-report/SKILL.md) — generate the issue report skeleton from `issue-rules.md` format
 
 Write the structured report to `<artifacts>/issue_report.md` using the `write_to_file` tool (`IsArtifact: true`). Follow the format in `issue-rules.md` §2. Include a clickable `[issue_report.md](file:///path)` artifact link in your chat response.
 
@@ -145,4 +131,5 @@ End the report with:
 4. **Ask early** — if the issue is ambiguous, ask questions in Step 1, not Step 4.
 5. **Stay focused** — investigate just enough to produce a clear report; avoid rabbit holes.
 6. **Use MCP tools** — when Narsil or Sequential Thinking are available, prefer them over manual grep/search for higher accuracy.
+
 

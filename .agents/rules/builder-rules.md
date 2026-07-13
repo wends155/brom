@@ -23,50 +23,7 @@ The Builder should match it closely since there is no test to validate against.
 
 ## 2. Step Execution Protocol
 
-For each plan step `Step N: [TAG] file — function() (L##-##)`:
-
-### 2.1 Parse
-
-Extract from the step header:
-- **File tag**: `[NEW]`, `[MODIFY]`, `[DELETE]`, or `[TEST]`
-- **File path**: The exact file to touch
-- **Function sub-tag** *(if present)*: `[+]` (create), `[~]` (modify), or `[-]` (remove)
-- **Function/struct name**: The specific target within the file
-- **Line range**: Advisory — locate the actual target, don't blindly edit by line number
-
-### 2.2 Read Before Write
-
-**Before making any code changes**, the Builder MUST:
-1. Read the target file (or the relevant section)
-2. Locate the function/struct/module referenced in the step
-3. Understand the current state — does it match the plan's Pre-condition?
-4. If the Pre-condition does not hold → **STOP**, do not proceed
-
-### 2.3 Execute
-
-Apply the change described in the step's Action field:
-- For `[TEST]` steps: write the test **first** (TDD Red phase)
-- For `[NEW]` steps: create the file with the specified content
-- For `[MODIFY]` steps: edit only the targeted function/struct/lines
-- For `[DELETE]` steps: remove the specified code or file
-
-**Sub-tag-aware dispatch** *(when function sub-tags are present)*:
-- For `[+]` sub-tag: the target symbol MUST NOT already exist in the file. Create it from scratch.
-- For `[~]` sub-tag: the target symbol MUST already exist. Edit it in place.
-- For `[-]` sub-tag: the target symbol MUST already exist. Remove it entirely.
-
-### 2.4 Post-Verify
-
-After executing, run the step's Post checks:
-1. Re-read the changed code to confirm it matches the Action description
-2. Run the Post verification command(s) as specified
-3. If Post check fails → enter Error Recovery (§9)
-
-### 2.5 Update Progress
-
-After each step completes:
-- Mark `task.md`: `[ ]` → `[/]` when starting, `[/]` → `[x]` when Post passes
-- At 🔒 CHECKPOINT markers: run `ALL`, commit via standard `git` commands
+> 📘 **Skill Handled:** This procedure is now executed via the [`execute-plan-step`](../../.gemini/skills/execute-plan-step/SKILL.md) skill. See the skill definition for execution, parsing, and state updates.
 
 ## 3. TDD Mandate
 
@@ -80,6 +37,8 @@ After each step completes:
 2. The test must **fail** before implementation (Red) and **pass** after (Green)
 3. If the plan omits a test for a code change, the Builder writes one anyway
 4. Minor changes (§4) still require existing tests to pass — run `ALL` to verify
+5. **Never fix by deleting.** If a test fails, fix the source code or STOP (§9). Removing, disabling (`#[ignore]`, `.skip()`), or commenting out the failing test is **prohibited** — it is a STOP condition (§5.2), not a valid fix strategy.
+
 
 ## 4. Scope Discipline
 
@@ -117,6 +76,22 @@ If the plan includes a Negative Scope section (ipr.md §2):
 2. Before modifying any file, check it against the exclusion list
 3. If a step's Action would require touching a Negative Scope item → **STOP**
 
+### 4.5 Subagent Isolation *(Multi-Agent mode only)*
+
+When executing within a Parallel Lane (see `ipr.md` §2, Parallel Execution Lanes):
+
+1. **File Boundary**: The subagent may ONLY modify files within its assigned lane's module boundary. Cross-lane file access is a strict STOP condition.
+2. **Task File Isolation**: The subagent updates ONLY its assigned `task_lane_*.md` sub-file, never the main `task.md`.
+3. **Local Checkpoints**: Lane-local `🔒` checkpoints verify only the lane's module compiles. The `🔒 SYNC CHECKPOINT` at lane convergence verifies the full workspace.
+4. **Git Isolation**: Each subagent commits to a lane-specific branch (`build/lane-a`, `build/lane-b`). The Sync Checkpoint merges all lane branches and runs `ALL` on the integrated result.
+5. **Lane Failure Escalation (R1)**: If a subagent encounters a compilation error or merge conflict on integration that halts the lane:
+   - It MUST generate a `lane_failure_diagnostics.json` containing the broken files, symbols, compiler logs, and step ID.
+   - It MUST commit the diagnostic file, commit the WIP code with `WIP: lane failure - [reason]`, and STOP to escalate to the Architect.
+
+> [!NOTE]
+> If multi-agent orchestration is NOT available, this section does not apply.
+> Standard single-Builder scope rules (§4.1–§4.4) govern.
+
 ## 5. Decision Boundaries
 
 ### 5.1 Allowed Micro-Decisions
@@ -135,8 +110,6 @@ The Builder MUST **immediately halt** and escalate when:
 - Changing a return type or function signature
 - Adding public APIs (functions, structs, traits) not in the plan
 - Modifying module structure (new files, moved code between modules)
-- A `[+]` sub-tagged function already exists in the target file (plan is stale or duplicate)
-- A `[~]` or `[-]` sub-tagged function does NOT exist in the target file (plan is stale or target was already removed)
 - Discovering the plan contradicts `architecture.md`
 - A step is ambiguous — the Builder cannot determine the intended action
 
@@ -147,37 +120,20 @@ The Builder MUST **immediately halt** and escalate when:
 
 ## 6. Self-Verification Loop
 
-After writing code for any step:
-
-1. **Re-read** the changed lines in the file
-2. **Compare** against the step's Action description:
-   - Does it implement the described behavior?
-   - Does it match the Interface Contract signature (if specified)?
-   - Does it respect the Negative Scope?
-3. **Run** the Post check command(s)
-4. **Only then** mark the step as complete in `task.md`
-
-If the re-read reveals a mismatch:
-- Fix the code **before** running Post checks
-- Do not rationalize deviations — match the plan or STOP
+> 📘 **Skill Handled:** This procedure is now executed via the [`execute-plan-step`](../../.gemini/skills/execute-plan-step/SKILL.md) skill (Post-Verify).
 
 ## 7. Command Execution Discipline
 
-> [!CAUTION]
-> The IDE terminal wrapper captures **both stdout and stderr** natively.
-> You will see all compiler errors, warnings, and panics without any
-> shell redirects. Adding `2>&1` or redirecting to files is structurally
-> redundant and impairs direct agent observability.
+The IDE terminal captures **both stdout and stderr** as a single interleaved
+stream. Shell redirects (`2>&1`) are unnecessary but no longer blocked.
 
-**Banned operators** — TARS prohibits all of these for execution discipline:
+> [!TIP]
+> **Observability Advisory:** Prefer separate `run_command` calls for complex
+> pipelines when debugging. Chaining is permitted but isolating failure points
+> is easier with individual calls.
 
-| Pattern | Why banned |
-|---------|-----------|
-| `&&`, `||`, `;` | Chaining — use a separate `run_command` call for each command |
-| `>`, `2>`, `2>&1` | Redirects — stderr is already captured; redirects are unnecessary |
-| `|` | Pipes — use native agent tools instead |
-
-**Rule:** One command per `run_command` call. No exceptions. See `GEMINI.md §6`.
+The root `Makefile` provides convenience targets for common searches (e.g.,
+`make search-todos`). Using them is recommended but not mandatory.
 
 ## 8. Builder Notes
 
@@ -196,41 +152,21 @@ The Builder can flag observations and suggestions for the Architect using a stru
 3. Use `💡` for improvement suggestions and `⚠️` for observations (mismatches, discoveries)
 4. Each note references the step number and target for context
 5. Notes are reviewed by the Architect during `/audit` Step 2a
+6. When the Builder diverges from a plan's code snippet (justified by Fidelity Hierarchy §1), log it as `⚠️ Deviation: Step N — [plan snippet] → [actual] — [justification]`. The report generation step (build.md Step 5) categorizes these into a Deviations table.
+7. At build completion, Builder Notes are aggregated into the Build Report artifact (see §10) for M/L tier plans.
 
 ## 9. Error Recovery
 
-### 9.1 First Failure
+> 📘 **Skill Handled:** This procedure is now executed via the [`execute-plan-step`](../../.gemini/skills/execute-plan-step/SKILL.md) skill (Error Recovery phase).
 
-When a Post check fails:
-1. Diagnose the failure — read the error output
-2. Fix **within the current step's scope** only
-3. Re-run Post check
-4. If fixed → continue to next step
+---
 
-### 9.2 Second Consecutive Failure (Same Step)
+## 10. Build Report
 
-**STOP immediately.**
-1. Commit current progress: `WIP: stopped at step N — [reason]`
-2. Do NOT revert completed steps
-3. Report the failure to the Architect with:
-   - Step number and target
-   - Error output from both attempts
-   - What was tried
-
-### 9.3 Never Fix Forward
-
-Do NOT modify a **future** step's target to work around a current failure.
-Each step is self-contained. If step 3 fails, do not edit step 5's target file
-to compensate — that creates unaudited changes.
-
-### 9.4 Regression Detection
-
-If a step's Post check reveals that **previously passing tests now fail**:
-1. **STOP** — this is a regression
-2. Note which tests broke and which step likely caused it
-3. The Architect decides rollback scope — the Builder does not unilaterally revert
+> 📘 **Skill Handled:** This procedure and template are now managed via the [`generate-build-report`](../../.gemini/skills/generate-build-report/SKILL.md) skill.
 
 ---
 
 > **Loaded by:** `/build` workflow
 > **Compliance:** Verified during `/audit` via Plan Fidelity (audit-rules.md §4)
+
