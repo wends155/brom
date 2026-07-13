@@ -6,7 +6,7 @@
 | **Version** | 1.1.0 |
 | **Last Updated** | 2026-04-14 |
 
-> Last verified against: cb7b9e6
+> Last verified against: e579ad0
 
 ## 1. brom-macros
 
@@ -251,6 +251,8 @@ THEN a `403 Forbidden` response is returned
 |-------------------|------------------|---------|--------|
 | `RequireAdmin` | `pub struct RequireAdmin(pub Session)` | - | `ServerError` |
 | `RequireApiKey` | `pub struct RequireApiKey(pub ApiKeyRecord)` | - | `ServerError` |
+| `ServerConfig` | `pub struct ServerConfig { pub cors_origins: Vec<HeaderValue>, pub secure_cookie: bool }` | - | - |
+| `spawn_session_cleanup` | `pub fn spawn_session_cleanup(session_store: Arc<dyn SessionStore>)` | - | - |
 | `DataEnvelope<T>`| `pub struct DataEnvelope<T: Serialize> { pub data: T }` | - | - |
 | `PaginatedResponse<T>` | `pub struct PaginatedResponse<T: Serialize> { pub data: Vec<T>, pub meta: PaginationMeta }` | - | - |
 | `ServerError` | `enum ServerError` | - | - |
@@ -264,6 +266,31 @@ WHEN a request is made for `index.html`
 THEN the response headers explicitly prevent caching
 WHEN a request is made for a hashed asset (e.g., `pkg/admin-12345.js`)
 THEN the response receives `public, max-age=31536000, immutable` headers
+
+[HAPPY] Content-Security-Policy Injection
+GIVEN any response returned from the Axum server
+WHEN the response is processed by the middleware
+THEN the HTTP headers include `Content-Security-Policy` with a default policy of `default-src 'self'`
+
+[HAPPY] Secure Cookie Flag Enabled
+GIVEN `BROM_SECURE_COOKIE` is unset or set to a value other than `false`
+WHEN a user successfully logs in and receives a session cookie
+THEN the cookie header contains the `Secure` flag
+
+[HAPPY] Secure Cookie Flag Disabled
+GIVEN `BROM_SECURE_COOKIE` is set to `false`
+WHEN a user successfully logs in and receives a session cookie
+THEN the cookie header does not contain the `Secure` flag
+
+[HAPPY] Background Session Expiration Cleanup
+GIVEN the server has started
+WHEN the hourly background session cleanup timer ticks
+THEN the database is queried to delete all expired session records
+
+[HAPPY] Throttled API Key Last-Used Timestamp Updates
+GIVEN a valid Bearer Token is used to authenticate a request
+WHEN the key was last used less than 15 minutes ago
+THEN the request succeeds without performing a database write to update the `last_used_at` timestamp
 
 ### Contract Constraints
 - **Data Envelope Format**: All successful responses must use `{ "data": ... }` to allow top-level metadata injection without breaking client mapping.
