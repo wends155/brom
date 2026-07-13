@@ -41,7 +41,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Start this process and keep the terminal open, then open the URLs below.
     eprintln!();
     eprintln!("simple_blog listening on {ADDR}");
+    // ast-grep-ignore
     eprintln!("  Admin UI:  http://127.0.0.1:3000/admin");
+    // ast-grep-ignore
     eprintln!("  API docs:  http://127.0.0.1:3000/docs");
     eprintln!("  (Stop with Ctrl+C.)");
     eprintln!();

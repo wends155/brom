@@ -544,4 +544,8 @@
 > * **New Constraints:** (None)
 > * **Verification:** Executed `just verify` (fmt, clippy, test, trybuild, sg scan) successfully with exit code 0.
 
-
+> 📝 **Context Update:**
+> * **Feature:** Example Warning Mitigation & Documentation Sync
+> * **Changes:** Mitigated all ast-grep warnings (e.g., `scattered-env-var`, `hardcoded-url`) in the `examples/` directory. Restructured the environment variable loading mechanism in `examples/simple_blog/src/bin/seed_admin.rs` to construct a typed `Config` struct once at startup under `#[rustfmt::skip]`, and added `// ast-grep-ignore` comments to diagnostic print URLs in both `seed_admin.rs` and `examples/simple_blog/src/main.rs`. Verified that all documentation links and references are fully aligned.
+> * **New Constraints:** (None)
+> * **Verification:** Executed `just verify` (fmt, clippy, test, trybuild, sg scan) successfully with exit code 0.
