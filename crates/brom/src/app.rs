@@ -249,17 +249,9 @@ impl BromApp {
         }
         tracing::info!(count = self.schemas.len(), "registered entity schemas");
 
-        // 6. Construct application state
-        let state = AppState {
-            db: pool.clone(),
-            session_store: Arc::new(pool.clone()),
-            api_key_store: Arc::new(pool),
-            schema_registry: Arc::new(registry),
-        };
-
-        // 7. Resolve CORS origins
+        // 6. Resolve CORS origins
         // #[allow(clippy::expect_used)] // Startup panics are acceptable per coding-standard §4.10
-        let cors_origins = if self.cors_origins.is_empty() {
+        let cors_origins: Vec<axum::http::HeaderValue> = if self.cors_origins.is_empty() {
             std::env::var("BROM_CORS_ORIGINS")
                 .unwrap_or_default()
                 .split(',')
@@ -280,7 +272,26 @@ impl BromApp {
                 .collect()
         };
 
-        // 8. Build router and serve
+        // 7. Load server config
+        let secure_cookie = std::env::var("BROM_SECURE_COOKIE").map_or(true, |v| v != "false");
+        let config = brom_server::ServerConfig {
+            cors_origins: cors_origins.clone(),
+            secure_cookie,
+        };
+
+        // 8. Construct application state
+        let state = AppState {
+            db: pool.clone(),
+            session_store: Arc::new(pool.clone()),
+            api_key_store: Arc::new(pool),
+            schema_registry: Arc::new(registry),
+            config,
+        };
+
+        // 9. Spawn background session cleanup
+        brom_server::spawn_session_cleanup(state.session_store.clone());
+
+        // 10. Build router and serve
         let router = brom_server::create_router(state, cors_origins);
         let listener = tokio::net::TcpListener::bind(addr).await?;
         tracing::info!(addr = %addr, "brom server listening");

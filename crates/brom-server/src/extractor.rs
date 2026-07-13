@@ -84,12 +84,22 @@ where
         let key = auth_header[7..].trim();
         let record = state.api_key_store.validate(key)?;
 
-        // Side-effect: update last used timestamp in background
-        let store = Arc::clone(&state.api_key_store);
-        let id = record.id;
-        tokio::spawn(async move {
-            let _ = store.update_last_used(id);
-        });
+        // Side-effect: update last used timestamp in background, throttled to every 15 minutes
+        let should_update = match &record.last_used_at {
+            None => true,
+            Some(ts) => match chrono::DateTime::parse_from_rfc3339(ts) {
+                Err(_) => true,
+                Ok(dt) => chrono::Utc::now().signed_duration_since(dt).num_minutes() >= 15,
+            },
+        };
+
+        if should_update {
+            let store = Arc::clone(&state.api_key_store);
+            let id = record.id;
+            tokio::spawn(async move {
+                let _ = store.update_last_used(id);
+            });
+        }
 
         Ok(RequireApiKey(record))
     }
@@ -113,6 +123,10 @@ mod tests {
             session_store,
             api_key_store,
             schema_registry: Arc::new(brom_core::schema::SchemaRegistry::new()),
+            config: crate::config::ServerConfig {
+                cors_origins: vec![],
+                secure_cookie: false,
+            },
         }
     }
 

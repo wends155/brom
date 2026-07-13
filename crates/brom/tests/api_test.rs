@@ -290,3 +290,104 @@ async fn api_keys_crud() {
     let json: Value = serde_json::from_slice(&body_bytes).unwrap();
     assert_eq!(json.as_array().unwrap().len(), 0);
 }
+
+#[tokio::test]
+async fn test_csp_header_present() {
+    let state = common::test_app_state();
+    let app = build_router(state, vec![]);
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/admin/api/login")
+                .method("POST")
+                .header("content-type", "application/json")
+                .body(Body::from(r#"{"email":"bad","password":"bad"}"#))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert!(
+        response.headers().get("content-security-policy").is_some(),
+        "CSP header should be present in response"
+    );
+}
+
+#[tokio::test]
+async fn test_secure_cookie_flag() {
+    let mut state = common::test_app_state();
+    state.config.secure_cookie = true;
+    let (_user_id, password) = common::seed_admin_user(&state);
+
+    let app = build_router(state, vec![]);
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/admin/api/login")
+                .method("POST")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({
+                        "email": "admin@test.com",
+                        "password": password
+                    })
+                    .to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let cookie_header = response
+        .headers()
+        .get(header::SET_COOKIE)
+        .expect("should set cookie")
+        .to_str()
+        .unwrap();
+
+    assert!(
+        cookie_header.contains("Secure"),
+        "Cookie header should contain Secure flag: {cookie_header}"
+    );
+}
+
+#[tokio::test]
+async fn test_secure_cookie_flag_disabled() {
+    let mut state = common::test_app_state();
+    state.config.secure_cookie = false;
+    let (_user_id, password) = common::seed_admin_user(&state);
+
+    let app = build_router(state, vec![]);
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/admin/api/login")
+                .method("POST")
+                .header("content-type", "application/json")
+                .body(Body::from(
+                    json!({
+                        "email": "admin@test.com",
+                        "password": password
+                    })
+                    .to_string(),
+                ))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let cookie_header = response
+        .headers()
+        .get(header::SET_COOKIE)
+        .expect("should set cookie")
+        .to_str()
+        .unwrap();
+
+    assert!(
+        !cookie_header.contains("Secure"),
+        "Cookie header should NOT contain Secure flag when disabled: {cookie_header}"
+    );
+}

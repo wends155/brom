@@ -18,6 +18,10 @@ pub fn test_app_state() -> AppState {
         session_store: Arc::new(pool.clone()),
         api_key_store: Arc::new(pool.clone()),
         schema_registry: Arc::new(SchemaRegistry::new()),
+        config: brom_server::ServerConfig {
+            cors_origins: vec![],
+            secure_cookie: false,
+        },
     }
 }
 

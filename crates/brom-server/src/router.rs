@@ -73,6 +73,7 @@ pub async fn login(
         .path("/")
         .http_only(true)
         .same_site(SameSite::Lax)
+        .secure(state.config.secure_cookie)
         .build();
 
     let body = Json(LoginResponse {
@@ -139,6 +140,7 @@ pub fn build_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>)
         .layer(middleware::x_content_type_options_layer())
         .layer(middleware::x_frame_options_layer())
         .layer(middleware::referrer_policy_layer())
+        .layer(middleware::csp_layer())
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<_>| {

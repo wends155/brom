@@ -14,4 +14,6 @@ pub struct AppState {
     pub api_key_store: Arc<dyn ApiKeyStore>,
     /// Static registry of entity schemas.
     pub schema_registry: Arc<SchemaRegistry>,
+    /// Server configuration (cookie flags, etc.).
+    pub config: crate::config::ServerConfig,
 }

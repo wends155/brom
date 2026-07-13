@@ -40,3 +40,13 @@ pub fn referrer_policy_layer() -> SetResponseHeaderLayer<HeaderValue> {
         HeaderValue::from_static("strict-origin-when-cross-origin"),
     )
 }
+
+/// Returns a layer that adds a baseline Content-Security-Policy header.
+pub fn csp_layer() -> SetResponseHeaderLayer<HeaderValue> {
+    SetResponseHeaderLayer::if_not_present(
+        header::HeaderName::from_static("content-security-policy"),
+        HeaderValue::from_static(
+            "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline';",
+        ),
+    )
+}

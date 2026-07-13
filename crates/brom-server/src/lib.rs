@@ -41,3 +41,21 @@ pub use config::ServerConfig;
 pub fn create_router(state: AppState, cors_origins: Vec<axum::http::HeaderValue>) -> axum::Router {
     router::build_router(state, cors_origins)
 }
+
+/// Spawns a background task that periodically purges expired sessions.
+///
+/// Runs an initial cleanup immediately, then repeats every hour.
+#[allow(clippy::duration_suboptimal_units)]
+pub fn spawn_session_cleanup(session_store: std::sync::Arc<dyn brom_auth::SessionStore>) {
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(3600));
+        loop {
+            interval.tick().await;
+            if let Err(e) = session_store.cleanup_expired() {
+                tracing::warn!(error = %e, "session cleanup failed");
+            } else {
+                tracing::debug!("expired sessions cleaned up");
+            }
+        }
+    });
+}

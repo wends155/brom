@@ -6,6 +6,9 @@ use std::env;
 pub struct ServerConfig {
     /// List of allowed CORS origins.
     pub cors_origins: Vec<HeaderValue>,
+    /// Controls whether the session cookie sets the `Secure` flag.
+    /// Defaults to `true`. Set `BROM_SECURE_COOKIE=false` for local HTTP dev.
+    pub secure_cookie: bool,
 }
 
 impl ServerConfig {
@@ -32,6 +35,11 @@ impl ServerConfig {
             })
             .collect();
 
-        Self { cors_origins }
+        let secure_cookie = env::var("BROM_SECURE_COOKIE").map_or(true, |v| v != "false");
+
+        Self {
+            cors_origins,
+            secure_cookie,
+        }
     }
 }
